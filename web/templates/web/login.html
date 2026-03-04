@@ -6,95 +6,59 @@
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
 
-/* 🔥 NUEVO: aseguramos altura total */
 html, body {
     height: 100%;
+    margin: 0;
+    font-family: 'Outfit', sans-serif;
 }
 
-/* Ocultar navbar del base */
 nav, .navbar, header, .topbar {
     display: none !important;
 }
 
-/* 🔥 CAMBIO IMPORTANTE AQUÍ */
 .login-background {
-    position: fixed;           /* 🔥 cambiado */
-    top: 0;                    /* 🔥 agregado */
-    left: 0;                   /* 🔥 agregado */
-    width: 100vw;              /* 🔥 cambiado */
-    height: 100vh;             /* 🔥 cambiado */
+    position: fixed;
+    inset: 0;
     background: url("{% static 'web/img/fondonewton.jpg' %}") no-repeat center center;
     background-size: cover;
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 0;                /* 🔥 agregado */
 }
 
 .login-background::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(5, 20, 50, 0.55);
-    backdrop-filter: blur(2px);
+    backdrop-filter: blur(3px);
+    background: rgba(0,0,0,0.25);
 }
 
-/* 🔥 CAMBIO: aseguramos que la tarjeta esté encima */
 .login-wrapper {
     position: relative;
-    z-index: 2;                /* 🔥 cambiado de 1 a 2 */
+    z-index: 2;
     width: 100%;
-    max-width: 480px;
+    max-width: 450px;
     padding: 20px;
 }
 
 .card-login {
-    border-radius: 28px;
+    border-radius: 25px;
     overflow: hidden;
-    box-shadow: 0 40px 80px rgba(0, 0, 0, 0.45);
-    background: #fff;
+    box-shadow: 0 35px 70px rgba(0, 0, 0, 0.45);
+    background: #ffffff;
 }
 
+/* 🔥 HEADER CON IMAGEN COMPLETA */
 .card-header-img {
-    height: 200px;
-    background-image: url("{% static 'web/img/newtonpreacademia.jpg' %}");
+    height: 180px;
+    background: url("{% static 'web/img/logoN.jpg' %}") no-repeat center center;
     background-size: cover;
-    background-position: center top;
-    position: relative;
 }
-
-.card-header-img::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(to bottom, rgba(10,30,80,0.3) 0%, rgba(10,30,80,0.75) 100%);
-}
-
-.card-header-text {
-    position: absolute;
-    bottom: 24px;
-    left: 0;
-    right: 0;
-    text-align: center;
-    z-index: 2;
-    color: #fff;
-}
-
-.login-title {
-    font-size: 32px;
-    font-weight: 800;
-}
-
-.login-subtitle {
-    font-size: 13px;
-    font-weight: 300;
-    letter-spacing: 3px;
-    text-transform: uppercase;
-    opacity: 0.85;
-}
+/* Si quieres que sea imagen tipo banner real usa cover en vez de contain */
 
 .card-body-form {
-    padding: 36px 40px 40px;
+    padding: 35px 35px 40px;
 }
 
 .alert-error {
@@ -109,63 +73,61 @@ nav, .navbar, header, .topbar {
 }
 
 .field-group {
-    margin-bottom: 16px;
-    font-size: 15px;
+    margin-bottom: 18px;
 }
 
 .field-label {
     display: block;
     font-size: 12px;
-    font-weight: 600;
+    font-weight: 700;
     letter-spacing: 1.5px;
     text-transform: uppercase;
-    color: #8892a4;
-    margin-bottom: 7px;
+    color: #7b8794;
+    margin-bottom: 6px;
 }
 
 .form-control {
     width: 100%;
-    height: 52px;
-    font-size: 16px;
-    color: #1a2540;
+    height: 50px;
+    font-size: 15px;
     background: #f4f7fb;
     border: 2px solid transparent;
-    border-radius: 14px;
-    padding: 0 18px;
+    border-radius: 12px;
+    padding: 0 16px;
     outline: none;
-    transition: 0.25s;
+    transition: all 0.3s ease;
 }
 
 .form-control:focus {
-    background: #fff;
+    background: #ffffff;
     border-color: #1976d2;
-    box-shadow: 0 0 0 4px rgba(25, 118, 210, 0.12);
+    box-shadow: 0 0 0 3px rgba(25,118,210,0.15);
 }
 
 .btn-login {
-    display: block;
     width: 100%;
-    height: 54px;
-    margin-top: 24px;
+    height: 52px;
+    margin-top: 25px;
     font-size: 16px;
     font-weight: 700;
-    color: #fff;
+    color: #ffffff;
     background: linear-gradient(135deg, #1e88e5 0%, #0d47a1 100%);
     border: none;
-    border-radius: 14px;
+    border-radius: 12px;
     cursor: pointer;
-    transition: 0.25s;
+    transition: 0.3s ease;
 }
 
 .btn-login:hover {
     transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.25);
 }
 
 .card-footer-text {
     text-align: center;
     margin-top: 20px;
     font-size: 12px;
-    color: #aab0bc;
+    color: #9aa3af;
 }
 </style>
 
@@ -173,12 +135,8 @@ nav, .navbar, header, .topbar {
     <div class="login-wrapper">
         <div class="card-login">
 
-            <div class="card-header-img">
-                <div class="card-header-text">
-                    <div class="login-title">Newton en Red</div>
-                    <div class="login-subtitle">Sistema Académico · Sede Huaura</div>
-                </div>
-            </div>
+            <!-- 🔥 HEADER CON IMAGEN COMPLETA -->
+            <div class="card-header-img"></div>
 
             <div class="card-body-form">
 
