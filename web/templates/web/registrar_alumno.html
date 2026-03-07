@@ -1,9 +1,114 @@
 {% extends 'web/base.html' %}
+{% load static %}
 
 {% block content %}
 
-<h2>Registro de Alumno</h2>
+<div class="container">
 
-<p>Aquí irá el formulario para registrar alumnos.</p>
+<h1>Registro Académico</h1>
+<p class="subtitle">Complete los datos del alumno y su apoderado</p>
+
+<form method="POST">
+{% csrf_token %}
+
+<!-- DATOS DEL ALUMNO -->
+<div class="form-section">
+<h2>Datos del Alumno</h2>
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>Apellido Paterno *</label>
+<input type="text" name="apellido_paterno">
+</div>
+
+<div class="form-group">
+<label>Apellido Materno *</label>
+<input type="text" name="apellido_materno">
+</div>
+
+<div class="form-group">
+<label>Nombres *</label>
+<input type="text" name="nombres">
+</div>
+
+<div class="form-group">
+<label>DNI *</label>
+<input type="text" name="dni">
+</div>
+
+<div class="form-group">
+<label>Celular</label>
+<input type="text" name="celular">
+</div>
+
+<div class="form-group">
+<label>Fecha de Nacimiento</label>
+<input type="date" name="fecha">
+</div>
+
+<div class="form-group">
+<label>Sede</label>
+<select name="sede">
+<option>Huaura</option>
+<option>Huacho</option>
+<option>Sayán</option>
+</select>
+</div>
+
+<div class="form-group">
+<label>Dirección</label>
+<input type="text" name="direccion">
+</div>
+
+<div class="form-group">
+<label>Distrito</label>
+<input type="text" name="distrito">
+</div>
+
+<div class="form-group">
+<label>Correo Electrónico</label>
+<input type="email" name="correo">
+</div>
+
+</div>
+</div>
+
+<!-- DATOS APODERADO -->
+<div class="form-section">
+<h2>Datos del Apoderado</h2>
+
+<div class="form-grid">
+
+<div class="form-group">
+<label>Nombre Completo *</label>
+<input type="text" name="apoderado_nombre">
+</div>
+
+<div class="form-group">
+<label>DNI *</label>
+<input type="text" name="apoderado_dni">
+</div>
+
+<div class="form-group">
+<label>Celular *</label>
+<input type="text" name="apoderado_celular">
+</div>
+
+<div class="form-group">
+<label>Dirección</label>
+<input type="text" name="apoderado_direccion">
+</div>
+
+</div>
+</div>
+
+<button class="btn-guardar" type="submit">
+Guardar Registro
+</button>
+
+</form>
+
+</div>
 
 {% endblock %}

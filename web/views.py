@@ -30,3 +30,6 @@ def registrar_alumno(request):
 def logout_view(request):
     logout(request)
     return redirect('login')
+@login_required
+def matriculas(request):
+    return render(request, 'web/matriculas/matricula.html')

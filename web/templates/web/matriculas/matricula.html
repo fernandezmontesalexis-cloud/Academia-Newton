@@ -1,0 +1,89 @@
+{% extends 'web/base.html' %}
+{% load static %}
+{% block content %}
+
+<div class="container-fluid">
+
+<!-- HEADER -->
+
+<div class="card header-card">
+
+<div class="d-flex justify-content-between">
+
+<h3>Gestión de Matrículas</h3>
+
+<div>
+
+<button class="btn btn-primary">
+Volver al Panel
+</button>
+
+<button class="btn btn-success">
+Registrar Matricula
+</button>
+
+<button class="btn btn-success">
+Exportar Excel
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- TABLA -->
+
+<div class="card mt-4">
+
+<h5>Matriculas Registradas</h5>
+
+<table class="table">
+
+<thead>
+
+<tr>
+
+<th>#</th>
+<th>Alumno</th>
+<th>Carrera</th>
+<th>Turno</th>
+<th>Fecha</th>
+<th>Estado</th>
+<th>Acciones</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+<td>1</td>
+<td>Mersi Daniza Ponce</td>
+<td>Ingeniería de Sistemas</td>
+<td>Mañana</td>
+<td>2025-11-18</td>
+
+<td>
+<span class="badge bg-success">
+Activa
+</span>
+</td>
+
+<td>
+✏ 🗑
+</td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+{% endblock %}
