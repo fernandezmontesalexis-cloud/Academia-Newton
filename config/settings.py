@@ -117,3 +117,6 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / "web/static"
 ]
+
+# Configuración del tipo de ID automático para los modelos (mejora recomendada por Django)
+DEFAULT_AUTO_FIELD ='django.db.models.BigAutoField'
