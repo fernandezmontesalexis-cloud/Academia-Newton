@@ -1,263 +1,88 @@
-/* =========================
-   1. RESET GENERAL
-========================= */
+/* RESET */
 
 *{
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Outfit', Arial, Helvetica, sans-serif;
 }
 
-html, body{
-    height:100%;
-    font-family:'Outfit', Arial, Helvetica, sans-serif;
+/* LAYOUT PRINCIPAL */
+
+.layout{
+display:flex;
+min-height:100vh;
+background:#f4f6f9;
 }
 
-body{
-    display:flex;
-    background:#f4f6f9;
-}
 
-
-/* =========================
-   2. LAYOUT BASE (BASE.HTML)
-========================= */
+/* SIDEBAR */
 
 .sidebar{
-    width:230px;
-    height:100vh;
-    background:#5a3ec8;
-    color:white;
-    padding:20px;
+
+width:230px;
+background:#5a3ec8;
+color:white;
+padding:20px;
+
+display:flex;
+flex-direction:column;
+
 }
 
 .sidebar h4{
-    margin-bottom:20px;
+margin-bottom:25px;
 }
 
 .sidebar a{
-    display:block;
-    color:white;
-    padding:10px;
-    text-decoration:none;
+
+display:block;
+color:white;
+padding:12px;
+text-decoration:none;
+border-radius:5px;
+
 }
 
 .sidebar a:hover{
-    background:#452fa3;
-    border-radius:5px;
+background:#452fa3;
 }
+
+
+/* CONTENEDOR DERECHO */
+
+.main{
+
+flex:1;
+display:flex;
+flex-direction:column;
+
+}
+
+
+/* BARRA SUPERIOR */
+
+.topbar{
+
+height:60px;
+background:#745ece;
+color:white;
+bottom: 190px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+
+padding:0 55px;
+
+}
+
+
+/* CONTENIDO */
 
 .content{
-    flex:1;
-    padding:30px;
-    background:#f5f6fa;
-}
 
+flex:1;
+padding:30px;
+background:#f5f6fa;
 
-/* =========================
-   3. LOGIN
-========================= */
-
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&display=swap');
-
-nav, .navbar, header, .topbar {
-    display:none !important;
-}
-
-.login-background{
-    position:fixed;
-    inset:0;
-    background:url("../img/fondonewton.jpg") no-repeat center center;
-    background-size:cover;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-}
-
-.login-background::before{
-    content:'';
-    position:absolute;
-    inset:0;
-    backdrop-filter:blur(3px);
-    background:rgba(0,0,0,0.25);
-}
-
-.login-wrapper{
-    position:relative;
-    z-index:2;
-    width:100%;
-    max-width:450px;
-    padding:20px;
-}
-
-.card-login{
-    border-radius:25px;
-    overflow:hidden;
-    box-shadow:0 35px 70px rgba(0,0,0,0.45);
-    background:#ffffff;
-}
-
-.card-header-img{
-    height:180px;
-    background:url("../img/logoN.jpg") no-repeat center center;
-    background-size:cover;
-}
-
-.card-body-form{
-    padding:35px 35px 40px;
-}
-
-.alert-error{
-    font-size:14px;
-    color:#c0392b;
-    background:#fdf0ef;
-    border:1px solid #f5c6c3;
-    border-radius:10px;
-    padding:10px 14px;
-    margin-bottom:20px;
-    font-weight:500;
-}
-
-.field-group{
-    margin-bottom:18px;
-}
-
-.field-label{
-    display:block;
-    font-size:12px;
-    font-weight:700;
-    letter-spacing:1.5px;
-    text-transform:uppercase;
-    color:#7b8794;
-    margin-bottom:6px;
-}
-
-.form-control{
-    width:100%;
-    height:50px;
-    font-size:15px;
-    background:#f4f7fb;
-    border:2px solid transparent;
-    border-radius:12px;
-    padding:0 16px;
-    outline:none;
-    transition:all 0.3s ease;
-}
-
-.form-control:focus{
-    background:#ffffff;
-    border-color:#1976d2;
-    box-shadow:0 0 0 3px rgba(25,118,210,0.15);
-}
-
-.btn-login{
-    width:100%;
-    height:52px;
-    margin-top:25px;
-    font-size:16px;
-    font-weight:700;
-    color:#ffffff;
-    background:linear-gradient(135deg,#1e88e5 0%,#0d47a1 100%);
-    border:none;
-    border-radius:12px;
-    cursor:pointer;
-    transition:0.3s ease;
-}
-
-.btn-login:hover{
-    transform:translateY(-2px);
-    box-shadow:0 10px 20px rgba(0,0,0,0.25);
-}
-
-.card-footer-text{
-    text-align:center;
-    margin-top:20px;
-    font-size:14px;
-    color:#7e8691;
-}
-
-
-/* =========================
-   4. FORMULARIO REGISTRO ALUMNO
-========================= */
-
-.container{
-  
-    width:900px;
-    margin:40px auto;
-    background:white;
-    padding:40px;
-    border-radius:10px;
-    box-shadow:0 0 15px rgba(0,0,0,0.1);
-}
-
-h1{
-    text-align: center;
-    color:#1f2d3d;
-    margin-bottom:10px;
-}
-
-.subtitle{
-    text-align: center;
-    color:#6c757d;
-    margin-bottom:30px;
-}
-
-.form-section{
-    margin-bottom:35px;
-}
-
-.form-section h2{
-    margin-bottom:20px;
-    border-bottom:2px solid #e9ecef;
-    padding-bottom:6px;
-    color:#2c3e50;
-}
-
-.form-grid{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    gap:20px;
-}
-
-.form-group{
-    display:flex;
-    flex-direction:column;
-}
-
-label{
-    font-weight:600;
-    margin-bottom:6px;
-    color:#333;
-}
-
-input,
-select{
-    padding:10px;
-    border:1px solid #ced4da;
-    border-radius:6px;
-    font-size:14px;
-    transition:0.2s;
-}
-
-input:focus,
-select:focus{
-    border-color:#007bff;
-    outline:none;
-    box-shadow:0 0 3px rgba(0,123,255,0.3);
-}
-
-.btn-guardar{
-    margin-top:20px;
-    background:#007bff;
-    color:white;
-    padding:12px 25px;
-    border:none;
-    border-radius:6px;
-    font-size:15px;
-    cursor:pointer;
-}
-
-.btn-guardar:hover{
-    background:#0056b3;
 }

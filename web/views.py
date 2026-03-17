@@ -23,9 +23,14 @@ def login_view(request):
 @login_required
 def dashboard(request):
     return render(request, 'web/dashboard.html')
+
 @login_required
 def registrar_alumno(request):
-    return render(request,'web/registrar_alumno.html')
+    return render(request,'web/registrar/registrar_alumno.html')
+@login_required
+def registrar_apoderado(request):
+    return render(request,'web/registrar/registrar_apoderado.html')
+
 @login_required
 def logout_view(request):
     logout(request)
