@@ -45,7 +45,7 @@ class Alumno(models.Model):
     distrito = models.CharField(max_length=50)
     email = models.EmailField()
 
-    Sede = models.ForeignKey(Sede, on_delete=models.CASCADE)
+    sede = models.ForeignKey(Sede, on_delete=models.CASCADE)
     apoderado = models.ForeignKey(Apoderado, on_delete=models.CASCADE)
 
     def __str__(self):
@@ -65,14 +65,14 @@ class Ciclo(models.Model):
     
 
 class Matricula(models.Model):
-    Alumno = models.ForeignKey(Alumno, on_delete=models.CASCADE)
+    alumno = models.ForeignKey(Alumno, on_delete=models.CASCADE)
     ciclo = models.ForeignKey(Ciclo, on_delete=models.CASCADE)
 
     fecha_matricula = models.DateField()
     estado = models.CharField(max_length=50)
 
     def __str__(self):
-        return f"{self.Alumno} {self.ciclo}"
+        return f"{self.alumno} {self.ciclo}"
     
 
 class Pago (models.Model):

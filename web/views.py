@@ -17,19 +17,24 @@ def login_view(request):
         else:
             messages.error(request, 'Usuario o Contraseña incorrecto')
 
-    return render(request, 'web/login.html')
+    return render(request, 'web/login/login.html')
 
 
 @login_required
 def dashboard(request):
-    return render(request, 'web/dashboard.html')
+    perfil = request.user.perfil
+
+    if perfil.tipo_usuario =='admin':
+        return render(request,'web/dashboard/dashboard_admin.html')
+    elif perfil.tipo_usuario == 'secretaria':
+        return render(request,'web/dashboard/dashboard_secre.html')
 
 @login_required
 def registrar_alumno(request):
-    return render(request,'web/registrar/registrar_alumno.html')
+    return render(request,'web/alumno/registrar_alumno.html')
 @login_required
 def registrar_apoderado(request):
-    return render(request,'web/registrar/registrar_apoderado.html')
+    return render(request,'web/apoderado/registrar_apoderado.html')
 
 @login_required
 def logout_view(request):
@@ -37,4 +42,4 @@ def logout_view(request):
     return redirect('login')
 @login_required
 def matriculas(request):
-    return render(request, 'web/matriculas/matricula.html')
+    return render(request, 'web/matricula/matricula.html')

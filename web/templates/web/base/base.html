@@ -14,9 +14,9 @@
 <link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}">
 </head>
 <body>
-<!-- =============================== -->
+
 <!-- CONTENEDOR GENERAL DEL SISTEMA -->
-<!-- =============================== -->
+
 <div class="layout">
 
     <!-- =============================== -->
@@ -28,37 +28,44 @@
 
         <nav class="menu">
 
-            <a href="{% url 'dashboard' %}">
-            🏠 Panel
-            </a>
+            <!--SECRETARIA-->
+            {% if request.user.perfil.tipo_usuario == 'secretaria' %}
+                <a href="{% url 'registrar_alumno' %}">
+                👨‍🎓 Registrar Alumno
+                </a>
 
-            <a href="{% url 'registrar_alumno' %}">
-            👨‍🎓 Registrar Alumno
-            </a>
+                <a href="{% url 'matricula' %}">
+                📚 Matrículas
+                </a>
 
-            <a href="{% url 'matricula' %}">
-            📚 Matrículas
-            </a>
+                <a href="#">
+                💰 Pagos
+                </a>
 
-            <a href="#">
-            👨‍🏫 Profesores
-            </a>
+               
+            {% endif %}
+            <!--ADMIN-->
+            {% if request.user.perfil.tipo_usuario == 'admin' %}
 
-            <a href="#">
-            🕒 Horarios
-            </a>
+                <a href="{% url 'dashboard' %}">
+                🏠 Panel
+                </a>
 
-            <a href="#">
-            💰 Pagos
-            </a>
+                <a href="#">
+                📊 Reportes
+                </a>
 
-            <a href="#">
-            📊 Reportes
-            </a>
+                <a href="#">
+                ⚙ Configuración
+                </a>
+                 <a href="#">
+                👨‍🏫 Profesores
+                </a>
 
-            <a href="#">
-            ⚙ Configuración
-            </a>
+                <a href="#">
+                🕒 Horarios
+                </a>
+            {% endif %}
 
         </nav>
 
