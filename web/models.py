@@ -88,7 +88,6 @@ class Pago (models.Model):
         return f"{self.monto} {self.matricula}"
 
 
-#no tocar falta implementar
 class FormacionAcademica(models.Model):
     alumno = models.OneToOneField(Alumno, on_delete=models.CASCADE)
     tipo_institucion = models.CharField(max_length=20)
@@ -96,8 +95,6 @@ class FormacionAcademica(models.Model):
     distrito_ie = models.CharField(max_length=50)
 
 
-
-#no tocar falta implementar
 class FormacionAdicional(models.Model):
     alumno = models.OneToOneField(Alumno, on_delete=models.CASCADE)
     estudio_previo = models.BooleanField()

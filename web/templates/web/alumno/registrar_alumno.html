@@ -6,8 +6,8 @@
 
 <h1>Registro Académico</h1>
 <p class="subtitle">Paso 1: Datos del Alumno</p>
-<form action="{% url 'registrar_apoderado' %}" method="GET">
-
+<form method="POST">
+{% csrf_token %}
 
 <!-- DATOS DEL ALUMNO -->
 <div class="form-section">
@@ -40,15 +40,15 @@
 
 <div class="form-group">
 <label>Fecha de Nacimiento</label>
-<input type="date" name="fecha">
+<input type="date" name="fecha_nacimiento">
 </div>
 
 <div class="form-group">
 <label>Sede</label>
 <select name="sede">
-<option>Huaura</option>
-<option>Huacho</option>
-<option>Sayán</option>
+    {% for sede in sedes %}
+        <option value="{{ sede.id }}">{{ sede.nombre }}</option>
+    {% endfor %}
 </select>
 </div>
 
@@ -64,7 +64,7 @@
 
 <div class="form-group">
 <label>Correo Electrónico</label>
-<input type="email" name="correo">
+<input type="email" name="email">
 </div>
 
 </div>
