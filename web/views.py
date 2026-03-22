@@ -52,6 +52,7 @@ def registrar_alumno(request):
 
 @login_required
 def registrar_apoderado(request):
+
     if request.method == 'POST':
         
         data = request.session.get('alumno')
@@ -82,6 +83,14 @@ def registrar_apoderado(request):
         return redirect('dashboard')
     return render(request, 'web/apoderado/registrar_apoderado.html')
 
+
+    return render(request,'web/apoderado/registrar_apoderado.html')
+@login_required
+def regis_form_academica(request):
+    return render(request,'web/formacion/regis_form_academica.html')
+@login_required
+def regis_form_adicional(request):
+    return render(request,'web/formacion/regis_form_adicional.html')
 @login_required
 def logout_view(request):
     logout(request)

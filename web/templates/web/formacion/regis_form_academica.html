@@ -1,0 +1,46 @@
+{% extends 'web/base/base.html' %}
+
+{% block content %}
+<div class="alumno-container">
+
+
+    <h2>Registro Académico</h2>
+    <p>Paso 3: Formación Académica</p>
+    <p>I.E en donde realizó sus estudios</p>
+
+    <form action="{% url 'regis_form_adicional' %}" method="GET">
+        {% csrf_token %}
+
+        <div class="row">
+            <div class="col-md-6">
+                <label>Institución *</label>
+                <input type="text" name="institucion" class="form-control" >
+            </div>
+            <div class="col-md-6">
+                <label>Distrito *</label>
+                <input type="text" name="Distrito" class="form-control" >
+            </div>
+
+            <div class="col-md-6">
+                <label>Tipo de institución *</label>
+                <select name="nivel" class="form-control" >
+                    <option value="">Seleccione</option>
+                    <option>Nacional</option>
+                    <option>Particular</option>
+                </select>
+            </div>
+
+
+        </div>
+
+        <br>
+
+        <a href="{% url 'registrar_apoderado' %}" class="btn btn-secondary">← Anterior</a>
+        <button class="btn-guardar" type="submit">
+            Siguiente →
+        </button>
+
+    </form>
+</div>
+
+{% endblock %}

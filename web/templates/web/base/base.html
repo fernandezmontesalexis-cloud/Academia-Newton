@@ -3,131 +3,136 @@
 <html lang="es">
 
 <head>
-<meta charset="UTF-8">
-<title>Newton en Red</title>
+    <meta charset="UTF-8">
+    <title>Newton en Red</title>
+    {% block extra_css %}{% endblock %}
 
-<!-- Bootstrap -->
- <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-<!-- CSS -->
-<link rel="stylesheet" href="{% static 'web/css/style.css' %}">
-<link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}">
+    <!-- Bootstrap -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- CSS -->
+    <link rel="stylesheet" href="{% static 'web/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}">
 </head>
+
 <body>
 
-<!-- CONTENEDOR GENERAL DEL SISTEMA -->
+    <!-- CONTENEDOR GENERAL DEL SISTEMA -->
 
-<div class="layout">
+    <div class="layout">
 
-    <!-- =============================== -->
-    <!-- SIDEBAR (MENÚ LATERAL) -->
-    <!-- =============================== -->
-    <aside class="sidebar">
+        <!-- =============================== -->
+        <!-- SIDEBAR (MENÚ LATERAL) -->
+        <!-- =============================== -->
+        <aside class="sidebar">
 
-        <h2 class="logo">Newton en Red</h2>
+            <h2 class="logo">Newton en Red</h2>
 
-        <nav class="menu">
+            <nav class="menu">
 
-            <!--SECRETARIA-->
-            {% if request.user.perfil.tipo_usuario == 'secretaria' %}
+                <!--SECRETARIA-->
+                {% if request.user.perfil.tipo_usuario == 'secretaria' %}
+                <a href="{% url 'dashboard'%}">
+                    🏠 Inicio
+                </a>
+                
                 <a href="{% url 'registrar_alumno' %}">
-                👨‍🎓 Registrar Alumno
+                    👨‍🎓 Registrar Alumno
                 </a>
 
                 <a href="{% url 'matricula' %}">
-                📚 Matrículas
+                    📚 Matrículas
                 </a>
 
                 <a href="#">
-                💰 Pagos
+                    💰 Pagos
                 </a>
 
-               
-            {% endif %}
-            <!--ADMIN-->
-            {% if request.user.perfil.tipo_usuario == 'admin' %}
+
+                {% endif %}
+                <!--ADMIN-->
+                {% if request.user.perfil.tipo_usuario == 'admin' %}
 
                 <a href="{% url 'dashboard' %}">
-                🏠 Panel
+                    🏠 Panel
                 </a>
 
                 <a href="#">
-                📊 Reportes
+                    📊 Reportes
                 </a>
 
                 <a href="#">
-                ⚙ Configuración
+                    ⚙ Configuración
                 </a>
-                 <a href="#">
-                👨‍🏫 Profesores
+                <a href="#">
+                    👨‍🏫 Profesores
                 </a>
 
                 <a href="#">
-                🕒 Horarios
+                    🕒 Horarios
                 </a>
-            {% endif %}
+                {% endif %}
 
-        </nav>
+            </nav>
 
-    </aside>
-
-
-    <!-- =============================== -->
-    <!-- CONTENIDO PRINCIPAL -->
-    <!-- =============================== -->
-    <main class="main">
-        <!-- =============================== -->
-        <!-- BARRA SUPERIOR -->
-        <!-- =============================== -->
-        <header class="topbar">
-
-            <div>
-                📅 Sistema Academia Newton
-            </div>
-
-            <!-- USUARIO -->
-            <div class="dropdown">
-
-                <a class="dropdown-toggle text-white text-decoration-none"
-                   href="#"
-                   data-bs-toggle="dropdown">
-
-                   👤 {{ request.user.username }}
-
-                </a>
-
-                <ul class="dropdown-menu dropdown-menu-end">
-
-                    <li>
-                        <a class="dropdown-item" href="{% url 'logout' %}">
-                        🚪 Cerrar sesión
-                        </a>
-                    </li>
-
-                </ul>
-
-            </div>
-
-        </header>
+        </aside>
 
 
         <!-- =============================== -->
-        <!-- CONTENIDO DINÁMICO -->
+        <!-- CONTENIDO PRINCIPAL -->
         <!-- =============================== -->
-        <section class="content">
+        <main class="main">
+            <!-- =============================== -->
+            <!-- BARRA SUPERIOR -->
+            <!-- =============================== -->
+            <header class="topbar">
 
-            {% block content %}
+                <div>
+                    📅 Sistema Academia Newton
+                </div>
 
-            {% endblock %}
+                <!-- USUARIO -->
+                <div class="dropdown">
 
-        </section>
+                    <a class="dropdown-toggle text-white text-decoration-none" href="#" data-bs-toggle="dropdown">
 
-    </main>
+                        👤 {{ request.user.username }}
 
-</div>
+                    </a>
 
-<!-- Bootstrap JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+                    <ul class="dropdown-menu dropdown-menu-end">
+
+                        <li>
+                            <a class="dropdown-item" href="{% url 'logout' %}">
+                                🚪 Cerrar sesión
+                            </a>
+                        </li>
+
+                    </ul>
+
+                </div>
+
+            </header>
+
+
+            <!-- =============================== -->
+            <!-- CONTENIDO DINÁMICO -->
+            <!-- =============================== -->
+            <section class="content">
+
+                {% block content %}
+
+                {% endblock %}
+
+            </section>
+
+        </main>
+
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
 </body>
+
 </html>

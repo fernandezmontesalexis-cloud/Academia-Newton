@@ -1,1 +1,33 @@
 {% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/dashboard_secre.css' %}">
+{% endblock %}
+{% block content %}
+
+<h2>Panel de Secretaria</h2>
+
+<div class="cards-container">
+
+    <a href="{% url 'registrar_alumno' %}" class="card">
+        👨‍🎓
+        <h3>Alumnos</h3>
+        <p>Registrar alumno</p>
+    </a>
+
+    <a href="{% url 'matricula' %}" class="card">
+        📚
+        <h3>Matrículas</h3>
+        <p>Ver matrículas</p>
+    </a>
+
+    <a href="#" class="card">
+        💰
+        <h3>Pagos</h3>
+        <p>Gestionar pagos</p>
+    </a>
+
+</div>
+
+{% endblock %}
