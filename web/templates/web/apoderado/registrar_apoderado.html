@@ -5,7 +5,7 @@
 
     <h1>Registro Académico</h1>
     <p class="subtitle">Paso 2: Datos del apoderado</p>
-    <form action="{% url 'regis_form_academica' %}" method="GET">
+    <form  method="POST">
         {% csrf_token %}
 
         <!-- DATOS APODERADO -->

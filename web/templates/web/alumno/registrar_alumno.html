@@ -9,6 +9,14 @@
 <form method="POST">
 {% csrf_token %}
 
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-danger">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
 <!-- DATOS DEL ALUMNO -->
 <div class="form-section">
 <div class="form-grid">

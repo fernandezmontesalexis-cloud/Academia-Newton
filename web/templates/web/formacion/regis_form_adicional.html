@@ -4,38 +4,41 @@
 <div class="alumno-container">
 
 
-    <h2>Registro Académico Adcional</h2>
+    <h2>Registro Académico Adicional</h2>
     <p>Paso 4: Formación Académica</p>
     <p>I.E en donde realizó sus estudios</p>
 
-    <form method="GET">
+    <form method="POST">
         {% csrf_token %}
 
         <div class="row">
             <div class="form-group">
                 <label>¿Has estudiado en alguna academia anteriormente</label><br>
 
-                <input type="radio" name="experiencia" value="si"> Sí
-                <input type="radio" name="experiencia" value="no"> No
+                <input type="radio" name="estudio_previo" value="si"> Sí
+                <input type="radio" name="estudio_previo" value="no"> No
             </div>
             <div class="col-md-6">
                 <label>Nombre de la carrera profesional de tu interes: *</label>
-                <input type="text" name="profesion" class="form-control" required>
+                <input type="text" name="carrera_interes" class="form-control" required>
             </div>
             <div class="col-md-6">
                 <label>Nombre de la segunda carrera profesional de tu interes: *</label>
-                <input type="text" name="segunda_profesion" class="form-control" required>
+                <input type="text" name="segunda_carrera" class="form-control" required>
             </div>
-
+            
             <div class="col-md-6">
-                <label>Tipo de institución *</label>
-                <select name="nivel" class="form-control" required>
-                    <option value="">Seleccione</option>
-                    <option>Nacional</option>
-                    <option>Particular</option>
+                <label>Tipo de estudio</label>
+                <select name="tipo_estudio">
+                    <option value="anual">Anual</option>
+                    <option value="semestral">Semestral</option>
+                    <option value="otros">Otros</option>
                 </select>
-            </div>
 
+                <label>Academia anterior</label>
+                <input type="text" name="academia_anterior">
+            </div>
+            
 
         </div>
 
