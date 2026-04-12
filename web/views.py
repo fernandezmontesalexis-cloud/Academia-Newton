@@ -98,3 +98,5 @@ def logout_view(request):
 @login_required
 def matriculas(request):
     return render(request, 'web/matricula/matricula.html')
+def pagos(request):
+    return render(request, 'web/pagos/pagos.html')

@@ -1,7 +1,39 @@
 {% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/dashboard_admin.css' %}">
+{% endblock %}
 {% block content %}
-<div class="container mt 4">
-<h2>Panel Del Sistema</h2>
-<p>Bienvenido Al Sistema De La Academia Newton En Red</p>
+
+<h2>Bienvenido Al Sistema De La Academia Newton En Red</h2>
+
+<div class="cards-container">
+
+
+    <a href="{% url 'matricula' %}" class="card">
+        <i class="fas fa-chart-pie"></i> 
+        <h3>Reportes</h3>
+        <p>Ver Reportes</p>
+    </a>
+
+    <a href="#" class="card">
+        <i class="fas fa-cog"></i>
+        <h3>Configuración</h3>
+        <p>Ver Configuración</p>
+    </a>
+    <a href="#" class="card">
+        <i class="fas fa-chalkboard-teacher"></i>
+        <h3>Profesores</h3>
+        <p>Ver Profesores</p>
+    </a>
+    <a href="#" class="card">
+        <i class="fas fa-clock"></i>
+        <h3>Horarios</h3>
+        <p>Ver Horarios</p>
+    </a>
+
+
 </div>
+
 {% endblock %}

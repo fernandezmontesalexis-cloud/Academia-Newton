@@ -1,0 +1,67 @@
+.pago-form label {
+    font-weight: bold;
+    margin-top: 10px;
+    display: block;
+}
+
+.pago-form input,
+.pago-form select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+}
+
+.pago-form input:focus,
+.pago-form select:focus {
+    outline: none;
+    border-color: #0d1b2a;
+}
+/* Contenedor de la lista */
+form ul {
+    list-style: none;
+    padding: 15px;
+    margin: 0;
+    display: grid;
+    /* Crea 2 columnas de igual tamaño */
+    grid-template-columns: 1fr 1fr; 
+    /* Espacio entre columnas y filas */
+    gap: 20px; 
+}
+
+/* Estilo para cada celda (li) */
+form li {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Para que el botón ocupe las dos columnas al final */
+form li:last-child {
+    grid-column: span 2; 
+    margin-top: 10px;
+}
+
+/* Estilos básicos para que se vea limpio */
+form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    color: #333;
+}
+
+form input, form select {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.btn-pagar {
+    background-color: #0f172a;
+    color: white;
+    padding: 12px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}

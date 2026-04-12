@@ -1,0 +1,71 @@
+{% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<h2><i class="fas fa-money-bill"></i> Registro de Pagos</h2>
+
+<div class="pagos-container">
+
+    <!-- FORMULARIO -->
+    <div class="card pago-form">
+        <h3>Nuevo Pago</h3>
+
+        <form method="POST">
+            {% csrf_token %}
+            <ul>
+                <li>
+
+                    <!-- Fecha -->
+                    <label>Fecha</label>
+                    <input type="date" name="fecha_pago" required>
+                </li>
+
+                <li>
+                    <!-- Cajero -->
+                    <label>Cajero</label>
+                    <input type="text" value="{{ request.user.username }}" readonly>
+                </li>
+                <li>
+                    <!-- Adquiriente -->
+                    <label>Adquiriente</label>
+                    <input type="text" name="adquiriente" placeholder="Nombre del apoderado o quien paga">
+                </li>
+
+                <li>
+                    <!-- Alumno -->
+                    <label>Alumno</label>
+                    <input type="text" name="alumno" placeholder="Nombre del alumno">
+                </li>
+                <li>
+                    <!-- Método de pago -->
+                    <label>Método de Pago</label>
+                    <select name="metodo_pago">
+                        <option value="efectivo">Efectivo</option>
+                        <option value="yape">Yape</option>
+                        <option value="transferencia">Transferencia</option>
+                    </select>
+                </li>
+                <li>
+                    <!-- Descripción -->
+                    <label>Descripción</label>
+                    <input type="text" name="descripcion" placeholder="Ej: Ciclo Matemática - Turno mañana">
+                </li>
+                <li>
+                    <!-- Monto -->
+                    <label>Monto</label>
+                    <input type="number" name="monto" placeholder="Ingrese monto" required>
+                </li>
+                <li>
+                    <button type="submit" class="btn-pagar">
+                        Registrar Pago
+                    </button>
+                </li>
+            </ul>
+
+        </form>
+    </div>
+
+</div>
+
+{% endblock %}

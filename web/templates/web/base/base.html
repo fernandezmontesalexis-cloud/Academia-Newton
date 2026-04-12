@@ -13,6 +13,8 @@
     <!-- CSS -->
     <link rel="stylesheet" href="{% static 'web/css/style.css' %}">
     <link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}">
+    <link rel="stylesheet" href="{% static 'web/css/pagos.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body>
@@ -33,19 +35,19 @@
                 <!--SECRETARIA-->
                 {% if request.user.perfil.tipo_usuario == 'secretaria' %}
                 <a href="{% url 'dashboard'%}">
-                    🏠 Inicio
+                    <i class="fas fa-home"></i> Inicio
                 </a>
-                
+
                 <a href="{% url 'registrar_alumno' %}">
-                    👨‍🎓 Registrar Alumno
+                    <i class="fas fa-user-graduate"></i> Registrar Alumno
                 </a>
 
                 <a href="{% url 'matricula' %}">
-                    📚 Matrículas
+                    <i class="fas fa-book"></i> Matrículas
                 </a>
 
-                <a href="#">
-                    💰 Pagos
+                <a href="{% url 'pagos' %}">
+                    <i class="fas fa-money-bill"></i> Pagos
                 </a>
 
 
@@ -54,22 +56,23 @@
                 {% if request.user.perfil.tipo_usuario == 'admin' %}
 
                 <a href="{% url 'dashboard' %}">
-                    🏠 Panel
+                    <i class="fas fa-chart-line"></i> Panel
                 </a>
 
                 <a href="#">
-                    📊 Reportes
+                    <i class="fas fa-chart-pie"></i> Reportes
                 </a>
 
                 <a href="#">
-                    ⚙ Configuración
-                </a>
-                <a href="#">
-                    👨‍🏫 Profesores
+                    <i class="fas fa-cog"></i> Configuración
                 </a>
 
                 <a href="#">
-                    🕒 Horarios
+                    <i class="fas fa-chalkboard-teacher"></i> Profesores
+                </a>
+
+                <a href="#">
+                    <i class="fas fa-clock"></i> Horarios
                 </a>
                 {% endif %}
 
@@ -88,25 +91,24 @@
             <header class="topbar">
 
                 <div>
-                    📅 Sistema Academia Newton
+                    <i class="fas fa-calendar-alt"></i> Sistema Academia Newton
                 </div>
 
                 <!-- USUARIO -->
                 <div class="dropdown">
 
                     <a class="dropdown-toggle text-white text-decoration-none" href="#" data-bs-toggle="dropdown">
-
-                        👤 {{ request.user.username }}
-
+                        <i class="fas fa-user"></i> {{ request.user.username }}
                     </a>
 
                     <ul class="dropdown-menu dropdown-menu-end">
 
                         <li>
                             <a class="dropdown-item" href="{% url 'logout' %}">
-                                🚪 Cerrar sesión
+                                <i class="fas fa-sign-out-alt"></i> Cerrar sesión
                             </a>
                         </li>
+
 
                     </ul>
 

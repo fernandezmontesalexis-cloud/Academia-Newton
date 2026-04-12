@@ -10,4 +10,5 @@ urlpatterns = [
     path('regis_form_adicional/',views.regis_form_adicional, name='regis_form_adicional'),
     path('logout/', views.logout_view, name='logout'),
     path('matriculas/', views.matriculas, name='matricula'),
+    path('pagos/', views.pagos, name='pagos'),
 ]
