@@ -8,5 +8,5 @@ admin.site.register(Alumno)
 admin.site.register(Ciclo)
 admin.site.register(Matricula)
 admin.site.register(Pago)
-
-#falta agregar
+admin.site.register(FormacionAcademica)
+admin.site.register(FormacionAdicional)
