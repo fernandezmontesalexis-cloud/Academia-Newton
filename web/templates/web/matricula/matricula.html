@@ -46,7 +46,7 @@ Exportar Excel
 
 <th>#</th>
 <th>Alumno</th>
-<th>Carrera</th>
+<th>Ciclo</th>
 <th>Turno</th>
 <th>Fecha</th>
 <th>Estado</th>
@@ -58,17 +58,18 @@ Exportar Excel
 
 <tbody>
 
+{% for m in matriculas %}
 <tr>
 
-<td>1</td>
-<td>Mersi Daniza Ponce</td>
-<td>Ingeniería de Sistemas</td>
-<td>Mañana</td>
-<td>2025-11-18</td>
+<td>{{ forloop.counter }}</td>
+<td>{{ m.alumno }}</td>
+<td>{{ m.ciclo.nombre }}</td>
+<td>Mañana</td> <!-- luego lo mejoras -->
+<td>{{ m.fecha_matricula }}</td>
 
 <td>
 <span class="badge bg-success">
-Activa
+{{ m.estado }}
 </span>
 </td>
 
@@ -77,6 +78,7 @@ Activa
 </td>
 
 </tr>
+{% endfor %}
 
 </tbody>
 

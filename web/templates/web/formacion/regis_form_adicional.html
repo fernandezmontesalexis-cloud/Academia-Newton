@@ -26,7 +26,7 @@
                 <label>Nombre de la segunda carrera profesional de tu interes: *</label>
                 <input type="text" name="segunda_carrera" class="form-control" required>
             </div>
-            
+
             <div class="col-md-6">
                 <label>Tipo de estudio</label>
                 <select name="tipo_estudio">
@@ -38,7 +38,14 @@
                 <label>Academia anterior</label>
                 <input type="text" name="academia_anterior">
             </div>
-            
+            <label>Ciclo *</label>
+            <select name="ciclo" required>
+                <option value="">Seleccione un ciclo</option>
+                {% for ciclo in ciclos %}
+                <option value="{{ ciclo.id }}">{{ ciclo.nombre }} - S/ {{ ciclo.precio }}</option>
+                {% endfor %}
+            </select>
+
 
         </div>
 

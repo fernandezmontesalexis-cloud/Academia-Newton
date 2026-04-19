@@ -3,6 +3,8 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from .models import Alumno, Apoderado, Sede, FormacionAcademica, FormacionAdicional
+from .models import Matricula, Pago, Ciclo
+from datetime import date
 
 
 def login_view(request):
@@ -34,19 +36,28 @@ def dashboard(request):
 def registrar_alumno(request):
     if request.method == 'POST':
 
+        fecha_nacimiento = request.POST.get('fecha_nacimiento')
+
+        # 🔥 VALIDACIÓN
+        if not fecha_nacimiento:
+            messages.error(request, "Debes ingresar la fecha de nacimiento")
+            return redirect('registrar_alumno')
+
         request.session['alumno'] = {
             'apellido_paterno': request.POST.get('apellido_paterno'),
             'apellido_materno': request.POST.get('apellido_materno'),
             'nombres': request.POST.get('nombres'),
             'dni': request.POST.get('dni'),
             'celular': request.POST.get('celular'),
-            'fecha_nacimiento': request.POST.get('fecha_nacimiento'),
+            'fecha_nacimiento': fecha_nacimiento,  # ← ya validado
             'direccion': request.POST.get('direccion'),
             'distrito': request.POST.get('distrito'),
             'email': request.POST.get('email'),
             'sede': request.POST.get('sede'),
         }
+
         return redirect('registrar_apoderado')
+
     sedes = Sede.objects.all()
     return render(request, 'web/alumno/registrar_alumno.html', {'sedes': sedes})
 
@@ -135,20 +146,64 @@ def regis_form_adicional(request):
             carrera_interes = request.POST.get('carrera_interes'),
             segunda_carrera = request.POST.get('segunda_carrera')
         )
+
+                # 🔥 NUEVO CODIGO CORRECTO
+        ciclo_id = request.POST.get('ciclo')
+
+        if not ciclo_id:
+            messages.error(request, "Debe seleccionar un ciclo")
+            return redirect('regis_form_adicional')
+
+        ciclo = Ciclo.objects.get(id=ciclo_id)
+
+        matricula = Matricula.objects.create(
+            alumno=alumno,
+            ciclo=ciclo,
+            fecha_matricula=date.today(),
+            estado="pendiente"
+        )
         
         #para que se quede limpia la session
         del request.session['alumno']
         del request.session['apoderado']
         del request.session['formacion_academica']
 
-        return redirect('dashboard')
-    return render(request,'web/formacion/regis_form_adicional.html')
+        return redirect('pagos', matricula_id=matricula.id)
+    ciclos = Ciclo.objects.all()
+    return render(request,'web/formacion/regis_form_adicional.html', {
+    'ciclos': ciclos
+    })
 @login_required
 def logout_view(request):
     logout(request)
     return redirect('login')
 @login_required
 def matriculas(request):
-    return render(request, 'web/matricula/matricula.html')
-def pagos(request):
-    return render(request, 'web/pagos/pagos.html')
+    matriculas = Matricula.objects.select_related('alumno', 'ciclo').all()
+
+    return render(request, 'web/matricula/matricula.html', {
+        'matriculas': matriculas
+    })
+@login_required
+def pagos(request, matricula_id):
+    matricula = Matricula.objects.get(id=matricula_id)
+
+    if request.method == 'POST':
+        fecha = request.POST.get('fecha')
+        monto = request.POST.get('monto')
+        metodo = request.POST.get('metodo_pago')
+
+        Pago.objects.create(
+            matricula=matricula,
+            perfil=request.user.perfil,
+            fecha_pago=fecha,
+            monto=monto,
+            metodo_pago=metodo,
+            estado="completado"
+        )
+
+        return redirect('dashboard')
+
+    return render(request, 'web/pagos/pagos.html', {
+        'matricula': matricula
+    })
