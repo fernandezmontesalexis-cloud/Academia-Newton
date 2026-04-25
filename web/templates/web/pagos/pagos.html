@@ -10,7 +10,6 @@
     <!-- FORMULARIO -->
     <div class="card pago-form">
         <h3>Nuevo Pago</h3>
-
         <form method="POST">
             {% csrf_token %}
             <ul>
@@ -18,7 +17,7 @@
 
                     <!-- Fecha -->
                     <label>Fecha</label>
-                    <input type="date" name="fecha" required>
+                
                 </li>
 
                 <li>
@@ -33,9 +32,7 @@
                 </li>
 
                 <li>
-                    <!-- Alumno -->
-                    <label>Alumno</label>
-                    <input type="text" name="alumno" placeholder="Nombre del alumno">
+                    <p><strong>Alumno:</strong> {{ matricula.alumno }}</p>
                 </li>
                 <li>
                     <!-- Método de pago -->

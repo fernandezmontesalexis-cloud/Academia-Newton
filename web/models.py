@@ -26,7 +26,7 @@ class Perfil(models.Model):
 
 class Apoderado(models.Model):
     nombre_completo = models.CharField(max_length=100)
-    dni = models.CharField(max_length=8)
+    dni = models.CharField(max_length=8)    
     celular = models.CharField(max_length=9)
     direccion = models.CharField(max_length=100)
 
@@ -69,11 +69,17 @@ class Matricula(models.Model):
     ciclo = models.ForeignKey(Ciclo, on_delete=models.CASCADE)
 
     fecha_matricula = models.DateField()
-    estado = models.CharField(max_length=50)
+
+    ESTADOS = [
+        ('pendiente', 'Pendiente'),
+        ('pagado', 'Pagado'),
+    ]
+    estado = models.CharField(max_length=20, choices=ESTADOS)
+
+    registrado_por = models.ForeignKey(Perfil, on_delete=models.CASCADE)  # mejora
 
     def __str__(self):
         return f"{self.alumno} {self.ciclo}"
-    
 
 class Pago (models.Model):
     matricula = models.ForeignKey(Matricula, on_delete=models.CASCADE)
@@ -81,7 +87,12 @@ class Pago (models.Model):
 
     fecha_pago = models.DateField()
     monto = models.DecimalField(max_digits=10, decimal_places=2)
-    metodo_pago = models.CharField(max_length=30)
+    METODOS = [
+    ('efectivo', 'Efectivo'),
+    ('yape', 'Yape'),
+    ('transferencia', 'Transferencia'),
+]
+    metodo_pago = models.CharField(max_length=20, choices=METODOS)
     estado = models.CharField(max_length=30)
 
     def __str__(self):
