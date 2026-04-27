@@ -14,19 +14,25 @@
         <div class="row">
             <div class="col-md-6">
                 <label>Institución *</label>
-                <input type="text" name="nombre_ie" class="form-control" >
+                <input type="text" name="nombre_ie" value="{{ formacion.nombre_ie }}">
             </div>
             <div class="col-md-6">
                 <label>Distrito *</label>
-                <input type="text" name="distrito_ie" class="form-control" >
+                <input type="text" name="distrito_ie" value="{{ formacion.distrito_ie }}">
             </div>
 
             <div class="col-md-6">
                 <label>Tipo de institución *</label>
-                <select name="tipo_institucion" class="form-control" >
+                <select name="tipo_institucion" class="form-control">
                     <option value="">Seleccione</option>
-                    <option>Nacional</option>
-                    <option>Particular</option>
+
+                    <option value="Nacional" {% if formacion.tipo_institucion == "Nacional" %}selected{% endif %}>
+                        Nacional
+                    </option>
+
+                    <option value="Particular" {% if formacion.tipo_institucion == "Particular" %}selected{% endif %}>
+                        Particular
+                    </option>
                 </select>
             </div>
 
@@ -39,6 +45,9 @@
         <button class="btn-guardar" type="submit">
             Siguiente →
         </button>
+        <a href="{% url 'cancelar_registro' %}" class="btn btn-danger" onclick="return confirmarCancelacion()">
+            Cancelar
+        </a>
 
     </form>
 </div>

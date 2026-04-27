@@ -12,42 +12,73 @@
         {% csrf_token %}
 
         <div class="row">
-            <div class="form-group">
-                <label>¿Has estudiado en alguna academia anteriormente</label><br>
 
-                <input type="radio" name="estudio_previo" value="si"> Sí
-                <input type="radio" name="estudio_previo" value="no"> No
-            </div>
-            <div class="col-md-6">
-                <label>Nombre de la carrera profesional de tu interes: *</label>
-                <input type="text" name="carrera_interes" class="form-control" required>
-            </div>
-            <div class="col-md-6">
-                <label>Nombre de la segunda carrera profesional de tu interes: *</label>
-                <input type="text" name="segunda_carrera" class="form-control" required>
-            </div>
+    <!-- RADIO -->
+    <div class="col-12 mb-3">
+        <label class="form-label">¿Has estudiado en alguna academia anteriormente?</label>
 
-            <div class="col-md-6">
-                <label>Tipo de estudio</label>
-                <select name="tipo_estudio">
-                    <option value="anual">Anual</option>
-                    <option value="semestral">Semestral</option>
-                    <option value="otros">Otros</option>
-                </select>
-
-                <label>Academia anterior</label>
-                <input type="text" name="academia_anterior">
-            </div>
-            <label>Ciclo *</label>
-            <select name="ciclo" required>
-                <option value="">Seleccione un ciclo</option>
-                {% for ciclo in ciclos %}
-                <option value="{{ ciclo.id }}">{{ ciclo.nombre }} - S/ {{ ciclo.precio }}</option>
-                {% endfor %}
-            </select>
-
-
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="estudio_previo" value="si"
+            {% if formacion_adicional.estudio_previo == "si" %}checked{% endif %}>
+            <label class="form-check-label">Sí</label>
         </div>
+
+        <div class="form-check">
+            <input class="form-check-input" type="radio" name="estudio_previo" value="no"
+            {% if formacion_adicional.estudio_previo == "no" %}checked{% endif %}>
+            <label class="form-check-label">No</label>
+        </div>
+    </div>
+
+    <!-- FILA 1 -->
+    <div class="col-md-6 mb-3">
+        <label class="form-label">Carrera profesional de tu interés *</label>
+        <input type="text" name="carrera_interes" class="form-control" required
+        value="{{ formacion_adicional.carrera_interes }}">
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <label class="form-label">Segunda carrera profesional *</label>
+        <input type="text" name="segunda_carrera" class="form-control" required
+        value="{{ formacion_adicional.segunda_carrera }}">
+    </div>
+
+    <!-- FILA 2 -->
+    <div class="col-md-4 mb-3">
+        <label class="form-label">Tipo de estudio</label>
+        <select name="tipo_estudio" class="form-select">
+            <option value="">Seleccione</option>
+
+            <option value="anual" {% if formacion_adicional.tipo_estudio == "anual" %}selected{% endif %}>Anual</option>
+            <option value="semestral" {% if formacion_adicional.tipo_estudio == "semestral" %}selected{% endif %}>Semestral</option>
+            <option value="otros" {% if formacion_adicional.tipo_estudio == "otros" %}selected{% endif %}>Otros</option>
+        </select>
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <label class="form-label">Academia anterior</label>
+        <input type="text" name="academia_anterior" class="form-control"
+        value="{{ formacion_adicional.academia_anterior }}">
+    </div>
+
+    <div class="col-md-4 mb-3">
+        <label class="form-label">Ciclo *</label>
+        <select name="ciclo" class="form-select" required>
+            <option value="">Seleccione un ciclo</option>
+
+            {% for ciclo in ciclos %}
+            <option value="{{ ciclo.id }}"
+            {% if formacion_adicional.ciclo|stringformat:"s" == ciclo.id|stringformat:"s" %}
+            selected
+            {% endif %}>
+                {{ ciclo.nombre }} - S/ {{ ciclo.precio }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+</div>
+
 
         <br>
 
@@ -55,6 +86,9 @@
         <button class="btn-guardar">
             Guardar Registro
         </button>
+        <a href="{% url 'cancelar_registro' %}" class="btn btn-danger" onclick="return confirmarCancelacion()">
+            Cancelar
+        </a>
 
     </form>
 </div>

@@ -5,7 +5,7 @@
 
     <h1>Registro Académico</h1>
     <p class="subtitle">Paso 2: Datos del apoderado</p>
-    <form  method="POST">
+    <form method="POST">
         {% csrf_token %}
 
         <!-- DATOS APODERADO -->
@@ -17,22 +17,22 @@
 
                 <div class="form-group">
                     <label>Nombre Completo *</label>
-                    <input type="text" name="nombre_apoderado">
+                    <input type="text" name="nombre_apoderado" value="{{ apoderado.nombre_apoderado }}">
                 </div>
 
                 <div class="form-group">
                     <label>DNI *</label>
-                    <input type="text" name="dni_apoderado">
+                    <input type="text" name="dni_apoderado" value="{{ apoderado.dni_apoderado }}">
                 </div>
 
                 <div class="form-group">
                     <label>Celular *</label>
-                    <input type="text" name="celular_apoderado">
+                    <input type="text" name="celular_apoderado" value="{{ apoderado.celular_apoderado }}">
                 </div>
 
                 <div class="form-group">
                     <label>Dirección</label>
-                    <input type="text" name="direccion_apoderado">
+                    <input type="text" name="direccion_apoderado" value="{{ apoderado.direccion_apoderado }}">
                 </div>
 
             </div>
@@ -43,6 +43,9 @@
         <button class="btn-guardar" type="submit">
             Siguiente →
         </button>
+        <a href="{% url 'cancelar_registro' %}" class="btn btn-danger" onclick="return confirmarCancelacion()">
+            Cancelar
+        </a>
 
 
     </form>

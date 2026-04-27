@@ -4,85 +4,91 @@
 <link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}">
 <div class="alumno-container">
 
-<h1>Registro Académico</h1>
-<p class="subtitle">Paso 1: Datos del Alumno</p>
-<form method="POST">
-{% csrf_token %}
+    <h1>Registro Académico</h1>
+    <p class="subtitle">Paso 1: Datos del Alumno</p>
+    <form method="POST">
+        {% csrf_token %}
 
-{% if messages %}
-    {% for message in messages %}
+        {% if messages %}
+        {% for message in messages %}
         <div class="alert alert-danger">
             {{ message }}
         </div>
-    {% endfor %}
-{% endif %}
+        {% endfor %}
+        {% endif %}
 
-<!-- DATOS DEL ALUMNO -->
-<div class="form-section">
-<div class="form-grid">
+        <!-- DATOS DEL ALUMNO -->
+        <div class="form-section">
+            <div class="form-grid">
 
-<div class="form-group">
-<label>Apellido Paterno *</label>
-<input type="text" name="apellido_paterno">
-</div>
+                <div class="form-group">
+                    <label>Apellido Paterno *</label>
+                    <input type="text" name="apellido_paterno" value="{{ alumno.apellido_paterno }}">
+                </div>
 
-<div class="form-group">
-<label>Apellido Materno *</label>
-<input type="text" name="apellido_materno">
-</div>
+                <div class="form-group">
+                    <label>Apellido Materno *</label>
+                    <input type="text" name="apellido_materno" value="{{ alumno.apellido_materno }}">
 
-<div class="form-group">
-<label>Nombres *</label>
-<input type="text" name="nombres">
-</div>
+                </div>
 
-<div class="form-group">
-<label>DNI *</label>
-<input type="text" name="dni">
-</div>
+                <div class="form-group">
+                    <label>Nombres *</label>
+                    <input type="text" name="nombres" value="{{ alumno.nombres }}">
+                </div>
 
-<div class="form-group">
-<label>Celular</label>
-<input type="text" name="celular">
-</div>
+                <div class="form-group">
+                    <label>DNI *</label>
+                    <input type="text" name="dni" value="{{ alumno.dni }}">
+                </div>
 
-<div class="form-group">
-<label>Fecha de Nacimiento</label>
-<input type="date" name="fecha_nacimiento" required>
-</div>
+                <div class="form-group">
+                    <label>Celular</label>
+                    <input type="text" name="celular" value="{{ alumno.celular }}">
+                </div>
 
-<div class="form-group">
-<label>Sede</label>
-<select name="sede">
-    {% for sede in sedes %}
-        <option value="{{ sede.id }}">{{ sede.nombre }}</option>
-    {% endfor %}
-</select>
-</div>
+                <div class="form-group">
+                    <label>Fecha de Nacimiento</label>
+                    <input type="date" name="fecha_nacimiento" value="{{ alumno.fecha_nacimiento }}">
+                </div>
 
-<div class="form-group">
-<label>Dirección</label>
-<input type="text" name="direccion">
-</div>
+                <div class="form-group">
+                    <label>Sede</label>
+                    <select name="sede">
+                        {% for sede in sedes %}
+                        <option value="{{ sede.id }}" {% if alumno.sede == sede.id|stringformat:"s" %}selected{% endif %}>
+                            {{ sede.nombre }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-<div class="form-group">
-<label>Distrito</label>
-<input type="text" name="distrito">
-</div>
+                <div class="form-group">
+                    <label>Dirección</label>
+                    <input type="text" name="direccion" value="{{ alumno.direccion }}">
+                </div>
 
-<div class="form-group">
-<label>Correo Electrónico</label>
-<input type="email" name="email">
-</div>
+                <div class="form-group">
+                    <label>Distrito</label>
+                    <input type="text" name="distrito" value="{{ alumno.distrito }}">
+                </div>
 
-</div>
-</div>
+                <div class="form-group">
+                    <label>Correo Electrónico</label>
+                    <input type="email" name="email" value="{{ alumno.email }}">
+                </div>
 
-<button class="btn-guardar" type="submit">
-Siguiente →
-</button>
+            </div>
+        </div>
 
-</form>
+        <button class="btn-guardar" type="submit">
+            Siguiente →
+        </button>
+        <a href="{% url 'cancelar_registro' %}" class="btn btn-danger" onclick="return confirmarCancelacion()">
+            Cancelar
+        </a>
+
+    </form>
 
 </div>
 
