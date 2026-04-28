@@ -10,5 +10,6 @@ urlpatterns = [
     path('regis_form_adicional/',views.regis_form_adicional, name='regis_form_adicional'),
     path('logout/', views.logout_view, name='logout'),
     path('matriculas/', views.matriculas, name='matricula'),
-path('pagos/<int:matricula_id>/', views.pagos, name='pagos'),
+    path('pagos/<int:matricula_id>/', views.pagos, name='pagos'),
+    path('cancelar-registro/', views.cancelar_registro, name='cancelar_registro'),
 ]

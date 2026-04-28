@@ -59,9 +59,14 @@ def registrar_alumno(request):
         }
 
         return redirect('registrar_apoderado')
-
     sedes = Sede.objects.all()
-    return render(request, 'web/alumno/registrar_alumno.html', {'sedes': sedes})
+
+    alumno = request.session.get('alumno', {})  # 🔥 AQUI ESTÁ LA CLAVE
+
+    return render(request, 'web/alumno/registrar_alumno.html', {
+        'sedes': sedes,
+        'alumno': alumno   # 🔥 LO ENVÍAS AL HTML
+    })
 
 @login_required
 def registrar_apoderado(request):
@@ -75,7 +80,12 @@ def registrar_apoderado(request):
             'direccion_apoderado': request.POST.get('direccion_apoderado'),
         }
         return redirect('regis_form_academica')
-    return render(request,'web/apoderado/registrar_apoderado.html')
+    apoderado = request.session.get('apoderado', {})
+
+    return render(request, 'web/apoderado/registrar_apoderado.html', {
+        'apoderado': apoderado
+    })
+
 
 @login_required
 def regis_form_academica(request):
@@ -87,11 +97,26 @@ def regis_form_academica(request):
             'distrito_ie':request.POST.get('distrito_ie'),
         }
         return redirect('regis_form_adicional')
-    return render(request,'web/formacion/regis_form_academica.html')
+        # 🔥 ESTO VA FUERA DEL IF
+    formacion = request.session.get('formacion_academica', {})
+
+    return render(request, 'web/formacion/regis_form_academica.html', {
+        'formacion': formacion
+    })
 @login_required
 def regis_form_adicional(request):
 
     if request.method == 'POST':
+
+        # 🔥 GUARDAR EN SESSION (ESTO ES LO QUE TE FALTABA)
+        request.session['formacion_adicional'] = {
+            'estudio_previo': request.POST.get('estudio_previo'),
+            'tipo_estudio': request.POST.get('tipo_estudio'),
+            'academia_anterior': request.POST.get('academia_anterior'),
+            'carrera_interes': request.POST.get('carrera_interes'),
+            'segunda_carrera': request.POST.get('segunda_carrera'),
+            'ciclo': request.POST.get('ciclo'),
+        }
 
         alumno_data = request.session.get('alumno')
         apoderado_data = request.session.get('apoderado')
@@ -138,16 +163,18 @@ def regis_form_adicional(request):
             distrito_ie=formacion_acad_data['distrito_ie']
         )
 
+        form_adicional = request.session.get('formacion_adicional')
+
         FormacionAdicional.objects.create(
             alumno=alumno,
-            estudio_previo=request.POST.get('estudio_previo') == 'si',
-            tipo_estudio=request.POST.get('tipo_estudio'),
-            academia_anterior=request.POST.get('academia_anterior'),
-            carrera_interes=request.POST.get('carrera_interes'),
-            segunda_carrera=request.POST.get('segunda_carrera')
+            estudio_previo=form_adicional['estudio_previo'] == 'si',
+            tipo_estudio=form_adicional['tipo_estudio'],
+            academia_anterior=form_adicional['academia_anterior'],
+            carrera_interes=form_adicional['carrera_interes'],
+            segunda_carrera=form_adicional['segunda_carrera']
         )
 
-        ciclo_id = request.POST.get('ciclo')
+        ciclo_id = form_adicional.get('ciclo')
 
         if not ciclo_id:
             messages.error(request, "Debe seleccionar un ciclo")
@@ -167,11 +194,15 @@ def regis_form_adicional(request):
         request.session.pop('alumno', None)
         request.session.pop('apoderado', None)
         request.session.pop('formacion_academica', None)
+        request.session.pop('formacion_adicional', None)
 
         return redirect('pagos', matricula_id=matricula.id)
 
     ciclos = Ciclo.objects.all()
+    formacion_adicional = request.session.get('formacion_adicional', {})
+
     return render(request,'web/formacion/regis_form_adicional.html', {
+        'formacion_adicional': formacion_adicional,
         'ciclos': ciclos
     })
 @login_required
@@ -263,3 +294,11 @@ def pagos(request, matricula_id):
         'total_ciclo': total_ciclo,
         'deuda': deuda
     })
+@login_required
+def cancelar_registro(request):
+    request.session.pop('alumno', None)
+    request.session.pop('apoderado', None)
+    request.session.pop('formacion_academica', None)
+    request.session.pop('formacion_adicional', None)
+
+    return redirect('dashboard')
