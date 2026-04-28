@@ -6,6 +6,8 @@ from .models import Alumno, Apoderado, Sede, FormacionAcademica, FormacionAdicio
 from .models import Matricula, Pago, Ciclo
 from datetime import date
 from django.db.models import Sum
+from decimal import Decimal
+from decimal import InvalidOperation
 
 
 def login_view(request):
@@ -39,7 +41,7 @@ def registrar_alumno(request):
 
         fecha_nacimiento = request.POST.get('fecha_nacimiento')
 
-        # 🔥 VALIDACIÓN
+        # VALIDACIÓN
         if not fecha_nacimiento:
             messages.error(request, "Debes ingresar la fecha de nacimiento")
             return redirect('registrar_alumno')
@@ -54,7 +56,6 @@ def registrar_alumno(request):
             'direccion': request.POST.get('direccion'),
             'distrito': request.POST.get('distrito'),
             'email': request.POST.get('email'),
-            'sede': request.POST.get('sede'),
         }
 
         return redirect('registrar_apoderado')
@@ -114,7 +115,7 @@ def regis_form_adicional(request):
                 direccion=apoderado_data['direccion_apoderado']
             )
 
-        sede = Sede.objects.get(id=alumno_data['sede'])
+        sede = request.user.perfil.sede
 
         alumno = Alumno.objects.create(
             apellido_paterno=alumno_data['apellido_paterno'],
@@ -179,16 +180,34 @@ def logout_view(request):
     return redirect('login')
 @login_required
 def matriculas(request):
-    hoy = date.today()
 
+    # base queryset
     matriculas = Matricula.objects.filter(
-        fecha_matricula=hoy,
         alumno__sede=request.user.perfil.sede
     ).select_related('alumno', 'ciclo')
 
-    return render(request, 'web/matricula/matricula.html', {
+    # búsqueda por DNI
+    dni = request.GET.get('dni')
+
+    if dni:
+        matriculas = matriculas.filter(alumno__dni__icontains=dni)
+
+    #primero pendientes, luego pagados, y los más recientes arriba
+    matriculas = matriculas.order_by('estado', '-fecha_matricula')
+
+    #calcular pagos y deudas
+
+    for m in matriculas:
+        total_pagado = Pago.objects.filter(matricula=m).aggregate(
+            Sum('monto')
+        )['monto__sum'] or 0
+
+        m.total_pagado = total_pagado
+        m.deuda = m.ciclo.precio - total_pagado
+
+    return render(request, 'web/matricula/matricula.html', {    
         'matriculas': matriculas
-    })
+    })   
 
 @login_required
 def pagos(request, matricula_id):
@@ -204,8 +223,8 @@ def pagos(request, matricula_id):
 
     if request.method == 'POST':
         try:
-            monto = float(request.POST.get('monto'))
-        except:
+            monto = Decimal(request.POST.get('monto'))
+        except (InvalidOperation, TypeError):
             messages.error(request, "Monto inválido")
             return redirect('pagos', matricula_id=matricula.id)
 
@@ -236,7 +255,7 @@ def pagos(request, matricula_id):
 
         matricula.save()
 
-        return redirect('registrar_alumno')
+        return redirect('matricula')
 
     return render(request, 'web/pagos/pagos.html', {
         'matricula': matricula,

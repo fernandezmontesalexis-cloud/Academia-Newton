@@ -13,17 +13,19 @@
         <form method="POST">
             {% csrf_token %}
             <ul>
+                <!-- feccha -->
                 <li>
-
-                    <!-- Fecha -->
-                    <label>Fecha</label>
-                
+                <label>Fecha</label>
+                <p class="form-control-plaintext">
+                    {% now 'd/m/Y' %}
+                </p>
                 </li>
-
+                <!-- cajero -->
                 <li>
-                    <!-- Cajero -->
                     <label>Cajero</label>
-                    <input type="text" value="{{ request.user.username }}" readonly>
+                    <p class="form-control-plaintext">
+                        {{ request.user.username }}
+                    </p>
                 </li>
                 <li>
                     <!-- Adquiriente -->
@@ -32,7 +34,10 @@
                 </li>
 
                 <li>
-                    <p><strong>Alumno:</strong> {{ matricula.alumno }}</p>
+                    <label>Alumno</label>
+                    <p class="form-control-plaintext">
+                        {{ matricula.alumno }}
+                    </p>
                 </li>
                 <li>
                     <!-- Método de pago -->

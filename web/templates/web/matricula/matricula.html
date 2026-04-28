@@ -14,14 +14,6 @@
 
 <div>
 
-<button class="btn btn-primary">
-Volver al Panel
-</button>
-
-<button class="btn btn-success">
-Registrar Matricula
-</button>
-
 <button class="btn btn-success">
 Exportar Excel
 </button>
@@ -37,49 +29,73 @@ Exportar Excel
 <div class="card mt-4">
 
 <h5>Matriculas Registradas</h5>
+<form method="GET" class="mb-3">
+    <div class="d-flex">
+        <input type="text" name="dni" class="form-control" placeholder="Buscar por DNI">
+        <button type="submit" class="btn btn-primary ms-2">Buscar</button>
+    </div>
+</form>
 
 <table class="table">
 
 <thead>
-
 <tr>
-
-<th>#</th>
-<th>Alumno</th>
-<th>Ciclo</th>
-<th>Turno</th>
-<th>Fecha</th>
-<th>Estado</th>
-<th>Acciones</th>
-
+    <th>#</th>
+    <th>Alumno</th>
+    <th>Ciclo</th>
+    <th>Fecha</th>
+    <th>Estado</th>
+    <th>Pagado</th>
+    <th>Deuda</th>
+    <th>Acciones</th>
 </tr>
-
 </thead>
 
 <tbody>
-
 {% for m in matriculas %}
 <tr>
 
 <td>{{ forloop.counter }}</td>
-<td>{{ m.alumno }}</td>
-<td>{{ m.ciclo.nombre }}</td>
-<td>Mañana</td> <!-- luego lo mejoras -->
-<td>{{ m.fecha_matricula }}</td>
 
 <td>
-<span class="badge bg-success">
-{{ m.estado }}
-</span>
+    {{ m.alumno }} <br>
+    <small>DNI: {{ m.alumno.dni }}</small>
+</td>
+
+<td>{{ m.ciclo.nombre }}</td>
+
+<td>{{ m.fecha_matricula|date:"d/m/Y" }}</td>
+
+<td>
+    {% if m.estado == "pendiente" %}
+        <span class="badge bg-warning text-dark">Pendiente</span>
+    {% else %}
+        <span class="badge bg-success">Pagado</span>
+    {% endif %}
+</td>
+
+<td>S/. {{ m.ciclo.precio }}</td>
+
+<td>
+    {% if m.deuda > 0 %}
+        <span class="text-danger">S/. {{ m.deuda }}</span>
+    {% else %}
+        <span class="text-success">0</span>
+    {% endif %}
 </td>
 
 <td>
-✏ 🗑
+    {% if m.estado == "pendiente" %}
+        <a href="{% url 'pagos' m.id %}" class="btn btn-sm btn-success">
+            Pagar
+        </a>
+    {% else %}
+        <span class="text-success">✔ Pagado</span>
+    {% endif %}
 </td>
 
 </tr>
 {% endfor %}
-
 </tbody>
 
 </table>
