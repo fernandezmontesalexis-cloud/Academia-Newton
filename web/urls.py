@@ -12,4 +12,5 @@ urlpatterns = [
     path('matriculas/', views.matriculas, name='matricula'),
     path('pagos/<int:matricula_id>/', views.pagos, name='pagos'),
     path('cancelar-registro/', views.cancelar_registro, name='cancelar_registro'),
+    path('reportes-sedes/', views.reportes_sedes, name='reportes_sedes'),
 ]

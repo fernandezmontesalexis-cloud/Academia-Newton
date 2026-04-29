@@ -302,3 +302,5 @@ def cancelar_registro(request):
     request.session.pop('formacion_adicional', None)
 
     return redirect('dashboard')
+def reportes_sedes(request):
+    return render(request, 'web/sedes/reportes_sedes.html')

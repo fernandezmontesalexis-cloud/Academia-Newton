@@ -1,0 +1,33 @@
+
+{% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/reportes_sedes.css' %}">
+{% endblock %}
+{% block content %}
+<h2>Seleccionar Sede</h2>
+
+<div class="contenedor-sedes">
+
+    <div class="card-sede">
+        <h3>Sede Huacho</h3>
+        <p>Ver alumnos</p>
+        <a href="{% url 'matricula' %}" class="btn-ingresar">Ingresar</a>
+    </div>
+
+    <div class="card-sede">
+        <h3>Sede Huaura</h3>
+        <p>Ver alumnos</p>
+        <a href="{% url 'matricula' %}" class="btn-ingresar">Ingresar</a>
+    </div>
+
+    <div class="card-sede">
+        <h3>Sede Sayan</h3>
+        <p>Ver alumnos</p>
+        <a href="{% url 'matricula' %}" class="btn-ingresar">Ingresar</a>
+    </div>
+
+
+</div>
+{% endblock %}
