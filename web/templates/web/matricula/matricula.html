@@ -40,7 +40,7 @@ Exportar Excel
 
 <thead>
 <tr>
-    <th>#</th>
+    <th>N.</th>
     <th>Alumno</th>
     <th>Ciclo</th>
     <th>Fecha</th>
@@ -74,7 +74,7 @@ Exportar Excel
     {% endif %}
 </td>
 
-<td>S/. {{ m.ciclo.precio }}</td>
+<td>S/. {{ m.total_pagado }}</td>
 
 <td>
     {% if m.deuda > 0 %}

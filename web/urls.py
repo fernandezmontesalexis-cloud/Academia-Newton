@@ -13,4 +13,6 @@ urlpatterns = [
     path('pagos/<int:matricula_id>/', views.pagos, name='pagos'),
     path('cancelar-registro/', views.cancelar_registro, name='cancelar_registro'),
     path('reportes-sedes/', views.reportes_sedes, name='reportes_sedes'),
+    path('alumnos/', views.lista_alumnos, name='lista_alumnos'),
+    path('alumno/estado/<int:alumno_id>/', views.cambiar_estado_alumno, name='cambiar_estado_alumno'),
 ]

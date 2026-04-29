@@ -23,23 +23,23 @@
 
                 <div class="form-group">
                     <label>Apellido Paterno *</label>
-                    <input type="text" name="apellido_paterno" value="{{ alumno.apellido_paterno }}">
+                    <input type="text" name="apellido_paterno" required value="{{ alumno.apellido_paterno }}">
                 </div>
 
                 <div class="form-group">
                     <label>Apellido Materno *</label>
-                    <input type="text" name="apellido_materno" value="{{ alumno.apellido_materno }}">
+                    <input type="text" name="apellido_materno" required value="{{ alumno.apellido_materno }}">
 
                 </div>
 
                 <div class="form-group">
                     <label>Nombres *</label>
-                    <input type="text" name="nombres" value="{{ alumno.nombres }}">
+                    <input type="text" name="nombres"required value="{{ alumno.nombres }}">
                 </div>
 
                 <div class="form-group">
                     <label>DNI *</label>
-                    <input type="text" name="dni" value="{{ alumno.dni }}">
+                    <input type="text" name="dni" value="{{ alumno.dni }}"pattern="[0-9]{8}" required maxlength="8">
                 </div>
 
                 <div class="form-group">
@@ -48,13 +48,8 @@
                 </div>
 
                 <div class="form-group">
-                    <label>Dirección</label>
-                    <input type="text" name="direccion">
-                </div>
-
-                <div class="form-group">
                     <label>Fecha de Nacimiento</label>
-                    <input type="date" name="fecha_nacimiento" value="{{ alumno.fecha_nacimiento }}">
+                    <input type="date" name="fecha_nacimiento" value="{{ alumno.fecha_nacimiento|date:'Y-m-d' }}">
                 </div>
 
                 <div class="form-group">
@@ -69,7 +64,7 @@
 
                 <div class="form-group">
                     <label>Correo Electrónico</label>
-                    <input type="email" name="email" value="{{ alumno.email }}">
+                    <input type="email" name="email" value="{{ alumno.email }} "required>
                 </div>
 
             </div>
