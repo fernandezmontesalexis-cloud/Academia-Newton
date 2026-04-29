@@ -12,4 +12,6 @@ urlpatterns = [
     path('matriculas/', views.matriculas, name='matricula'),
     path('pagos/<int:matricula_id>/', views.pagos, name='pagos'),
     path('cancelar-registro/', views.cancelar_registro, name='cancelar_registro'),
+    path('alumnos/', views.lista_alumnos, name='lista_alumnos'),
+    path('alumno/estado/<int:alumno_id>/', views.cambiar_estado_alumno, name='cambiar_estado_alumno'),
 ]

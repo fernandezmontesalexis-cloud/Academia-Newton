@@ -37,37 +37,68 @@ def dashboard(request):
 
 @login_required
 def registrar_alumno(request):
+
+    # limpiar session si es nuevo ingreso
+    if request.method == 'GET':
+        request.session.pop('alumno', None)
+
     if request.method == 'POST':
 
+        # capturar datos del input
+        apellido_paterno = request.POST.get('apellido_paterno')
+        apellido_materno = request.POST.get('apellido_materno')
+        nombres = request.POST.get('nombres')
+        dni = request.POST.get('dni')
+        celular = request.POST.get('celular')
+        
         fecha_nacimiento = request.POST.get('fecha_nacimiento')
+        direccion = request.POST.get('direccion')
+        distrito = request.POST.get('distrito')
+        email = request.POST.get('email')
 
-        # VALIDACIÓN
+        #validar datos , antes de guardar en session
+
+        # DNI obligatorio
+        if not dni:
+            messages.error(request, "El DNI es obligatorio")
+            return render(request, 'web/alumno/registrar_alumno.html', {'alumno': request.POST})
+
+        # DNI válido
+        if len(dni) != 8 or not dni.isdigit():
+            messages.error(request, "El DNI debe tener 8 números")
+            return render(request, 'web/alumno/registrar_alumno.html', {'alumno': request.POST})
+
+        # DNI duplicado
+        if Alumno.objects.filter(dni=dni).exists():
+            messages.error(request, "Este DNI ya está registrado")
+            return render(request, 'web/alumno/registrar_alumno.html', {'alumno': request.POST})
+
+        # Fecha obligatoria
         if not fecha_nacimiento:
             messages.error(request, "Debes ingresar la fecha de nacimiento")
-            return redirect('registrar_alumno')
+            return render(request, 'web/alumno/registrar_alumno.html', {'alumno': request.POST})
 
+        #guardar datos en session luego de validar
         request.session['alumno'] = {
-            'apellido_paterno': request.POST.get('apellido_paterno'),
-            'apellido_materno': request.POST.get('apellido_materno'),
-            'nombres': request.POST.get('nombres'),
-            'dni': request.POST.get('dni'),
-            'celular': request.POST.get('celular'),
-            'fecha_nacimiento': fecha_nacimiento,  # ← ya validado
-            'direccion': request.POST.get('direccion'),
-            'distrito': request.POST.get('distrito'),
-            'email': request.POST.get('email'),
+            'apellido_paterno': apellido_paterno,
+            'apellido_materno': apellido_materno,
+            'nombres': nombres,
+            'dni': dni,
+            'celular': celular,
+            'fecha_nacimiento': fecha_nacimiento,
+            'direccion': direccion,
+            'distrito': distrito,
+            'email': email,
         }
 
         return redirect('registrar_apoderado')
-    sedes = Sede.objects.all()
 
-    alumno = request.session.get('alumno', {})  # 🔥 AQUI ESTÁ LA CLAVE
+    # GET
+    alumno = request.session.get('alumno', {})
 
     return render(request, 'web/alumno/registrar_alumno.html', {
-        'sedes': sedes,
-        'alumno': alumno   # 🔥 LO ENVÍAS AL HTML
+        'alumno': alumno
     })
-
 @login_required
 def registrar_apoderado(request):
 
@@ -97,7 +128,7 @@ def regis_form_academica(request):
             'distrito_ie':request.POST.get('distrito_ie'),
         }
         return redirect('regis_form_adicional')
-        # 🔥 ESTO VA FUERA DEL IF
+        # ESTO VA FUERA DEL IF
     formacion = request.session.get('formacion_academica', {})
 
     return render(request, 'web/formacion/regis_form_academica.html', {
@@ -108,7 +139,6 @@ def regis_form_adicional(request):
 
     if request.method == 'POST':
 
-        # 🔥 GUARDAR EN SESSION (ESTO ES LO QUE TE FALTABA)
         request.session['formacion_adicional'] = {
             'estudio_previo': request.POST.get('estudio_previo'),
             'tipo_estudio': request.POST.get('tipo_estudio'),
@@ -123,11 +153,6 @@ def regis_form_adicional(request):
         formacion_acad_data = request.session.get('formacion_academica')
 
         if not alumno_data or not formacion_acad_data:
-            return redirect('registrar_alumno')
-
-        # validar dni único
-        if Alumno.objects.filter(dni=alumno_data['dni']).exists():
-            messages.error(request, "Este alumno ya está registrado")
             return redirect('registrar_alumno')
 
         # apoderado opcional
@@ -152,6 +177,7 @@ def regis_form_adicional(request):
             direccion=alumno_data['direccion'],
             distrito=alumno_data['distrito'],
             email=alumno_data['email'],
+            estado = 'activo',
             sede=sede,
             apoderado=apoderado
         )
@@ -214,7 +240,8 @@ def matriculas(request):
 
     # base queryset
     matriculas = Matricula.objects.filter(
-        alumno__sede=request.user.perfil.sede
+        alumno__sede=request.user.perfil.sede,
+        alumno__estado = 'activo'   
     ).select_related('alumno', 'ciclo')
 
     # búsqueda por DNI
@@ -226,7 +253,7 @@ def matriculas(request):
     #primero pendientes, luego pagados, y los más recientes arriba
     matriculas = matriculas.order_by('estado', '-fecha_matricula')
 
-    #calcular pagos y deudas
+    #calculo de pagos y deudas
 
     for m in matriculas:
         total_pagado = Pago.objects.filter(matricula=m).aggregate(
@@ -271,11 +298,10 @@ def pagos(request, matricula_id):
         #guardar pago
         Pago.objects.create(
             matricula=matricula,
-            perfil=request.user.perfil,
+            registrado_por=request.user.perfil,
             fecha_pago=date.today(),
             monto=monto,
-            metodo_pago=metodo,
-            estado="completado"
+            metodo_pago=metodo
         )
 
         # actualizar estado
@@ -286,7 +312,7 @@ def pagos(request, matricula_id):
 
         matricula.save()
 
-        return redirect('matricula')
+        return redirect('matriculas')
 
     return render(request, 'web/pagos/pagos.html', {
         'matricula': matricula,
@@ -302,3 +328,30 @@ def cancelar_registro(request):
     request.session.pop('formacion_adicional', None)
 
     return redirect('dashboard')
+@login_required
+def lista_alumnos(request):
+
+    alumnos = Alumno.objects.filter(
+        sede=request.user.perfil.sede
+    )
+
+    dni = request.GET.get('dni')
+
+    if dni:
+        alumnos = alumnos.filter(dni__icontains=dni)
+
+    return render(request, 'web/alumno/lista_alumnos.html', {
+        'alumnos': alumnos
+    })
+@login_required
+def cambiar_estado_alumno(request, alumno_id):
+    alumno = Alumno.objects.get(id=alumno_id)
+
+    if alumno.estado == 'activo':
+        alumno.estado = 'inactivo'
+    else:
+        alumno.estado = 'activo'
+
+    alumno.save()
+
+    return redirect(lista_alumnos)

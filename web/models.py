@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.utils import timezone
+from django.core.validators import RegexValidator
 
 class Sede(models.Model):
     nombre = models.CharField(max_length=70)
@@ -38,15 +40,21 @@ class Alumno(models.Model):
     apellido_paterno = models.CharField(max_length=70)
     apellido_materno = models.CharField(max_length=70)
     nombres = models.CharField(max_length=70)
-    dni = models.CharField(max_length=8)
+    dni = models.CharField(max_length=8, unique=True,
+                           validators=[RegexValidator(r'^\d{8}$','El DNI debe tener 8 digitos')])
     celular = models.CharField(max_length=9)
     fecha_nacimiento = models.DateField()
     direccion = models.CharField(max_length=100)
     distrito = models.CharField(max_length=50)
     email = models.EmailField()
+    ESTADOS =[
+        ('activo','Activo'),
+        ('inactivo','Inactivo'),
+    ]
+    estado = models.CharField(max_length=10, choices=ESTADOS, default='activo' )
 
     sede = models.ForeignKey(Sede, on_delete=models.CASCADE)
-    apoderado = models.ForeignKey(Apoderado, on_delete=models.CASCADE)
+    apoderado = models.ForeignKey(Apoderado, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
         return f"{self.nombres} {self.apellido_paterno}"
@@ -83,9 +91,9 @@ class Matricula(models.Model):
 
 class Pago (models.Model):
     matricula = models.ForeignKey(Matricula, on_delete=models.CASCADE)
-    perfil = models.ForeignKey(Perfil, on_delete=models.CASCADE)
+    registrado_por = models.ForeignKey(Perfil, on_delete=models.CASCADE)
 
-    fecha_pago = models.DateField()
+    fecha_pago = models.DateField(default=timezone.now)
     monto = models.DecimalField(max_digits=10, decimal_places=2)
     METODOS = [
     ('efectivo', 'Efectivo'),
@@ -93,7 +101,6 @@ class Pago (models.Model):
     ('transferencia', 'Transferencia'),
 ]
     metodo_pago = models.CharField(max_length=20, choices=METODOS)
-    estado = models.CharField(max_length=30)
 
     def __str__(self):
         return f"{self.monto} {self.matricula}"
