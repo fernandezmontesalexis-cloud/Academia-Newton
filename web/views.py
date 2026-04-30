@@ -23,7 +23,7 @@ def login_view(request):
         else:
             messages.error(request, 'Usuario o Contraseña incorrecto')
 
-    return render(request, 'web/login/login.html')
+    return render(request, 'web/auth/login.html')
 
 
 @login_required
@@ -31,9 +31,9 @@ def dashboard(request):
     perfil = request.user.perfil
 
     if perfil.tipo_usuario =='admin':
-        return render(request,'web/dashboard/dashboard_admin.html')
+        return render(request,'web/administrador/dashboard_admin.html')
     elif perfil.tipo_usuario == 'secretaria':
-        return render(request,'web/dashboard/dashboard_secre.html')
+        return render(request,'web/secretaria/dashboard_secre.html')
 
 @login_required
 def registrar_alumno(request):
@@ -61,22 +61,22 @@ def registrar_alumno(request):
         # DNI obligatorio
         if not dni:
             messages.error(request, "El DNI es obligatorio")
-            return render(request, 'web/alumno/registrar_alumno.html', {'alumno': request.POST})
+            return render(request, 'web/secretaria/alumnos/registrar_alumno.html', {'alumno': request.POST})
 
         # DNI válido
         if len(dni) != 8 or not dni.isdigit():
             messages.error(request, "El DNI debe tener 8 números")
-            return render(request, 'web/alumno/registrar_alumno.html', {'alumno': request.POST})
+            return render(request, 'web/secretaria/alumnos/registrar_alumno.html', {'alumno': request.POST})
 
         # DNI duplicado
         if Alumno.objects.filter(dni=dni).exists():
             messages.error(request, "Este DNI ya está registrado")
-            return render(request, 'web/alumno/registrar_alumno.html', {'alumno': request.POST})
+            return render(request, 'web/secretaria/alumnos/registrar_alumno.html', {'alumno': request.POST})
 
         # Fecha obligatoria
         if not fecha_nacimiento:
             messages.error(request, "Debes ingresar la fecha de nacimiento")
-            return render(request, 'web/alumno/registrar_alumno.html', {'alumno': request.POST})
+            return render(request, 'web/secretaria/alumnos/registrar_alumno.html', {'alumno': request.POST})
 
         #guardar datos en session luego de validar
         request.session['alumno'] = {
@@ -96,9 +96,9 @@ def registrar_alumno(request):
     # GET
     alumno = request.session.get('alumno', {})
 
-    return render(request, 'web/alumno/registrar_alumno.html', {
-        'alumno': alumno
-    })
+    return render(request, 'web/secretaria/alumnos/registrar_alumno.html', {
+    'alumno': alumno
+})
 @login_required
 def registrar_apoderado(request):
 
@@ -113,7 +113,7 @@ def registrar_apoderado(request):
         return redirect('regis_form_academica')
     apoderado = request.session.get('apoderado', {})
 
-    return render(request, 'web/apoderado/registrar_apoderado.html', {
+    return render(request, 'web/secretaria/alumnos/registrar_apoderado.html', {
         'apoderado': apoderado
     })
 
@@ -131,7 +131,7 @@ def regis_form_academica(request):
         # ESTO VA FUERA DEL IF
     formacion = request.session.get('formacion_academica', {})
 
-    return render(request, 'web/formacion/regis_form_academica.html', {
+    return render(request, 'web/secretaria/alumnos/regis_form_academica.html', {
         'formacion': formacion
     })
 @login_required
@@ -227,7 +227,7 @@ def regis_form_adicional(request):
     ciclos = Ciclo.objects.all()
     formacion_adicional = request.session.get('formacion_adicional', {})
 
-    return render(request,'web/formacion/regis_form_adicional.html', {
+    return render(request,'web/secretaria/alumnos/regis_form_adicional.html', {
         'formacion_adicional': formacion_adicional,
         'ciclos': ciclos
     })
@@ -263,7 +263,7 @@ def matriculas(request):
         m.total_pagado = total_pagado
         m.deuda = m.ciclo.precio - total_pagado
 
-    return render(request, 'web/matricula/matricula.html', {    
+    return render(request, 'web/secretaria/matriculas/lista_matricula.html', {    
         'matriculas': matriculas
     })   
 
@@ -314,7 +314,7 @@ def pagos(request, matricula_id):
 
         return redirect('matriculas')
 
-    return render(request, 'web/pagos/pagos.html', {
+    return render(request, 'web/secretaria/pagos/pagos.html', {
         'matricula': matricula,
         'total_pagado': total_pagado,
         'total_ciclo': total_ciclo,
@@ -330,7 +330,7 @@ def cancelar_registro(request):
     return redirect('dashboard')
 
 def reportes_sedes(request):
-    return render(request, 'web/sedes/reportes_sedes.html')
+    return render(request, 'web/administrador/reportes/reportes_sedes.html')
 
 @login_required
 def lista_alumnos(request):
@@ -344,7 +344,7 @@ def lista_alumnos(request):
     if dni:
         alumnos = alumnos.filter(dni__icontains=dni)
 
-    return render(request, 'web/alumno/lista_alumnos.html', {
+    return render(request, 'web/secretaria/alumnos/lista_alumnos.html', {
         'alumnos': alumnos
     })
 @login_required
@@ -358,4 +358,11 @@ def cambiar_estado_alumno(request, alumno_id):
 
     alumno.save()
 
-    return redirect(lista_alumnos)
+    return redirect('lista_alumnos')
+@login_required
+def lista_ciclos(request):
+    ciclos = Ciclo.objects.all()
+
+    return render(request, 'web/administrador/ciclos/lista.html', {
+        'ciclos': ciclos
+    })
