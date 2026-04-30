@@ -1,39 +1,9 @@
 from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
-from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from .models import Alumno, Apoderado, Sede, FormacionAcademica, FormacionAdicional
-from .models import Matricula, Pago, Ciclo
+from django.contrib import messages
+
+from ..models import Alumno, Apoderado, FormacionAcademica, FormacionAdicional, Matricula, Ciclo
 from datetime import date
-from django.db.models import Sum
-from decimal import Decimal
-from decimal import InvalidOperation
-
-
-def login_view(request):
-    if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
-
-        user = authenticate(request, username=username, password=password)
-
-        if user is not None:
-            login(request, user)
-            return redirect('dashboard')
-        else:
-            messages.error(request, 'Usuario o Contraseña incorrecto')
-
-    return render(request, 'web/auth/login.html')
-
-
-@login_required
-def dashboard(request):
-    perfil = request.user.perfil
-
-    if perfil.tipo_usuario =='admin':
-        return render(request,'web/administrador/dashboard_admin.html')
-    elif perfil.tipo_usuario == 'secretaria':
-        return render(request,'web/secretaria/dashboard_secre.html')
 
 @login_required
 def registrar_alumno(request):
@@ -232,95 +202,6 @@ def regis_form_adicional(request):
         'ciclos': ciclos
     })
 @login_required
-def logout_view(request):
-    logout(request)
-    return redirect('login')
-@login_required
-def matriculas(request):
-
-    # base queryset
-    matriculas = Matricula.objects.filter(
-        alumno__sede=request.user.perfil.sede,
-        alumno__estado = 'activo'   
-    ).select_related('alumno', 'ciclo')
-
-    # búsqueda por DNI
-    dni = request.GET.get('dni')
-
-    if dni:
-        matriculas = matriculas.filter(alumno__dni__icontains=dni)
-
-    #primero pendientes, luego pagados, y los más recientes arriba
-    matriculas = matriculas.order_by('estado', '-fecha_matricula')
-
-    #calculo de pagos y deudas
-
-    for m in matriculas:
-        total_pagado = Pago.objects.filter(matricula=m).aggregate(
-            Sum('monto')
-        )['monto__sum'] or 0
-
-        m.total_pagado = total_pagado
-        m.deuda = m.ciclo.precio - total_pagado
-
-    return render(request, 'web/secretaria/matriculas/lista_matricula.html', {    
-        'matriculas': matriculas
-    })   
-
-@login_required
-def pagos(request, matricula_id):
-    matricula = Matricula.objects.get(id=matricula_id)
-
-    #calcular pagos actuales
-    total_pagado = Pago.objects.filter(matricula=matricula).aggregate(
-        Sum('monto')
-    )['monto__sum'] or 0
-
-    total_ciclo = matricula.ciclo.precio
-    deuda = total_ciclo - total_pagado
-
-    if request.method == 'POST':
-        try:
-            monto = Decimal(request.POST.get('monto'))
-        except (InvalidOperation, TypeError):
-            messages.error(request, "Monto inválido")
-            return redirect('pagos', matricula_id=matricula.id)
-
-        metodo = request.POST.get('metodo_pago')
-
-        nuevo_total = total_pagado + monto
-
-        #validación
-        if nuevo_total > total_ciclo:
-            messages.error(request, "El monto excede lo que debe pagar")
-            return redirect('pagos', matricula_id=matricula.id)
-
-        #guardar pago
-        Pago.objects.create(
-            matricula=matricula,
-            registrado_por=request.user.perfil,
-            fecha_pago=date.today(),
-            monto=monto,
-            metodo_pago=metodo
-        )
-
-        # actualizar estado
-        if nuevo_total >= total_ciclo:
-            matricula.estado = "pagado"
-        else:
-            matricula.estado = "pendiente"
-
-        matricula.save()
-
-        return redirect('matriculas')
-
-    return render(request, 'web/secretaria/pagos/pagos.html', {
-        'matricula': matricula,
-        'total_pagado': total_pagado,
-        'total_ciclo': total_ciclo,
-        'deuda': deuda
-    })
-@login_required
 def cancelar_registro(request):
     request.session.pop('alumno', None)
     request.session.pop('apoderado', None)
@@ -328,41 +209,3 @@ def cancelar_registro(request):
     request.session.pop('formacion_adicional', None)
 
     return redirect('dashboard')
-
-def reportes_sedes(request):
-    return render(request, 'web/administrador/reportes/reportes_sedes.html')
-
-@login_required
-def lista_alumnos(request):
-
-    alumnos = Alumno.objects.filter(
-        sede=request.user.perfil.sede
-    )
-
-    dni = request.GET.get('dni')
-
-    if dni:
-        alumnos = alumnos.filter(dni__icontains=dni)
-
-    return render(request, 'web/secretaria/alumnos/lista_alumnos.html', {
-        'alumnos': alumnos
-    })
-@login_required
-def cambiar_estado_alumno(request, alumno_id):
-    alumno = Alumno.objects.get(id=alumno_id)
-
-    if alumno.estado == 'activo':
-        alumno.estado = 'inactivo'
-    else:
-        alumno.estado = 'activo'
-
-    alumno.save()
-
-    return redirect('lista_alumnos')
-@login_required
-def lista_ciclos(request):
-    ciclos = Ciclo.objects.all()
-
-    return render(request, 'web/administrador/ciclos/lista.html', {
-        'ciclos': ciclos
-    })

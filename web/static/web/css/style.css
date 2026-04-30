@@ -55,7 +55,16 @@
     color: white;
     margin-right: 10px;
 }
+/*diseño para submenu*/
+.submenu {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+}
 
+.submenu.open {
+    max-height: 200px;
+}
 
 /* CONTENEDOR DERECHO */
 

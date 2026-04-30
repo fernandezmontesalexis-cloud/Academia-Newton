@@ -47,11 +47,11 @@
                     <i class="fas fa-book"></i> Matrículas
                 </a>
 
-                
+
                 <a href="{% url 'lista_alumnos' %}">
-                        <i class="fas fa-user"></i> Gestion Estado
+                    <i class="fas fa-user"></i> Gestion Estado
                 </a>
-                
+
 
 
 
@@ -75,11 +75,20 @@
                 <a href="#">
                     <i class="fas fa-chalkboard-teacher"></i> Profesores
                 </a>
-
-                <a href="#">
-                    <i class="fas fa-clock"></i> Horarios
+                <a href="javascript:void(0);" onclick="toggleMenu()">
+                    <i class="fas fa-tools"></i> Mantenimiento
                 </a>
-                
+                <ul id="submenu-mantenimiento" class="submenu">
+                    <li><a href="{% url 'lista_sedes' %}">Sedes</a></li>
+                    <li><a href="#">Ciclos</a></li>
+                </ul>
+                <script>
+                    function toggleMenu() {
+                        const submenu = document.getElementById("submenu-mantenimiento");
+                        submenu.classList.toggle("open");
+                    }
+                </script>
+
                 {% endif %}
 
             </nav>

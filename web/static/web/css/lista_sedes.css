@@ -1,0 +1,71 @@
+.container {
+    padding: 30px;
+}
+
+.card {
+    background: #fff;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.tabla th {
+    padding: 15px;
+    background: #f8fafc;
+    font-weight: 600;
+}
+
+.tabla td {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+/* 👉 contenedor de acciones */
+.acciones {
+    display: flex;
+    gap: 10px;
+}
+
+/* 👉 botones */
+.btn-edit {
+    background: #facc15;
+    color: #000;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.btn-edit:hover {
+    background: #eab308;
+}
+
+.btn-delete {
+    background: #ef4444;
+    color: white;
+    padding: 6px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.btn-delete:hover {
+    background: #dc2626;
+}
+
+/* botón nueva sede */
+.btn {
+    background: #1e3a8a;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: 0.2s;
+}
+
+.btn:hover {
+    background: #172554;
+}

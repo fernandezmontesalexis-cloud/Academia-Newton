@@ -1,0 +1,41 @@
+{% extends 'web/base/base.html' %}
+{% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/lista_sedes.css' %}">
+{% endblock %}
+{% block content %}
+
+<div class="container">
+
+    <div class="header">
+        <h2>Lista de Sedes</h2>
+        <a href="#" class="btn">+ Nueva Sede</a>
+    </div>
+
+    <div class="card">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Nombre</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sede in sedes %}
+                <tr>
+                    <td>{{ sede.nombre }}</td>
+                    <td>
+                        <div class="acciones">
+                            <a href="#" class="btn-edit">Editar</a>
+                            <a href="#" class="btn-delete">Eliminar</a>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}
