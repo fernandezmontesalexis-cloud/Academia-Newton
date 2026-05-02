@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from web.permisos import permiso_requerido
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 
@@ -6,6 +7,7 @@ from ..models import Matricula, Pago
 
 
 @login_required
+@permiso_requerido(['admin','secretaria'])
 def matriculas(request):
 
     # base queryset

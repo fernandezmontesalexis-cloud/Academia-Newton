@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from web.permisos import permiso_requerido
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 
@@ -6,6 +7,7 @@ from ..models import Alumno, Apoderado, FormacionAcademica, FormacionAdicional, 
 from datetime import date
 
 @login_required
+@permiso_requerido(['admin', 'secretaria'])
 def registrar_alumno(request):
 
     # limpiar session si es nuevo ingreso
@@ -70,6 +72,7 @@ def registrar_alumno(request):
     'alumno': alumno
 })
 @login_required
+@permiso_requerido(['admin', 'secretaria'])
 def registrar_apoderado(request):
 
     if request.method == 'POST':
@@ -89,6 +92,7 @@ def registrar_apoderado(request):
 
 
 @login_required
+@permiso_requerido(['admin', 'secretaria'])
 def regis_form_academica(request):
     
     if request.method == 'POST':
@@ -105,6 +109,7 @@ def regis_form_academica(request):
         'formacion': formacion
     })
 @login_required
+@permiso_requerido(['admin', 'secretaria'])
 def regis_form_adicional(request):
 
     if request.method == 'POST':
@@ -202,6 +207,7 @@ def regis_form_adicional(request):
         'ciclos': ciclos
     })
 @login_required
+@permiso_requerido(['admin', 'secretaria'])
 def cancelar_registro(request):
     request.session.pop('alumno', None)
     request.session.pop('apoderado', None)

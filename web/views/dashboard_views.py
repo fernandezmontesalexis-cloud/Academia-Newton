@@ -1,14 +1,21 @@
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-
-
 
 @login_required
 def dashboard(request):
-    perfil = request.user.perfil
+    perfil = getattr(request.user, 'perfil', None)
 
-    if perfil.tipo_usuario == "admin":
-        return render(request, "web/administrador/dashboard_admin.html")
+    if not perfil:
+        return redirect('login')
 
-    elif perfil.tipo_usuario == "secretaria":
-        return render(request, "web/secretaria/dashboard_secre.html")
+    dashboards = {
+        "admin": "web/administrador/dashboard_admin.html",
+        "secretaria": "web/secretaria/dashboard_secre.html",
+    }
+
+    template = dashboards.get(perfil.tipo_usuario)
+
+    if not template:
+        return redirect('login')
+
+    return render(request, template)

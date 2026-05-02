@@ -64,11 +64,9 @@ urlpatterns = [
     path("reportes/sedes/", reportes_sedes, name="reportes_sedes"),
 
     # ADMIN
-    path("admin/ciclos/", lista_ciclos, name="lista_ciclos"),
+    path("panel/ciclos/", lista_ciclos, name="lista_ciclos"),
     #LISTA SEDE
     path("panel/sedes/", lista_sedes, name="lista_sedes"),
     
-
-
 
 ]

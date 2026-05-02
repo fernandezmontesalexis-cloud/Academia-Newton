@@ -120,3 +120,9 @@ STATICFILES_DIRS = [
 
 # Configuración del tipo de ID automático para los modelos (mejora recomendada por Django)
 DEFAULT_AUTO_FIELD ='django.db.models.BigAutoField'
+
+
+# Configuración de autenticación (IMPORTANTE CUIDADO)
+LOGIN_URL = '/'
+LOGIN_REDIRECT_URL = '/dashboard/'
+LOGOUT_REDIRECT_URL = '/'

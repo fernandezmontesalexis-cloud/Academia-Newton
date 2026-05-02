@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect
+from web.permisos import permiso_requerido
 from django.contrib.auth.decorators import login_required
 from ..models import Alumno
 
-@login_required
+@login_required 
+@permiso_requerido(['admin','secretaria'])
 def lista_alumnos(request):
     alumnos = Alumno.objects.filter(
         sede=request.user.perfil.sede
@@ -19,6 +21,7 @@ def lista_alumnos(request):
 
 
 @login_required
+@permiso_requerido(['admin','secretaria'])
 def cambiar_estado_alumno(request, alumno_id):
     alumno = Alumno.objects.get(id=alumno_id)
 

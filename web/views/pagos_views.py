@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from web.permisos import permiso_requerido
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.db.models import Sum
@@ -10,6 +11,7 @@ from ..models import Matricula, Pago
 
 
 @login_required
+@permiso_requerido(['admin','secretaria'])
 def pagos(request, matricula_id):
     matricula = Matricula.objects.get(id=matricula_id)
 
