@@ -1,0 +1,22 @@
+{% extends 'web/base/base.html' %}
+
+{% block content %}
+
+<div class="container">
+    <div class="card">
+        <h2>Nueva Sede</h2>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div style="margin-bottom: 15px;">
+                <label>Nombre de la sede</label>
+                <input type="text" name="nombre" class="form-control">
+            </div>
+
+            <button type="submit" class="btn">Guardar</button>
+        </form>
+    </div>
+</div>
+
+{% endblock %}

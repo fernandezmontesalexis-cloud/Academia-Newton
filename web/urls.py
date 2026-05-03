@@ -16,6 +16,7 @@ from .views.pagos_views import pagos
 from .views.reportes_views import reportes_sedes
 from .views.admin_views import lista_ciclos
 from .views.admin_views import lista_sedes
+from .views.admin_views import crear_sede
 
 urlpatterns = [
     # AUTENTICACIÓN
@@ -67,6 +68,7 @@ urlpatterns = [
     path("panel/ciclos/", lista_ciclos, name="lista_ciclos"),
     #LISTA SEDE
     path("panel/sedes/", lista_sedes, name="lista_sedes"),
+    path("panel/sedes/nueva/", crear_sede, name="crear_sede"),
     
 
 ]
