@@ -45,7 +45,7 @@ class Alumno(models.Model):
     celular = models.CharField(max_length=9)
     fecha_nacimiento = models.DateField()
     direccion = models.CharField(max_length=100)
-    distrito = models.CharField(max_length=50)
+    distrito = models.ForeignKey('Distrito', on_delete=models.SET_NULL, null=True)
     email = models.EmailField()
     ESTADOS =[
         ('activo','Activo'),
@@ -96,9 +96,9 @@ class Pago (models.Model):
     fecha_pago = models.DateField(default=timezone.now)
     monto = models.DecimalField(max_digits=10, decimal_places=2)
     METODOS = [
-    ('efectivo', 'Efectivo'),
-    ('yape', 'Yape'),
-    ('transferencia', 'Transferencia'),
+        ('efectivo', 'Efectivo'),
+        ('yape', 'Yape'),
+        ('transferencia', 'Transferencia'),
 ]
     metodo_pago = models.CharField(max_length=20, choices=METODOS)
 
@@ -109,8 +109,9 @@ class Pago (models.Model):
 class FormacionAcademica(models.Model):
     alumno = models.OneToOneField(Alumno, on_delete=models.CASCADE)
     tipo_institucion = models.CharField(max_length=20)
-    nombre_ie = models.CharField(max_length=100)
-    distrito_ie = models.CharField(max_length=50)
+    institucion = models.ForeignKey(
+    'InstitucionEducativa',on_delete=models.SET_NULL,null=True,blank=True)
+    
 
 
 class FormacionAdicional(models.Model):
@@ -120,3 +121,29 @@ class FormacionAdicional(models.Model):
     academia_anterior = models.CharField(max_length=100)
     carrera_interes = models.CharField(max_length=100)
     segunda_carrera = models.CharField(max_length=100, null=True, blank=True)
+
+class Departamento(models.Model):
+    nombre = models.CharField(max_length=100)
+    def __str__(self):
+        return self.nombre
+
+class Provincia(models.Model):
+    nombre = models.CharField(max_length=100)
+    departamento = models.ForeignKey(Departamento, on_delete=models.CASCADE)
+    def __str__(self):
+        return self.nombre
+
+class Distrito(models.Model):
+    nombre = models.CharField(max_length=100)
+    provincia = models.ForeignKey(Provincia, on_delete=models.CASCADE)
+    def __str__(self):
+        return f"{self.nombre} - {self.provincia.nombre} - {self.provincia.departamento.nombre}"
+    
+class InstitucionEducativa(models.Model):
+    nombre = models.CharField(max_length=150)
+    distrito = models.ForeignKey(Distrito, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return self.nombre
+    
+    

@@ -55,7 +55,7 @@ Exportar Excel
 {% for m in matriculas %}
 <tr>
 
-<td>{{ forloop.counter }}</td>
+<td>{{ matriculas.start_index|add:forloop.counter0 }}</td>
 
 <td>
     {{ m.alumno }} <br>
@@ -99,6 +99,27 @@ Exportar Excel
 </tbody>
 
 </table>
+<div class="d-flex justify-content-center mt-3">
+
+    {% if matriculas.has_previous %}
+        <a class="btn btn-outline-primary me-2"
+           href="?page={{ matriculas.previous_page_number }}{% if request.GET.dni %}&dni={{ request.GET.dni }}{% endif %}">
+            ← Anterior
+        </a>
+    {% endif %}
+
+    <span class="mx-2 align-self-center">
+        Página {{ matriculas.number }} de {{ matriculas.paginator.num_pages }}
+    </span>
+
+    {% if matriculas.has_next %}
+        <a class="btn btn-outline-primary ms-2"
+           href="?page={{ matriculas.next_page_number }}{% if request.GET.dni %}&dni={{ request.GET.dni }}{% endif %}">
+            Siguiente →
+        </a>
+    {% endif %}
+
+</div>
 
 </div>
 

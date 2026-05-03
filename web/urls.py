@@ -8,6 +8,10 @@ from .views.registro_views import (
     regis_form_academica,
     regis_form_adicional,
     cancelar_registro,
+    get_distritos,
+    get_provincias,
+    buscar_colegios,
+    crear_colegio,
 )
 
 import web.old_views as views  # para lo que aún no movemos
@@ -69,6 +73,13 @@ urlpatterns = [
     #LISTA SEDE
     path("panel/sedes/", lista_sedes, name="lista_sedes"),
     path("panel/sedes/nueva/", crear_sede, name="crear_sede"),
-    
+
+    #departamento ,provincia , distrito
+    path("get-provincias/<int:departamento_id>/", get_provincias),
+    path("get-distritos/<int:provincia_id>/", get_distritos),
+
+    #colegios
+    path("buscar-colegios/", buscar_colegios),
+    path("crear-colegio/", crear_colegio),
 
 ]

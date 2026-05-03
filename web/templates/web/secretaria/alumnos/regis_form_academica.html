@@ -14,11 +14,49 @@
         <div class="row">
             <div class="col-md-6">
                 <label>Institución *</label>
-                <input type="text" name="nombre_ie" value="{{ formacion.nombre_ie }}">
-            </div>
-            <div class="col-md-6">
-                <label>Distrito *</label>
-                <input type="text" name="distrito_ie" value="{{ formacion.distrito_ie }}">
+
+                <!-- INPUT VISIBLE -->
+                <input type="text" id="colegio" placeholder="Buscar colegio..." class="form-control">
+
+                <!-- ID OCULTO -->
+                <input type="hidden" name="colegio_id" id="colegio_id">
+
+                <!-- RESULTADOS -->
+                <div id="resultados" style="background:white; border:1px solid #ccc;"></div>
+
+                <!-- AGREGAR-->
+                <button type="button" class="btn btn-sm btn-primary mt-2" onclick="mostrarAgregar()">
+                    + Agregar colegio
+                </button>
+
+                <!-- FORM NUEVO -->
+                <div id="nuevoColegio" style="display:none; margin-top:10px;">
+
+                    <input type="text" id="nuevo_nombre" placeholder="Nombre colegio" class="form-control mb-2">
+
+                    <!-- DEPARTAMENTO -->
+                    <select id="dep_ie" class="form-control mb-2">
+                        <option value="">Departamento</option>
+                        {% for d in departamentos %}
+                        <option value="{{ d.id }}">{{ d.nombre }}</option>
+                        {% endfor %}
+                    </select>
+
+                    <!-- PROVINCIA -->
+                    <select id="prov_ie" class="form-control mb-2">
+                        <option value="">Provincia</option>
+                    </select>
+
+                    <!-- DISTRITO -->
+                    <select id="dist_ie" class="form-control mb-2">
+                        <option value="">Distrito</option>
+                    </select>
+
+                    <button type="button" class="btn btn-success btn-sm" onclick="crearColegio()">
+                        Guardar
+                    </button>
+
+                </div>
             </div>
 
             <div class="col-md-6">
@@ -51,5 +89,110 @@
 
     </form>
 </div>
+<script>
+document.getElementById("colegio").addEventListener("keyup", function () {
+    let query = this.value;
+
+    fetch(`/buscar-colegios/?q=${query}`)
+        .then(res => res.json())
+        .then(data => {
+            let resultados = document.getElementById("resultados");
+            resultados.innerHTML = "";
+
+            data.forEach(c => {
+                resultados.innerHTML += `
+                    <div style="cursor:pointer; padding:5px;"
+                        onclick="seleccionar(${c.id}, '${c.nombre}')">
+                        ${c.nombre}
+                    </div>
+                `;
+            });
+        });
+});
+
+function seleccionar(id, nombre) {
+    document.getElementById("colegio").value = nombre;
+    document.getElementById("colegio_id").value = id;
+    document.getElementById("resultados").innerHTML = "";
+}
+
+function mostrarAgregar() {
+    document.getElementById("nuevoColegio").style.display = "block";
+}
+
+function crearColegio() {
+    let nombre = document.getElementById("nuevo_nombre").value;
+    let distrito = document.getElementById("dist_ie").value;
+
+    console.log("Nombre:", nombre);
+    console.log("Distrito:", distrito);
+
+    if (!nombre || !distrito) {
+        alert("Completa todos los campos");
+        return;
+    }
+
+    fetch("/crear-colegio/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": "{{ csrf_token }}"
+        },
+        body: JSON.stringify({
+            nombre: nombre,
+            distrito: distrito
+        })
+    })
+    .then(res => {
+        if (!res.ok) {
+            throw new Error("Error en servidor");
+        }
+        return res.json();
+    })
+    .then(data => {
+        console.log("Respuesta:", data);
+
+        seleccionar(data.id, data.nombre);
+        document.getElementById("nuevoColegio").style.display = "none";
+    })
+    .catch(error => {
+        console.error("ERROR:", error);
+        alert("Error al guardar colegio");
+    });
+}
+</script>
+<script>
+document.getElementById("dep_ie").addEventListener("change", function () {
+    let id = this.value;
+
+    fetch(`/get-provincias/${id}/`)
+        .then(res => res.json())
+        .then(data => {
+            let prov = document.getElementById("prov_ie");
+            prov.innerHTML = '<option value="">Provincia</option>';
+
+            data.forEach(p => {
+                prov.innerHTML += `<option value="${p.id}">${p.nombre}</option>`;
+            });
+        });
+});
+</script>
+<script>
+document.getElementById("prov_ie").addEventListener("change", function () {
+    let id = this.value;
+
+    fetch(`/get-distritos/${id}/`)
+        .then(res => res.json())
+        .then(data => {
+            let dist = document.getElementById("dist_ie");
+            dist.innerHTML = '<option value="">Distrito</option>';
+
+            data.forEach(d => {
+                dist.innerHTML += `<option value="${d.id}">${d.nombre}</option>`;
+            });
+        });
+});
+</script>
+
 
 {% endblock %}

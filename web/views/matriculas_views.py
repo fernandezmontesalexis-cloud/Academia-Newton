@@ -2,7 +2,7 @@ from django.shortcuts import render
 from web.permisos import permiso_requerido
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
-
+from django.core.paginator import Paginator
 from ..models import Matricula, Pago
 
 
@@ -24,6 +24,12 @@ def matriculas(request):
 
     # primero pendientes, luego pagados, y los más recientes arriba
     matriculas = matriculas.order_by('estado', '-fecha_matricula')
+
+    #PAGINACIÓN
+    paginator = Paginator(matriculas, 10)
+    page_number = request.GET.get('page')
+
+    matriculas = paginator.get_page(page_number)
 
     # cálculo de pagos y deudas
     for m in matriculas:

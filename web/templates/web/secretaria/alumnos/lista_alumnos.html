@@ -39,8 +39,7 @@
 {% for a in alumnos %}
 <tr>
 
-<td>{{ forloop.counter }}</td>
-
+<td>{{ alumnos.start_index|add:forloop.counter0 }}</td>
 <td>
     {{ a.nombres }} {{ a.apellido_paterno }}<br>
     <small>DNI: {{ a.dni }}</small>
@@ -73,7 +72,27 @@
 </tbody>
 
 </table>
+<div class="d-flex justify-content-center mt-3">
 
+    {% if alumnos.has_previous %}
+        <a class="btn btn-outline-primary me-2"
+           href="?page={{ alumnos.previous_page_number }}{% if request.GET.dni %}&dni={{ request.GET.dni }}{% endif %}">
+            ← Anterior
+        </a>
+    {% endif %}
+
+    <span class="mx-2 align-self-center">
+        Página {{ alumnos.number }} de {{ alumnos.paginator.num_pages }}
+    </span>
+
+    {% if alumnos.has_next %}
+        <a class="btn btn-outline-primary ms-2"
+           href="?page={{ alumnos.next_page_number }}{% if request.GET.dni %}&dni={{ request.GET.dni }}{% endif %}">
+            Siguiente →
+        </a>
+    {% endif %}
+
+</div>
 </div>
 
 </div>

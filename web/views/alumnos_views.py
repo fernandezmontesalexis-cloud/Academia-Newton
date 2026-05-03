@@ -2,18 +2,25 @@ from django.shortcuts import render, redirect
 from web.permisos import permiso_requerido
 from django.contrib.auth.decorators import login_required
 from ..models import Alumno
+from django.core.paginator import Paginator
 
 @login_required 
 @permiso_requerido(['admin','secretaria'])
 def lista_alumnos(request):
-    alumnos = Alumno.objects.filter(
+
+    alumnos_lista = Alumno.objects.filter(
         sede=request.user.perfil.sede
     )
 
     dni = request.GET.get('dni')
 
     if dni:
-        alumnos = alumnos.filter(dni__icontains=dni)
+        alumnos_lista = alumnos_lista.filter(dni__icontains=dni)
+
+    paginator = Paginator(alumnos_lista, 10)  #10 por página
+    page_number = request.GET.get('page')
+
+    alumnos = paginator.get_page(page_number)
 
     return render(request, 'web/secretaria/alumnos/lista_alumnos.html', {
         'alumnos': alumnos
