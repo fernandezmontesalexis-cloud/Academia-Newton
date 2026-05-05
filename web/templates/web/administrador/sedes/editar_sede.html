@@ -10,18 +10,18 @@
 <div class="container-sede">
 
     <div class="card-sede">
-        <h2 class="titulo">Nueva Sede</h2>
+        <h2 class="titulo">Editar Sede</h2>
 
         <form method="POST">
             {% csrf_token %}
 
             <div class="form-group">
                 <label>Nombre de la sede</label>
-                <input type="text" name="nombre" class="input">
+                <input type="text" name="nombre" class="input" value="{{ sede.nombre }}">
             </div>
 
             <div class="acciones">
-                <button type="submit" class="btn-guardar">Guardar</button>
+                <button type="submit" class="btn-guardar">Actualizar</button>
                 <a href="{% url 'lista_sedes' %}" class="btn-cancelar">Cancelar</a>
             </div>
 

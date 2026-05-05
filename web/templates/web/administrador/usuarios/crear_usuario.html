@@ -1,0 +1,61 @@
+{% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/crear_sede.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="container-sede">
+
+    <div class="card-sede">
+        <h2 class="titulo">Crear Usuario</h2>
+
+        {% if error %}
+            <p style="color:red;">{{ error }}</p>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Usuario</label>
+                <input type="text" name="username" class="input">
+            </div>
+
+            <div class="form-group">
+                <label>Contraseña</label>
+                <input type="password" name="password" class="input">
+            </div>
+
+            <div class="form-group">
+                <label>Tipo Usuario</label>
+                <select name="tipo_usuario" class="input">
+                    <option value="admin">Administrador</option>
+                    <option value="secretaria">Secretaria</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Sede</label>
+                <select name="sede" class="input">
+                    {% for sede in sedes %}
+                        <option value="{{ sede.id }}">{{ sede.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="acciones">
+                <button type="submit" class="btn-guardar">Guardar</button>
+                <a href="{% url 'lista_usuarios' %}" class="btn-cancelar">
+                    Cancelar
+                </a>
+            </div>
+
+        </form>
+    </div>
+
+</div>
+
+{% endblock %}

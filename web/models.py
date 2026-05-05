@@ -2,6 +2,8 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.validators import RegexValidator
+from django.utils import timezone
+from django.db.models import Sum  
 
 class Sede(models.Model):
     nombre = models.CharField(max_length=70)
@@ -28,7 +30,7 @@ class Perfil(models.Model):
 
 class Apoderado(models.Model):
     nombre_completo = models.CharField(max_length=100)
-    dni = models.CharField(max_length=8)    
+    dni = models.CharField(max_length=8, unique=True) 
     celular = models.CharField(max_length=9)
     direccion = models.CharField(max_length=100)
 
@@ -46,7 +48,7 @@ class Alumno(models.Model):
     fecha_nacimiento = models.DateField()
     direccion = models.CharField(max_length=100)
     distrito = models.ForeignKey('Distrito', on_delete=models.SET_NULL, null=True)
-    email = models.EmailField()
+    email = models.EmailField(null=True, blank=True)
     ESTADOS =[
         ('activo','Activo'),
         ('inactivo','Inactivo'),
@@ -72,10 +74,11 @@ class Ciclo(models.Model):
         return self.nombre
     
 
+
+
 class Matricula(models.Model):
     alumno = models.ForeignKey(Alumno, on_delete=models.CASCADE)
     ciclo = models.ForeignKey(Ciclo, on_delete=models.CASCADE)
-
     fecha_matricula = models.DateField()
 
     ESTADOS = [
@@ -84,27 +87,49 @@ class Matricula(models.Model):
     ]
     estado = models.CharField(max_length=20, choices=ESTADOS)
 
-    registrado_por = models.ForeignKey(Perfil, on_delete=models.CASCADE)  # mejora
+    registrado_por = models.ForeignKey(Perfil, on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.alumno} {self.ciclo}"
 
-class Pago (models.Model):
+    # 🔥 NUEVO
+    def total_pagado(self):
+        total = self.pago_set.aggregate(total=Sum('monto'))['total']
+        return total or 0
+
+    # 🔥 NUEVO
+    def deuda(self):
+        return self.ciclo.precio - self.total_pagado()
+
+class Pago(models.Model):
     matricula = models.ForeignKey(Matricula, on_delete=models.CASCADE)
     registrado_por = models.ForeignKey(Perfil, on_delete=models.CASCADE)
 
     fecha_pago = models.DateField(default=timezone.now)
     monto = models.DecimalField(max_digits=10, decimal_places=2)
+
     METODOS = [
         ('efectivo', 'Efectivo'),
         ('yape', 'Yape'),
         ('transferencia', 'Transferencia'),
-]
+    ]
     metodo_pago = models.CharField(max_length=20, choices=METODOS)
 
     def __str__(self):
         return f"{self.monto} {self.matricula}"
 
+    # 🔥 NUEVO
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+
+        matricula = self.matricula
+
+        if matricula.deuda() <= 0:
+            matricula.estado = 'pagado'
+        else:
+            matricula.estado = 'pendiente'
+
+        matricula.save()
 
 class FormacionAcademica(models.Model):
     alumno = models.OneToOneField(Alumno, on_delete=models.CASCADE)

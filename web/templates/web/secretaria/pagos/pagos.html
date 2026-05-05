@@ -4,71 +4,129 @@
 {% block content %}
 
 <h2><i class="fas fa-money-bill"></i> Registro de Pagos</h2>
-
 <div class="pagos-container">
 
-    <!-- FORMULARIO -->
-    <div class="card pago-form">
-        <h3>Nuevo Pago</h3>
+    <!-- 🔝 RESUMEN -->
+    <div class="card shadow-sm p-3 mb-4">
+        <h5 class="mb-3">Resumen de matrícula</h5>
+
+        <div class="row text-center">
+            <div class="col-md-4">
+                <div class="border rounded p-3">
+                    <small>Total del ciclo</small>
+                    <h5>S/. {{ total_ciclo }}</h5>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3">
+                    <small>Total pagado</small>
+                    <h5 class="text-primary">S/. {{ total_pagado }}</h5>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="border rounded p-3">
+                    <small>Deuda</small>
+                    {% if deuda > 0 %}
+                    <h5 class="text-danger">S/. {{ deuda }}</h5>
+                    {% else %}
+                    <h5 class="text-success">0</h5>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 💳 FORMULARIO -->
+    {% if deuda > 0 %}
+    <div class="card shadow-sm p-4 mb-4">
+        <h5 class="mb-3">Registrar pago</h5>
+
         <form method="POST">
             {% csrf_token %}
-            <ul>
-                <!-- feccha -->
-                <li>
-                <label>Fecha</label>
-                <p class="form-control-plaintext">
-                    {% now 'd/m/Y' %}
-                </p>
-                </li>
-                <!-- cajero -->
-                <li>
-                    <label>Cajero</label>
-                    <p class="form-control-plaintext">
-                        {{ request.user.username }}
-                    </p>
-                </li>
-                <li>
-                    <!-- Adquiriente -->
-                    <label>Adquiriente</label>
-                    <input type="text" name="adquiriente" placeholder="Nombre del apoderado o quien paga">
-                </li>
 
-                <li>
-                    <label>Alumno</label>
-                    <p class="form-control-plaintext">
-                        {{ matricula.alumno }}
-                    </p>
-                </li>
-                <li>
-                    <!-- Método de pago -->
-                    <label>Método de Pago</label>
-                    <select name="metodo_pago">
+            <div class="row">
+                <div class="col-md-4">
+                    <label>Monto</label>
+                    <input type="number" name="monto" id="monto" class="form-control" step="0.01" min="1" required>
+                </div>
+
+                <div class="col-md-4">
+                    <label>Método de pago</label>
+                    <select name="metodo_pago" class="form-select" required>
+                        <option value="">Seleccione</option>
                         <option value="efectivo">Efectivo</option>
                         <option value="yape">Yape</option>
                         <option value="transferencia">Transferencia</option>
-                        <option value="plin">plin</option>
                     </select>
-                </li>
-                <li>
-                    <!-- Descripción -->
-                    <label>Descripción</label>
-                    <input type="text" name="descripcion" placeholder="Ej: Ciclo Matemática - Turno mañana">
-                </li>
-                <li>
-                    <!-- Monto -->
-                    <label>Monto</label>
-                    <input type="number" name="monto" placeholder="Ingrese monto" required>
-                </li>
-                <li>
-                    <button type="submit" class="btn-pagar">
-                        Registrar Pago
-                    </button>
-                </li>
-            </ul>
+                </div>
 
+                <div class="col-md-4 d-flex align-items-end">
+                    <button type="submit" class="btn btn-success w-100">
+                        Registrar pago
+                    </button>
+                </div>
+            </div>
+
+            <!-- 🔥 PAGAR TODO -->
+            <div class="mt-3 text-end">
+                <button type="button" class="btn btn-outline-primary btn-sm" onclick="pagarTodo()">
+                    Pagar todo
+                </button>
+            </div>
         </form>
+    </div>
+    {% else %}
+    <div class="alert alert-success text-center">
+        ✔ Matrícula pagada completamente
+    </div>
+    {% endif %}
+
+    <!-- 📜 HISTORIAL -->
+    <div class="card shadow-sm p-3">
+        <h5 class="mb-3">Historial de pagos</h5>
+
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+                <tr>
+                    <th>Fecha</th>
+                    <th>Monto</th>
+                    <th>Método</th>
+                    <th>Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pagos %}
+                <tr>
+                    <td>{{ p.fecha_pago|date:"d/m/Y" }}</td>
+                    <td>S/. {{ p.monto }}</td>
+                    <td>{{ p.get_metodo_pago_display }}</td>
+                    <td>
+                        <!-- 🔥 LISTO PARA PDF -->
+                        <a href="{% url 'boleta_pdf' p.id %}" class="btn btn-sm btn-outline-secondary">
+                            PDF
+                        </a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">
+                        No hay pagos registrados
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
     </div>
 
 </div>
+
+<!-- ⚡ SCRIPT -->
+<script>
+function pagarTodo() {
+    document.getElementById("monto").value = parseFloat("{{ deuda|default:0 }}");
+}
+</script>
 
 {% endblock %}

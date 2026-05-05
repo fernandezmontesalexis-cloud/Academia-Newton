@@ -1,0 +1,59 @@
+{% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/formularios.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="card">
+
+        <h2>Editar Usuario</h2>
+        <p class="subtitulo">Modifica los datos del usuario seleccionado</p>
+
+        <form method="POST">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label>Usuario</label>
+                <input type="text" name="username" value="{{ user.username }}" class="input">
+            </div>
+
+            <div class="form-group">
+                <label>Tipo de usuario</label>
+                <select name="tipo_usuario" class="input">
+                    <option value="admin" {% if perfil.tipo_usuario == "admin" %}selected{% endif %}>Administrador</option>
+                    <option value="secretaria" {% if perfil.tipo_usuario == "secretaria" %}selected{% endif %}>Secretaria</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Sede</label>
+                <select name="sede" class="input">
+                    {% for sede in sedes %}
+                        <option value="{{ sede.id }}" {% if perfil.sede.id == sede.id %}selected{% endif %}>
+                            {{ sede.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <!-- 🔥 BOTONES -->
+            <div class="acciones-form">
+                <button type="submit" class="btn-guardar">Actualizar</button>
+
+                <a href="{% url 'lista_usuarios' %}" class="btn-cancelar">
+                    Cancelar
+                </a>
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

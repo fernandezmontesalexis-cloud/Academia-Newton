@@ -21,6 +21,15 @@ from .views.reportes_views import reportes_sedes
 from .views.admin_views import lista_ciclos
 from .views.admin_views import lista_sedes
 from .views.admin_views import crear_sede
+from .views.admin_views import editar_sede
+from .views.admin_views import eliminar_sede
+from .views.admin_views import crear_usuario
+from .views.admin_views import lista_usuarios
+from .views.admin_views import editar_usuario
+from .views.admin_views import eliminar_usuario
+from .views.admin_views import crear_ciclo
+from .views.pagos_views import lista_pagos 
+from .views.pagos_views import boleta_pdf
 
 urlpatterns = [
     # AUTENTICACIÓN
@@ -64,12 +73,13 @@ urlpatterns = [
     # MATRÍCULAS Y PAGOS (aún en old_views)
     path("secretaria/matriculas/", matriculas, name="matriculas"),
     path("secretaria/pagos/<int:matricula_id>/", pagos, name="pagos"),
+    path("secretaria/pagos/", lista_pagos, name="lista_pagos"),
+    path('pagos/boleta/<int:pago_id>/', boleta_pdf, name='boleta_pdf'),
 
     # REPORTES
     path("reportes/sedes/", reportes_sedes, name="reportes_sedes"),
 
-    # ADMIN
-    path("panel/ciclos/", lista_ciclos, name="lista_ciclos"),
+    
     #LISTA SEDE
     path("panel/sedes/", lista_sedes, name="lista_sedes"),
     path("panel/sedes/nueva/", crear_sede, name="crear_sede"),
@@ -81,5 +91,21 @@ urlpatterns = [
     #colegios
     path("buscar-colegios/", buscar_colegios),
     path("crear-colegio/", crear_colegio),
+
+    path("panel/sedes/editar/<int:id>/", editar_sede, name="editar_sede"),
+    #eliminar sede
+    path("panel/sedes/eliminar/<int:id>/", eliminar_sede, name="eliminar_sede"),
+
+    #crud crear usarios
+    path("panel/usuarios/crear/", crear_usuario, name="crear_usuario"),
+    #lista de usaurios
+    path("panel/usuarios/", lista_usuarios, name="lista_usuarios"),
+    #editar usuarios
+    path("panel/usuarios/editar/<int:id>/", editar_usuario, name="editar_usuario"),
+    #eliminar usuario
+    path("panel/usuarios/eliminar/<int:id>/", eliminar_usuario, name="eliminar_usuario"),
+    #crear crud de ciclos
+    path("panel/ciclos/", lista_ciclos, name="lista_ciclos"),
+    path("panel/ciclos/crear/", crear_ciclo, name="crear_ciclo"),
 
 ]

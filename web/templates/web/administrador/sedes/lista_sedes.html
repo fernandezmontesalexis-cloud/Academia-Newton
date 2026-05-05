@@ -26,8 +26,12 @@
                     <td>{{ sede.nombre }}</td>
                     <td>
                         <div class="acciones">
-                            <a href="#" class="btn-edit">Editar</a>
-                            <a href="#" class="btn-delete">Eliminar</a>
+                            <a href="{% url 'editar_sede' sede.id %}" class="btn-edit">Editar</a>
+                            <a href="{% url 'eliminar_sede' sede.id %}"
+                                onclick="confirmarAccion(event, this.href, '¿Eliminar sede?', 'Se eliminará permanentemente', 'Sí, eliminar')"
+                                class="btn-delete">
+                                Eliminar
+                            </a>
                         </div>
                     </td>
                 </tr>

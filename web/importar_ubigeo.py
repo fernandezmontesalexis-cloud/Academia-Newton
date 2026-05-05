@@ -1,10 +1,16 @@
-import csv
-from web.models import Departamento, Provincia, Distrito
 import os
+import django
+import csv
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'Academia_Newton.settings')
+django.setup()
+
+from web.models import Departamento, Provincia, Distrito
+
 
 ruta = os.path.join(os.getcwd(), "web", "data", "ubigeo_distrito.csv")
 
-with open(ruta, newline='', encoding='utf-8') as file:
+with open(ruta, newline="", encoding="latin-1") as file:
     reader = csv.reader(file)
     next(reader)
 
@@ -13,7 +19,9 @@ with open(ruta, newline='', encoding='utf-8') as file:
         provincia_nombre = row[3]
         distrito_nombre = row[4]
 
-        dep, _ = Departamento.objects.get_or_create(nombre=departamento_nombre)
+        dep, _ = Departamento.objects.get_or_create(
+            nombre=departamento_nombre
+        )
 
         prov, _ = Provincia.objects.get_or_create(
             nombre=provincia_nombre,

@@ -30,7 +30,6 @@ def registrar_alumno(request):
 
     departamentos = Departamento.objects.all()
 
-
     if request.method == "POST":
 
         apellido_paterno = request.POST.get("apellido_paterno")
@@ -49,9 +48,7 @@ def registrar_alumno(request):
             return render(
                 request,
                 "web/secretaria/alumnos/registrar_alumno.html",
-                {"alumno": request.POST,
-                "departamentos": departamentos 
-                 },
+                {"alumno": request.POST, "departamentos": departamentos},
             )
 
         if len(dni) != 8 or not dni.isdigit():
@@ -59,9 +56,7 @@ def registrar_alumno(request):
             return render(
                 request,
                 "web/secretaria/alumnos/registrar_alumno.html",
-                {"alumno": request.POST,
-                 "departamentos": departamentos
-                 },
+                {"alumno": request.POST, "departamentos": departamentos},
             )
 
         if Alumno.objects.filter(dni=dni).exists():
@@ -69,8 +64,7 @@ def registrar_alumno(request):
             return render(
                 request,
                 "web/secretaria/alumnos/registrar_alumno.html",
-                {"alumno": request.POST,
-                 "departamentos": departamentos},
+                {"alumno": request.POST, "departamentos": departamentos},
             )
 
         if not fecha_nacimiento:
@@ -78,9 +72,7 @@ def registrar_alumno(request):
             return render(
                 request,
                 "web/secretaria/alumnos/registrar_alumno.html",
-                {"alumno": request.POST,
-                 "departamentos": departamentos 
-                 },
+                {"alumno": request.POST, "departamentos": departamentos},
             )
 
         #  VALIDACIÓN DE FECHA Y EDAD
@@ -90,9 +82,8 @@ def registrar_alumno(request):
             messages.error(request, "Fecha inválida")
             return render(
                 request,
-                "web/secretaria/alumnos/registrar_alumno.html", 
-                {"alumno": request.POST,
-                 "departamentos": departamentos },
+                "web/secretaria/alumnos/registrar_alumno.html",
+                {"alumno": request.POST, "departamentos": departamentos},
             )
 
         hoy = date.today()
@@ -103,9 +94,7 @@ def registrar_alumno(request):
             return render(
                 request,
                 "web/secretaria/alumnos/registrar_alumno.html",
-                {"alumno": request.POST,
-                 "departamentos": departamentos
-                 },
+                {"alumno": request.POST, "departamentos": departamentos},
             )
 
         # calcular edad
@@ -121,19 +110,16 @@ def registrar_alumno(request):
             return render(
                 request,
                 "web/secretaria/alumnos/registrar_alumno.html",
-                {"alumno": request.POST,
-                "departamentos": departamentos },
+                {"alumno": request.POST, "departamentos": departamentos},
             )
 
-        # edad poco 
+        # edad poco
         if edad > 60:
             messages.error(request, "Edad no válida para este registro")
             return render(
                 request,
                 "web/secretaria/alumnos/registrar_alumno.html",
-                {"alumno": request.POST,
-                 "departamentos": departamentos
-                 },
+                {"alumno": request.POST, "departamentos": departamentos},
             )
 
         # guardar en session
@@ -155,7 +141,9 @@ def registrar_alumno(request):
     alumno = request.session.get("alumno", {})
 
     return render(
-        request, "web/secretaria/alumnos/registrar_alumno.html", {"alumno": alumno,"departamentos": departamentos}
+        request,
+        "web/secretaria/alumnos/registrar_alumno.html",
+        {"alumno": alumno, "departamentos": departamentos},
     )
 
 
@@ -199,8 +187,7 @@ def regis_form_academica(request):
     return render(
         request,
         "web/secretaria/alumnos/regis_form_academica.html",
-        {"formacion": formacion,
-         "departamentos": departamentos},
+        {"formacion": formacion, "departamentos": departamentos},
     )
 
 
@@ -227,14 +214,27 @@ def regis_form_adicional(request):
             return redirect("registrar_alumno")
 
         # apoderado opcional
+        # apoderado opcional
+
         apoderado = None
+
         if apoderado_data and apoderado_data.get("nombre_apoderado"):
-            apoderado = Apoderado.objects.create(
-                nombre_completo=apoderado_data["nombre_apoderado"],
+
+            apoderado, created = Apoderado.objects.get_or_create(
                 dni=apoderado_data["dni_apoderado"],
-                celular=apoderado_data["celular_apoderado"],
-                direccion=apoderado_data["direccion_apoderado"],
+                defaults={
+                    "nombre_completo": apoderado_data["nombre_apoderado"],
+                    "celular": apoderado_data["celular_apoderado"],
+                    "direccion": apoderado_data["direccion_apoderado"],
+                },
             )
+
+            # 🔥 actualizar si ya existía
+            if not created:
+                apoderado.nombre_completo = apoderado_data["nombre_apoderado"]
+                apoderado.celular = apoderado_data["celular_apoderado"]
+                apoderado.direccion = apoderado_data["direccion_apoderado"]
+                apoderado.save()
 
         sede = request.user.perfil.sede
 
@@ -253,7 +253,7 @@ def regis_form_adicional(request):
             celular=alumno_data["celular"],
             fecha_nacimiento=alumno_data["fecha_nacimiento"],
             direccion=alumno_data["direccion"],
-            distrito= distrito,
+            distrito=distrito,
             email=alumno_data["email"],
             estado="activo",
             sede=sede,
@@ -265,7 +265,7 @@ def regis_form_adicional(request):
         FormacionAcademica.objects.create(
             alumno=alumno,
             tipo_institucion=formacion_acad_data["tipo_institucion"],
-            institucion=colegio
+            institucion=colegio,
         )
 
         form_adicional = request.session.get("formacion_adicional")
@@ -281,11 +281,15 @@ def regis_form_adicional(request):
 
         ciclo_id = form_adicional.get("ciclo")
 
-        if not ciclo_id:
+        if not ciclo_id or ciclo_id == "":
             messages.error(request, "Debe seleccionar un ciclo")
             return redirect("regis_form_adicional")
 
-        ciclo = Ciclo.objects.get(id=ciclo_id)
+        try:
+            ciclo = Ciclo.objects.get(id=int(ciclo_id))
+        except (Ciclo.DoesNotExist, ValueError):
+            messages.error(request, "Ciclo inválido")
+            return redirect("regis_form_adicional")
 
         matricula = Matricula.objects.create(
             alumno=alumno,
@@ -303,7 +307,7 @@ def regis_form_adicional(request):
 
         return redirect("pagos", matricula_id=matricula.id)
 
-    ciclos = Ciclo.objects.all()
+    ciclos = Ciclo.objects.filter(sede=request.user.perfil.sede)
     formacion_adicional = request.session.get("formacion_adicional", {})
 
     return render(
@@ -323,17 +327,20 @@ def cancelar_registro(request):
 
     return redirect("dashboard")
 
+
 @login_required
 def get_provincias(request, departamento_id):
     provincias = Provincia.objects.filter(departamento_id=departamento_id)
     data = list(provincias.values("id", "nombre"))
     return JsonResponse(data, safe=False)
 
+
 @login_required
 def get_distritos(request, provincia_id):
     distritos = Distrito.objects.filter(provincia_id=provincia_id)
     data = list(distritos.values("id", "nombre"))
     return JsonResponse(data, safe=False)
+
 
 @login_required
 def buscar_colegios(request):
@@ -344,6 +351,7 @@ def buscar_colegios(request):
     data = list(colegios.values("id", "nombre"))
 
     return JsonResponse(data, safe=False)
+
 
 @login_required
 def crear_colegio(request):
@@ -357,11 +365,7 @@ def crear_colegio(request):
             return JsonResponse({"error": "Faltan datos"}, status=400)
 
         colegio = InstitucionEducativa.objects.create(
-            nombre=nombre,
-            distrito_id=distrito_id
+            nombre=nombre, distrito_id=distrito_id
         )
 
-        return JsonResponse({
-            "id": colegio.id,
-            "nombre": colegio.nombre
-        })
+        return JsonResponse({"id": colegio.id, "nombre": colegio.nombre})

@@ -1,0 +1,56 @@
+{% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/lista_sedes.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<div class="container">
+
+    <div class="header">
+        <h2>Lista de Usuarios</h2>
+        <a href="{% url 'crear_usuario' %}" class="btn">+ Nuevo Usuario</a>
+    </div>
+
+    <div class="card">
+        <table class="tabla">
+            <thead>
+                <tr>
+                    <th>Usuario</th>
+                    <th>Tipo</th>
+                    <th>Sede</th>
+                    <th>Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for u in usuarios %}
+                <tr>
+                    <td>{{ u.username }}</td>
+                    <td>
+                        <span class="badge {{ u.perfil.tipo_usuario }}">
+                            {{ u.perfil.tipo_usuario }}
+                        </span>
+                    </td>
+                    <td>{{ u.perfil.sede.nombre }}</td>
+                    <td>
+                        <div class="acciones">
+                            <a href="{% url 'editar_usuario' u.id %}" class="btn-edit">Editar</a>
+                            <a href="{% url 'eliminar_usuario' u.id %}"
+                                onclick="confirmarAccion(event, this.href, '¿Eliminar usuario?', 'Esta acción no se puede deshacer', 'Sí, eliminar')"
+                                class="btn-delete">
+                                Eliminar
+                            </a>
+
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

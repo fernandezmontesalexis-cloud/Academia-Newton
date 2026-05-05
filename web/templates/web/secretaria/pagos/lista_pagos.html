@@ -1,0 +1,90 @@
+{% extends 'web/base/base.html' %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <div class="card shadow-sm p-3">
+        <h4 class="mb-3">💳 Gestión de Pagos</h4>
+
+        <!-- 🔍 BUSCADOR -->
+        <form method="GET" class="mb-3">
+            <input type="text" name="buscar" class="form-control" placeholder="Buscar por alumno o DNI">
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Alumno</th>
+                        <th>Ciclo</th>
+                        <th>Total</th>
+                        <th>Pagado</th>
+                        <th>Deuda</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in data %}
+                    {% with m=item.matricula %}
+
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+
+                        <td>
+                            {{ m.alumno }}<br>
+                            <small>DNI: {{ m.alumno.dni }}</small>
+                        </td>
+
+                        <td>{{ m.ciclo.nombre }}</td>
+
+                        <td>S/. {{ m.ciclo.precio }}</td>
+
+                        <td class="text-primary">
+                            S/. {{ item.total_pagado }}
+                        </td>
+
+                        <td>
+                            {% if item.deuda > 0 %}
+                                <span class="text-danger fw-bold">
+                                    S/. {{ item.deuda }}
+                                </span>
+                            {% else %}
+                                <span class="text-success">0</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if item.deuda > 0 %}
+                                <span class="badge bg-warning text-dark">
+                                    Pendiente
+                                </span>
+                            {% else %}
+                                <span class="badge bg-success">
+                                    Pagado
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <a href="{% url 'pagos' m.id %}" class="btn btn-sm btn-success">
+                                Ver / Pagar
+                            </a>
+                        </td>
+                    </tr>
+
+                    {% endwith %}
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}
