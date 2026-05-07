@@ -92,9 +92,8 @@ def pagos(request, matricula_id):
         'pagos': pagos
     })
 @login_required
-@permiso_requerido(['admin','secretaria'])
+@permiso_requerido(['admin', 'secretaria'])
 def lista_pagos(request):
-
     sede = request.user.perfil.sede
 
     matriculas = Matricula.objects.filter(
@@ -102,22 +101,29 @@ def lista_pagos(request):
     ).select_related('alumno', 'ciclo')
 
     data = []
-
     for m in matriculas:
         total_pagado = m.pago_set.aggregate(total=Sum('monto'))['total'] or 0
         deuda = m.ciclo.precio - total_pagado
-
         data.append({
             'matricula': m,
             'total_pagado': total_pagado,
-            'deuda': deuda
+            'deuda': deuda,
         })
 
-    # 🔥 ordenar: primero deudores
     data.sort(key=lambda x: x['deuda'], reverse=True)
 
+    pagos_hoy = (
+        Pago.objects.filter(fecha_pago=date.today(), matricula__alumno__sede=sede)
+        .aggregate(total=Sum('monto'))['total'] or 0
+    )
+    deuda_total = sum(x['deuda'] for x in data)
+    alumnos_con_deuda = sum(1 for x in data if x['deuda'] > 0)
+
     return render(request, 'web/secretaria/pagos/lista_pagos.html', {
-        'data': data
+        'data': data,
+        'pagos_hoy': pagos_hoy,
+        'deuda_total': deuda_total,
+        'alumnos_con_deuda': alumnos_con_deuda,
     })
 
 

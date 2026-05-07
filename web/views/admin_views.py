@@ -133,6 +133,44 @@ def eliminar_usuario(request, id):
 
 @login_required
 @permiso_requerido(['admin'])
+def configuracion(request):
+    return render(request, 'web/administrador/configuracion/configuracion.html')
+
+
+@login_required
+@permiso_requerido(['admin'])
+def editar_ciclo(request, id):
+    ciclo = get_object_or_404(Ciclo, id=id, sede=request.user.perfil.sede)
+    if request.method == "POST":
+        nombre = request.POST.get("nombre")
+        precio = request.POST.get("precio")
+        fecha_inicio = request.POST.get("fecha_inicio")
+        fecha_fin = request.POST.get("fecha_fin")
+        if not nombre or not precio or not fecha_inicio or not fecha_fin:
+            messages.error(request, "Todos los campos son obligatorios")
+            return render(request, "web/administrador/ciclos/editar_ciclo.html", {"ciclo": ciclo})
+        ciclo.nombre = nombre
+        ciclo.precio = precio
+        ciclo.fecha_inicio = fecha_inicio
+        ciclo.fecha_fin = fecha_fin
+        ciclo.save()
+        messages.success(request, "Ciclo actualizado correctamente")
+        return redirect("lista_ciclos")
+    return render(request, "web/administrador/ciclos/editar_ciclo.html", {"ciclo": ciclo})
+
+
+@login_required
+@permiso_requerido(['admin'])
+def eliminar_ciclo(request, id):
+    ciclo = get_object_or_404(Ciclo, id=id, sede=request.user.perfil.sede)
+    nombre = ciclo.nombre
+    ciclo.delete()
+    messages.success(request, f"Ciclo '{nombre}' eliminado correctamente")
+    return redirect("lista_ciclos")
+
+
+@login_required
+@permiso_requerido(['admin'])
 def crear_ciclo(request):
     if request.method == "POST":
         nombre = request.POST.get("nombre")

@@ -1,33 +1,102 @@
-
 {% extends 'web/base/base.html' %}
 {% load static %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'web/css/reportes_sedes.css' %}">
 {% endblock %}
+
 {% block content %}
-<h2>Seleccionar Sede</h2>
 
-<div class="contenedor-sedes">
-
-    <div class="card-sede">
-        <h3>Sede Huacho</h3>
-        <p>Ver alumnos</p>
-        <a href="{% url 'matriculas' %}" class="btn-ingresar">Ingresar</a>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Reportes por Sede</h4>
+        <small class="text-muted">Resumen gerencial de todas las sedes</small>
     </div>
-
-    <div class="card-sede">
-        <h3>Sede Huaura</h3>
-        <p>Ver alumnos</p>
-        <a href="{% url 'matriculas' %}" class="btn-ingresar">Ingresar</a>
-    </div>
-
-    <div class="card-sede">
-        <h3>Sede Sayan</h3>
-        <p>Ver alumnos</p>
-        <a href="{% url 'matriculas' %}" class="btn-ingresar">Ingresar</a>
-    </div>
-
-
 </div>
+
+{% if data_sedes %}
+
+<!-- CARDS POR SEDE -->
+<div class="row g-3 mb-4">
+    {% for item in data_sedes %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-primary text-white fw-semibold">
+                <i class="fas fa-building me-1"></i> {{ item.sede.nombre }}
+            </div>
+            <div class="card-body">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Alumnos activos</span>
+                    <span class="badge bg-primary">{{ item.alumnos_activos }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Matrículas</span>
+                    <span class="badge bg-secondary">{{ item.total_matriculas }}</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Ingresos</span>
+                    <span class="text-success fw-bold">S/. {{ item.ingresos }}</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Deuda pendiente</span>
+                    {% if item.deuda > 0 %}
+                        <span class="text-danger fw-bold">S/. {{ item.deuda }}</span>
+                    {% else %}
+                        <span class="text-success"><i class="fas fa-check"></i> Al día</span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- TABLA COMPARATIVA -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <h6 class="fw-semibold mb-3">
+            <i class="fas fa-table text-primary me-1"></i> Comparativo de Sedes
+        </h6>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Sede</th>
+                        <th class="text-center">Alumnos</th>
+                        <th class="text-center">Matrículas</th>
+                        <th class="text-end">Ingresos</th>
+                        <th class="text-end">Deuda</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in data_sedes %}
+                    <tr>
+                        <td class="fw-semibold">{{ item.sede.nombre }}</td>
+                        <td class="text-center">{{ item.alumnos_activos }}</td>
+                        <td class="text-center">{{ item.total_matriculas }}</td>
+                        <td class="text-end text-success fw-semibold">S/. {{ item.ingresos }}</td>
+                        <td class="text-end">
+                            {% if item.deuda > 0 %}
+                                <span class="text-danger fw-semibold">S/. {{ item.deuda }}</span>
+                            {% else %}
+                                <span class="text-success"><i class="fas fa-check"></i></span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="card border-0 shadow-sm">
+    <div class="card-body text-center py-5 text-muted">
+        <i class="fas fa-building fa-3x mb-3 d-block"></i>
+        No hay sedes registradas. <a href="{% url 'crear_sede' %}">Crear sede</a>
+    </div>
+</div>
+{% endif %}
+
 {% endblock %}

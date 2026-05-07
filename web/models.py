@@ -92,12 +92,10 @@ class Matricula(models.Model):
     def __str__(self):
         return f"{self.alumno} {self.ciclo}"
 
-    # 🔥 NUEVO
     def total_pagado(self):
-        total = self.pago_set.aggregate(total=Sum('monto'))['total']
-        return total or 0
+        # sum() usa la caché de prefetch_related cuando está disponible (evita N+1)
+        return sum(p.monto for p in self.pago_set.all()) or 0
 
-    # 🔥 NUEVO
     def deuda(self):
         return self.ciclo.precio - self.total_pagado()
 

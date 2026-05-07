@@ -1,7 +1,7 @@
 from django.urls import path
 from .views.auth_views import login_view, logout_view
 from .views.dashboard_views import dashboard
-from .views.alumnos_views import lista_alumnos, cambiar_estado_alumno
+from .views.alumnos_views import lista_alumnos, cambiar_estado_alumno, detalle_alumno
 from .views.registro_views import (
     registrar_alumno,
     registrar_apoderado,
@@ -14,19 +14,14 @@ from .views.registro_views import (
     crear_colegio,
 )
 
-from .views.matriculas_views import matriculas
+from .views.matriculas_views import matriculas, exportar_excel
 from .views.pagos_views import pagos
 from .views.reportes_views import reportes_sedes
-from .views.admin_views import lista_ciclos
-from .views.admin_views import lista_sedes
-from .views.admin_views import crear_sede
-from .views.admin_views import editar_sede
-from .views.admin_views import eliminar_sede
-from .views.admin_views import crear_usuario
-from .views.admin_views import lista_usuarios
-from .views.admin_views import editar_usuario
-from .views.admin_views import eliminar_usuario
-from .views.admin_views import crear_ciclo
+from .views.admin_views import (
+    lista_ciclos, lista_sedes, crear_sede, editar_sede, eliminar_sede,
+    crear_usuario, lista_usuarios, editar_usuario, eliminar_usuario,
+    crear_ciclo, editar_ciclo, eliminar_ciclo, configuracion,
+)
 from .views.pagos_views import lista_pagos 
 from .views.pagos_views import boleta_pdf
 
@@ -40,6 +35,7 @@ urlpatterns = [
 
     # SECRETARIA - ALUMNOS
     path("secretaria/alumnos/", lista_alumnos, name="lista_alumnos"),
+    path("secretaria/alumnos/<int:alumno_id>/", detalle_alumno, name="detalle_alumno"),
     path(
         "secretaria/alumnos/estado/<int:alumno_id>/",
         cambiar_estado_alumno,
@@ -71,6 +67,7 @@ urlpatterns = [
 
     # MATRÍCULAS Y PAGOS
     path("secretaria/matriculas/", matriculas, name="matriculas"),
+    path("secretaria/matriculas/exportar/", exportar_excel, name="exportar_excel"),
     path("secretaria/pagos/<int:matricula_id>/", pagos, name="pagos"),
     path("secretaria/pagos/", lista_pagos, name="lista_pagos"),
     path('pagos/boleta/<int:pago_id>/', boleta_pdf, name='boleta_pdf'),
@@ -106,5 +103,8 @@ urlpatterns = [
     #crear crud de ciclos
     path("panel/ciclos/", lista_ciclos, name="lista_ciclos"),
     path("panel/ciclos/crear/", crear_ciclo, name="crear_ciclo"),
+    path("panel/ciclos/editar/<int:id>/", editar_ciclo, name="editar_ciclo"),
+    path("panel/ciclos/eliminar/<int:id>/", eliminar_ciclo, name="eliminar_ciclo"),
+    path("panel/configuracion/", configuracion, name="configuracion"),
 
 ]

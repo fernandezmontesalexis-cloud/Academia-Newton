@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Recurse -Depth 2)",
+      "Bash(Select-Object FullName)",
+      "Bash(Remove-Item \"c:\\\\Users\\\\elvis\\\\OneDrive\\\\Escritorio\\\\Academia-newton\\\\web\\\\old_views.py\")",
+      "PowerShell(Remove-Item \"c:\\\\Users\\\\elvis\\\\OneDrive\\\\Escritorio\\\\Academia-newton\\\\web\\\\old_views.py\" -Confirm:$false)",
+      "PowerShell(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\elvis\\\\OneDrive\\\\Escritorio\\\\Academia-newton\\\\fixtures\" -Force)"
+    ]
+  }
+}

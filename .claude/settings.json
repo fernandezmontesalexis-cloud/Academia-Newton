@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Remove-Item \"c:\\\\Users\\\\elvis\\\\OneDrive\\\\Escritorio\\\\Academia-newton\\\\_gen_ubigeo.py\" -Confirm:$false)",
+      "PowerShell(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\elvis\\\\OneDrive\\\\Escritorio\\\\Academia-newton\\\\web\\\\management\\\\commands\" -Force)",
+      "PowerShell(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\elvis\\\\OneDrive\\\\Escritorio\\\\Academia-newton\\\\web\\\\templates\\\\web\\\\administrador\\\\configuracion\" -Force)",
+      "Bash(python manage.py check)",
+      "Bash(venv\\\\Scripts\\\\pip install *)"
+    ]
+  }
+}
