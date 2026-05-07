@@ -17,10 +17,6 @@ from ..models import (
     Departamento,
     InstitucionEducativa,
 )
-from datetime import date
-from datetime import datetime, date
-
-
 from datetime import datetime, date
 
 
@@ -354,6 +350,7 @@ def buscar_colegios(request):
 
 
 @login_required
+@permiso_requerido(["admin", "secretaria"])
 def crear_colegio(request):
     if request.method == "POST":
         data = json.loads(request.body)

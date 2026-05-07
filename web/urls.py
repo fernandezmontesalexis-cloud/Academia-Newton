@@ -14,7 +14,6 @@ from .views.registro_views import (
     crear_colegio,
 )
 
-import web.old_views as views  # para lo que aún no movemos
 from .views.matriculas_views import matriculas
 from .views.pagos_views import pagos
 from .views.reportes_views import reportes_sedes
@@ -70,7 +69,7 @@ urlpatterns = [
         name="cancelar_registro",
     ),
 
-    # MATRÍCULAS Y PAGOS (aún en old_views)
+    # MATRÍCULAS Y PAGOS
     path("secretaria/matriculas/", matriculas, name="matriculas"),
     path("secretaria/pagos/<int:matricula_id>/", pagos, name="pagos"),
     path("secretaria/pagos/", lista_pagos, name="lista_pagos"),

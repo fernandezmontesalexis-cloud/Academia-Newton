@@ -1,7 +1,10 @@
+import functools
 from django.shortcuts import redirect
+
 
 def permiso_requerido(roles_permitidos):
     def decorator(view_func):
+        @functools.wraps(view_func)
         def wrapper(request, *args, **kwargs):
             perfil = getattr(request.user, 'perfil', None)
 

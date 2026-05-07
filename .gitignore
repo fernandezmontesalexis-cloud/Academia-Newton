@@ -18,4 +18,4 @@ db.sqlite3
 Thumbs.db
 
 # Archivos de VS Code
-.vscode/
+.vscode/.claude/
