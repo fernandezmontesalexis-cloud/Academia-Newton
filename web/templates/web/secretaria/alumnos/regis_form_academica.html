@@ -1,5 +1,9 @@
 {% extends 'web/base/base.html' %}
+{% load static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}">
+{% endblock %}
 {% block content %}
 <div class="alumno-container">
 
@@ -79,119 +83,129 @@
 
         <br>
 
-        <a href="{% url 'registrar_apoderado' %}" class="btn btn-secondary">← Anterior</a>
-        <button class="btn-guardar" type="submit">
-            Siguiente →
-        </button>
-        <a href="{% url 'cancelar_registro' %}" class="btn btn-danger" onclick="return confirmarCancelacion()">
-            Cancelar
-        </a>
+        <div class="botones-form">
+
+            <a href="{% url 'registrar_apoderado' %}" class="btn btn-outline-dark">
+                ← Atrás
+            </a>
+
+            <button type="submit" class="btn btn-outline-primary">
+                Siguiente →
+            </button>
+
+            <a href="{% url 'cancelar_registro' %}"
+   class="btn btn-outline-secondary"
+   onclick="confirmarCancelacion(event, this.href)">
+    Cancelar
+</a>
+
+        </div>
 
     </form>
 </div>
 <script>
-document.getElementById("colegio").addEventListener("keyup", function () {
-    let query = this.value;
+    document.getElementById("colegio").addEventListener("keyup", function () {
+        let query = this.value;
 
-    fetch(`/buscar-colegios/?q=${query}`)
-        .then(res => res.json())
-        .then(data => {
-            let resultados = document.getElementById("resultados");
-            resultados.innerHTML = "";
+        fetch(`/buscar-colegios/?q=${query}`)
+            .then(res => res.json())
+            .then(data => {
+                let resultados = document.getElementById("resultados");
+                resultados.innerHTML = "";
 
-            data.forEach(c => {
-                resultados.innerHTML += `
+                data.forEach(c => {
+                    resultados.innerHTML += `
                     <div style="cursor:pointer; padding:5px;"
                         onclick="seleccionar(${c.id}, '${c.nombre}')">
                         ${c.nombre}
                     </div>
                 `;
+                });
             });
-        });
-});
+    });
 
-function seleccionar(id, nombre) {
-    document.getElementById("colegio").value = nombre;
-    document.getElementById("colegio_id").value = id;
-    document.getElementById("resultados").innerHTML = "";
-}
-
-function mostrarAgregar() {
-    document.getElementById("nuevoColegio").style.display = "block";
-}
-
-function crearColegio() {
-    let nombre = document.getElementById("nuevo_nombre").value;
-    let distrito = document.getElementById("dist_ie").value;
-
-    console.log("Nombre:", nombre);
-    console.log("Distrito:", distrito);
-
-    if (!nombre || !distrito) {
-        alert("Completa todos los campos");
-        return;
+    function seleccionar(id, nombre) {
+        document.getElementById("colegio").value = nombre;
+        document.getElementById("colegio_id").value = id;
+        document.getElementById("resultados").innerHTML = "";
     }
 
-    fetch("/crear-colegio/", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            "X-CSRFToken": "{{ csrf_token }}"
-        },
-        body: JSON.stringify({
-            nombre: nombre,
-            distrito: distrito
-        })
-    })
-    .then(res => {
-        if (!res.ok) {
-            throw new Error("Error en servidor");
+    function mostrarAgregar() {
+        document.getElementById("nuevoColegio").style.display = "block";
+    }
+
+    function crearColegio() {
+        let nombre = document.getElementById("nuevo_nombre").value;
+        let distrito = document.getElementById("dist_ie").value;
+
+        console.log("Nombre:", nombre);
+        console.log("Distrito:", distrito);
+
+        if (!nombre || !distrito) {
+            alert("Completa todos los campos");
+            return;
         }
-        return res.json();
-    })
-    .then(data => {
-        console.log("Respuesta:", data);
 
-        seleccionar(data.id, data.nombre);
-        document.getElementById("nuevoColegio").style.display = "none";
-    })
-    .catch(error => {
-        console.error("ERROR:", error);
-        alert("Error al guardar colegio");
+        fetch("/crear-colegio/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({
+                nombre: nombre,
+                distrito: distrito
+            })
+        })
+            .then(res => {
+                if (!res.ok) {
+                    throw new Error("Error en servidor");
+                }
+                return res.json();
+            })
+            .then(data => {
+                console.log("Respuesta:", data);
+
+                seleccionar(data.id, data.nombre);
+                document.getElementById("nuevoColegio").style.display = "none";
+            })
+            .catch(error => {
+                console.error("ERROR:", error);
+                alert("Error al guardar colegio");
+            });
+    }
+</script>
+<script>
+    document.getElementById("dep_ie").addEventListener("change", function () {
+        let id = this.value;
+
+        fetch(`/get-provincias/${id}/`)
+            .then(res => res.json())
+            .then(data => {
+                let prov = document.getElementById("prov_ie");
+                prov.innerHTML = '<option value="">Provincia</option>';
+
+                data.forEach(p => {
+                    prov.innerHTML += `<option value="${p.id}">${p.nombre}</option>`;
+                });
+            });
     });
-}
 </script>
 <script>
-document.getElementById("dep_ie").addEventListener("change", function () {
-    let id = this.value;
+    document.getElementById("prov_ie").addEventListener("change", function () {
+        let id = this.value;
 
-    fetch(`/get-provincias/${id}/`)
-        .then(res => res.json())
-        .then(data => {
-            let prov = document.getElementById("prov_ie");
-            prov.innerHTML = '<option value="">Provincia</option>';
+        fetch(`/get-distritos/${id}/`)
+            .then(res => res.json())
+            .then(data => {
+                let dist = document.getElementById("dist_ie");
+                dist.innerHTML = '<option value="">Distrito</option>';
 
-            data.forEach(p => {
-                prov.innerHTML += `<option value="${p.id}">${p.nombre}</option>`;
+                data.forEach(d => {
+                    dist.innerHTML += `<option value="${d.id}">${d.nombre}</option>`;
+                });
             });
-        });
-});
-</script>
-<script>
-document.getElementById("prov_ie").addEventListener("change", function () {
-    let id = this.value;
-
-    fetch(`/get-distritos/${id}/`)
-        .then(res => res.json())
-        .then(data => {
-            let dist = document.getElementById("dist_ie");
-            dist.innerHTML = '<option value="">Distrito</option>';
-
-            data.forEach(d => {
-                dist.innerHTML += `<option value="${d.id}">${d.nombre}</option>`;
-            });
-        });
-});
+    });
 </script>
 
 

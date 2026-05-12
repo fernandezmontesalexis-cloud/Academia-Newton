@@ -18,21 +18,30 @@ from .views.matriculas_views import matriculas, exportar_excel
 from .views.pagos_views import pagos
 from .views.reportes_views import reportes_sedes
 from .views.admin_views import (
-    lista_ciclos, lista_sedes, crear_sede, editar_sede, eliminar_sede,
-    crear_usuario, lista_usuarios, editar_usuario, eliminar_usuario,
-    crear_ciclo, editar_ciclo, eliminar_ciclo, configuracion,
+    lista_ciclos,
+    lista_sedes,
+    crear_sede,
+    editar_sede,
+    eliminar_sede,
+    crear_usuario,
+    lista_usuarios,
+    editar_usuario,
+    eliminar_usuario,
+    crear_ciclo,
+    editar_ciclo,
+    eliminar_ciclo,
+    configuracion,
 )
-from .views.pagos_views import lista_pagos 
+from .views.pagos_views import lista_pagos
 from .views.pagos_views import boleta_pdf
+from .views.registro_views import  nuevo_registro
 
 urlpatterns = [
     # AUTENTICACIÓN
     path("", login_view, name="login"),
     path("logout/", logout_view, name="logout"),
-
     # DASHBOARD
     path("dashboard/", dashboard, name="dashboard"),
-
     # SECRETARIA - ALUMNOS
     path("secretaria/alumnos/", lista_alumnos, name="lista_alumnos"),
     path("secretaria/alumnos/<int:alumno_id>/", detalle_alumno, name="detalle_alumno"),
@@ -41,7 +50,6 @@ urlpatterns = [
         cambiar_estado_alumno,
         name="cambiar_estado_alumno",
     ),
-
     # SECRETARIA - REGISTRO (YA CORREGIDO)
     path("secretaria/registrar-alumno/", registrar_alumno, name="registrar_alumno"),
     path(
@@ -64,47 +72,46 @@ urlpatterns = [
         cancelar_registro,
         name="cancelar_registro",
     ),
-
+    # para limpiar los campos de formulario
+    path(
+        "secretaria/nuevo-registro/",
+        nuevo_registro,
+        name="nuevo_registro",
+    ),
     # MATRÍCULAS Y PAGOS
     path("secretaria/matriculas/", matriculas, name="matriculas"),
     path("secretaria/matriculas/exportar/", exportar_excel, name="exportar_excel"),
     path("secretaria/pagos/<int:matricula_id>/", pagos, name="pagos"),
     path("secretaria/pagos/", lista_pagos, name="lista_pagos"),
-    path('pagos/boleta/<int:pago_id>/', boleta_pdf, name='boleta_pdf'),
-
+    path("pagos/boleta/<int:pago_id>/", boleta_pdf, name="boleta_pdf"),
     # REPORTES
     path("reportes/sedes/", reportes_sedes, name="reportes_sedes"),
-
-    
-    #LISTA SEDE
+    # LISTA SEDE
     path("panel/sedes/", lista_sedes, name="lista_sedes"),
     path("panel/sedes/nueva/", crear_sede, name="crear_sede"),
-
-    #departamento ,provincia , distrito
+    # departamento ,provincia , distrito
     path("get-provincias/<int:departamento_id>/", get_provincias),
     path("get-distritos/<int:provincia_id>/", get_distritos),
-
-    #colegios
+    # colegios
     path("buscar-colegios/", buscar_colegios),
     path("crear-colegio/", crear_colegio),
-
     path("panel/sedes/editar/<int:id>/", editar_sede, name="editar_sede"),
-    #eliminar sede
+    # eliminar sede
     path("panel/sedes/eliminar/<int:id>/", eliminar_sede, name="eliminar_sede"),
-
-    #crud crear usarios
+    # crud crear usarios
     path("panel/usuarios/crear/", crear_usuario, name="crear_usuario"),
-    #lista de usaurios
+    # lista de usaurios
     path("panel/usuarios/", lista_usuarios, name="lista_usuarios"),
-    #editar usuarios
+    # editar usuarios
     path("panel/usuarios/editar/<int:id>/", editar_usuario, name="editar_usuario"),
-    #eliminar usuario
-    path("panel/usuarios/eliminar/<int:id>/", eliminar_usuario, name="eliminar_usuario"),
-    #crear crud de ciclos
+    # eliminar usuario
+    path(
+        "panel/usuarios/eliminar/<int:id>/", eliminar_usuario, name="eliminar_usuario"
+    ),
+    # crear crud de ciclos
     path("panel/ciclos/", lista_ciclos, name="lista_ciclos"),
     path("panel/ciclos/crear/", crear_ciclo, name="crear_ciclo"),
     path("panel/ciclos/editar/<int:id>/", editar_ciclo, name="editar_ciclo"),
     path("panel/ciclos/eliminar/<int:id>/", eliminar_ciclo, name="eliminar_ciclo"),
     path("panel/configuracion/", configuracion, name="configuracion"),
-
 ]

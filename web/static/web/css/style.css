@@ -1,3 +1,6 @@
+body {
+    background-color: #F1F6F7;
+}
 /* RESET */
 
 * {
@@ -21,7 +24,7 @@
 .sidebar {
 
     width: 230px;
-    background: #031d52;
+    background-color: #3D5F73;
     color: rgb(255, 255, 255);
     padding: 20px;
 
@@ -48,7 +51,8 @@
 }
 
 .sidebar a:hover {
-    background: #452fa3;
+    background: #EDAD0C;
+    color: white;
 }
 
 .sidebar i {
@@ -81,7 +85,7 @@
 
 .topbar {
 
-    background: #0f172a;
+    background-color: #3D5F73;
     /* azul oscuro elegante */
     color: white;
     padding: 15px;
@@ -90,6 +94,7 @@
     align-items: center;
 
 }
+
 
 .topbar i {
     margin-right: 8px;
@@ -104,4 +109,76 @@
     padding: 30px;
     background: #f5f6fa;
 
+}
+.submenu {
+    list-style: none;
+    padding-left: 0;
+    margin-top: 10px;
+}
+
+.submenu li {
+    margin-bottom: 8px;
+}
+
+.menu-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.flecha {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+.flecha.rotar {
+    transform: rotate(180deg);
+}
+
+/* quitar puntos */
+.submenu {
+    list-style: none;
+    padding-left: 15px;
+    margin-top: 8px;
+    display: none;
+}
+
+.submenu.open {
+    display: block;
+}
+
+.submenu li {
+    margin-bottom: 6px;
+}
+
+/*log solo simbolo*/
+.sidebar-logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 15px;
+}
+
+.sidebar-logo img {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+}
+
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+    color: white;
+}
+
+.logo-text span {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.logo-text small {
+    font-size: 13px;
+    opacity: 0.8;
 }

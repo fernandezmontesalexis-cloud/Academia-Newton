@@ -34,12 +34,12 @@
 
                 <div class="form-group">
                     <label>Nombres *</label>
-                    <input type="text" name="nombres"required value="{{ alumno.nombres }}">
+                    <input type="text" name="nombres" required value="{{ alumno.nombres }}">
                 </div>
 
                 <div class="form-group">
                     <label>DNI *</label>
-                    <input type="text" name="dni" value="{{ alumno.dni }}"pattern="[0-9]{8}" required maxlength="8">
+                    <input type="text" name="dni" value="{{ alumno.dni }}" pattern="[0-9]{8}" required maxlength="8">
                 </div>
 
                 <div class="form-group">
@@ -47,85 +47,169 @@
                     <input type="text" name="celular" value="{{ alumno.celular }}">
                 </div>
 
-                <div class="form-group">
-                    <label>Fecha de Nacimiento</label>
-                    <input type="date" name="fecha_nacimiento" value="{{ alumno.fecha_nacimiento|date:'Y-m-d' }}">
-                </div>
 
                 <div class="form-group">
+                    <label>Fecha de Nacimiento</label>
+                    <input type="date" name="fecha_nacimiento" value="{{ alumno.fecha_nacimiento }}"">
+                </div>
+
+                <div class=" form-group">
                     <label>Dirección</label>
                     <input type="text" name="direccion" value="{{ alumno.direccion }}">
                 </div>
                 <div class="form-group">
                     <label>Departamento *</label>
-                    <select id="departamento" class="form-control">
+
+                    <select id="departamento" name="departamento" class="form-control">
+
                         <option value="">Seleccione</option>
+
                         {% for d in departamentos %}
-                        <option value="{{ d.id }}">{{ d.nombre }}</option>
+                        <option value="{{ d.id }}" {% if d.id == departamento_seleccionado %}selected{% endif %}>
+                            {{ d.nombre }}
+                        </option>
                         {% endfor %}
+
                     </select>
                 </div>
+
                 <div class="form-group">
                     <label>Provincia *</label>
-                    <select id="provincia" class="form-control">
+
+                    <select id="provincia" name="provincia" class="form-control">
                         <option value="">Seleccione un departamento</option>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label>Distrito *</label>
-                    <select name="distrito" id="distrito" class="form-control">
+
+                    <select id="distrito" name="distrito" class="form-control">
                         <option value="">Seleccione una provincia</option>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label>Correo Electrónico</label>
-                    <input type="email" name="email" value="{{ alumno.email }} "required>
+                    <input type="email" name="email" value="{{ alumno.email }}" placeholder="correo@ejemplo.com">
                 </div>
 
             </div>
         </div>
 
-        <button class="btn-guardar" type="submit">
-            Siguiente →
-        </button>
-        <a href="{% url 'cancelar_registro' %}" class="btn btn-danger" onclick="return confirmarCancelacion()">
-            Cancelar
-        </a>
+        <div class="d-flex gap-2 justify-content-end mt-4">
+
+            <button type="submit" class="btn btn-outline-primary">
+                Siguiente →
+            </button>
+
+            <a href="{% url 'cancelar_registro' %}" class="btn btn-outline-secondary"
+                onclick="confirmarCancelacion(event, this.href)">
+                Cancelar
+            </a>
+
+        </div>
 
     </form>
     <script>
-    document.getElementById("departamento").addEventListener("change", function () {
-        let id = this.value;
 
-        fetch(`/get-provincias/${id}/`)
-            .then(res => res.json())
-            .then(data => {
-                let provincia = document.getElementById("provincia");
-                provincia.innerHTML = "";
+        document.addEventListener("DOMContentLoaded", async function () {
+
+            const departamento = document.getElementById("departamento");
+            const provincia = document.getElementById("provincia");
+            const distrito = document.getElementById("distrito");
+
+            const provinciaSeleccionada = "{{ alumno.provincia }}";
+            const distritoSeleccionado = "{{ alumno.distrito }}";
+
+            // =========================
+            // CARGAR PROVINCIAS
+            // =========================
+            async function cargarProvincias(departamentoId, selectedProvincia = null) {
+
+                provincia.innerHTML =
+                    '<option value="">Seleccione una provincia</option>';
+
+                distrito.innerHTML =
+                    '<option value="">Seleccione un distrito</option>';
+
+                if (!departamentoId) return;
+
+                const response =
+                    await fetch(`/get-provincias/${departamentoId}/`);
+
+                const data = await response.json();
 
                 data.forEach(p => {
-                    provincia.innerHTML += `<option value="${p.id}">${p.nombre}</option>`;
-                });
-            });
-    });
-    </script>
-    <script>
-    document.getElementById("provincia").addEventListener("change", function () {
-        let id = this.value;
 
-        fetch(`/get-distritos/${id}/`)
-            .then(res => res.json())
-            .then(data => {
-                let distrito = document.getElementById("distrito");
-                distrito.innerHTML = "";
+                    provincia.innerHTML += `
+                <option value="${p.id}"
+                ${selectedProvincia == p.id ? "selected" : ""}
+                >
+                    ${p.nombre}
+                </option>
+            `;
+                });
+
+                // cargar distritos automáticamente
+                if (selectedProvincia) {
+                    cargarDistritos(selectedProvincia, distritoSeleccionado);
+                }
+            }
+
+            // =========================
+            // CARGAR DISTRITOS
+            // =========================
+            async function cargarDistritos(provinciaId, selectedDistrito = null) {
+
+                distrito.innerHTML =
+                    '<option value="">Seleccione un distrito</option>';
+
+                if (!provinciaId) return;
+
+                const response =
+                    await fetch(`/get-distritos/${provinciaId}/`);
+
+                const data = await response.json();
 
                 data.forEach(d => {
-                    distrito.innerHTML += `<option value="${d.id}">${d.nombre}</option>`;
+
+                    distrito.innerHTML += `
+                <option value="${d.id}"
+                ${selectedDistrito == d.id ? "selected" : ""}
+                >
+                    ${d.nombre}
+                </option>
+            `;
                 });
+            }
+
+            // =========================
+            // EVENTOS
+            // =========================
+            departamento.addEventListener("change", function () {
+
+                cargarProvincias(this.value);
             });
-    });
+
+            provincia.addEventListener("change", function () {
+
+                cargarDistritos(this.value);
+            });
+
+            // =========================
+            // RECUPERAR DATOS
+            // =========================
+            if (departamento.value) {
+
+                cargarProvincias(
+                    departamento.value,
+                    provinciaSeleccionada
+                );
+            }
+
+        });
+
     </script>
 
 </div>

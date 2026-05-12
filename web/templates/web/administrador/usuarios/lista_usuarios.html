@@ -36,7 +36,9 @@
                     <td>{{ u.perfil.sede.nombre }}</td>
                     <td>
                         <div class="acciones">
-                            <a href="{% url 'editar_usuario' u.id %}" class="btn-edit">Editar</a>
+                            <a href="{% url 'editar_usuario' u.id %}" class="btn btn-sm btn-outline-warning">
+                                Editar
+                            </a>
                             <a href="{% url 'eliminar_usuario' u.id %}"
                                 onclick="confirmarAccion(event, this.href, '¿Eliminar usuario?', 'Esta acción no se puede deshacer', 'Sí, eliminar')"
                                 class="btn-delete">

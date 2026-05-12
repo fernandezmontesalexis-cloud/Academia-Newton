@@ -26,12 +26,13 @@
                     <td>{{ sede.nombre }}</td>
                     <td>
                         <div class="acciones">
-                            <a href="{% url 'editar_sede' sede.id %}" class="btn-edit">Editar</a>
+                            <a href="{% url 'editar_sede' sede.id %}" class="btn btn-sm btn-outline-warning"> <i class="fas fa-edit"></i> Editar</a>
                             <a href="{% url 'eliminar_sede' sede.id %}"
                                 onclick="confirmarAccion(event, this.href, '¿Eliminar sede?', 'Se eliminará permanentemente', 'Sí, eliminar')"
-                                class="btn-delete">
-                                Eliminar
+                                class="btn btn-sm btn-outline-danger">
+                                <i class="fas fa-trash"></i> Eliminar
                             </a>
+                            
                         </div>
                     </td>
                 </tr>

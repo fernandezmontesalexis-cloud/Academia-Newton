@@ -36,6 +36,8 @@ def registrar_alumno(request):
 
         fecha_nacimiento = request.POST.get("fecha_nacimiento")
         direccion = request.POST.get("direccion")
+        departamento_id = request.POST.get("departamento")
+        provincia_id = request.POST.get("provincia")
         distrito_id = request.POST.get("distrito")
         email = request.POST.get("email")
 
@@ -127,6 +129,8 @@ def registrar_alumno(request):
             "celular": celular,
             "fecha_nacimiento": fecha_nacimiento,
             "direccion": direccion,
+            "departamento": departamento_id,
+            "provincia": provincia_id,
             "distrito": distrito_id,
             "email": email,
         }
@@ -139,7 +143,19 @@ def registrar_alumno(request):
     return render(
         request,
         "web/secretaria/alumnos/registrar_alumno.html",
-        {"alumno": alumno, "departamentos": departamentos},
+        {
+            "alumno": alumno,
+            "departamentos": departamentos,
+            "departamento_seleccionado": (
+                int(alumno.get("departamento")) if alumno.get("departamento") else None
+            ),
+            "provincia_seleccionada": (
+                int(alumno.get("provincia")) if alumno.get("provincia") else None
+            ),
+            "distrito_seleccionado": (
+                int(alumno.get("distrito")) if alumno.get("distrito") else None
+            ),
+        },
     )
 
 
@@ -149,13 +165,41 @@ def registrar_apoderado(request):
 
     if request.method == "POST":
 
+        nombre = request.POST.get("nombre_apoderado", "").strip()
+        dni = request.POST.get("dni_apoderado", "").strip()
+        celular = request.POST.get("celular_apoderado", "").strip()
+        direccion = request.POST.get("direccion_apoderado", "").strip()
+
+        # 🔥 VALIDACIONES
+
+        if dni and (not dni.isdigit() or len(dni) != 8):
+            messages.error(request, "El DNI debe tener exactamente 8 números")
+
+            return render(
+                request,
+                "web/secretaria/alumnos/registrar_apoderado.html",
+                {"apoderado": request.POST},
+            )
+
+        if celular and (not celular.isdigit() or len(celular) != 9):
+            messages.error(request, "El celular debe tener exactamente 9 números")
+
+            return render(
+                request,
+                "web/secretaria/alumnos/registrar_apoderado.html",
+                {"apoderado": request.POST},
+            )
+
+        # guardar en sesión
         request.session["apoderado"] = {
-            "nombre_apoderado": request.POST.get("nombre_apoderado"),
-            "dni_apoderado": request.POST.get("dni_apoderado"),
-            "celular_apoderado": request.POST.get("celular_apoderado"),
-            "direccion_apoderado": request.POST.get("direccion_apoderado"),
+            "nombre_apoderado": nombre,
+            "dni_apoderado": dni,
+            "celular_apoderado": celular,
+            "direccion_apoderado": direccion,
         }
+
         return redirect("regis_form_academica")
+
     apoderado = request.session.get("apoderado", {})
 
     return render(
@@ -309,7 +353,15 @@ def regis_form_adicional(request):
     return render(
         request,
         "web/secretaria/alumnos/regis_form_adicional.html",
-        {"formacion_adicional": formacion_adicional, "ciclos": ciclos},
+        {
+            "formacion_adicional": formacion_adicional,
+            "ciclos": ciclos,
+            "ciclo_seleccionado": (
+                int(formacion_adicional.get("ciclo"))
+                if formacion_adicional.get("ciclo")
+                else None
+            ),
+        },
     )
 
 
@@ -366,3 +418,15 @@ def crear_colegio(request):
         )
 
         return JsonResponse({"id": colegio.id, "nombre": colegio.nombre})
+
+
+@login_required
+@permiso_requerido(["admin", "secretaria"])
+def nuevo_registro(request):
+
+    request.session.pop("alumno", None)
+    request.session.pop("apoderado", None)
+    request.session.pop("formacion_academica", None)
+    request.session.pop("formacion_adicional", None)
+
+    return redirect("registrar_alumno")

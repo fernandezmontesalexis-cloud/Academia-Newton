@@ -6,8 +6,8 @@
 }
 
 .card {
-    background: white;
-    border-radius: 12px;
+    border: 1px solid #BCC4C7;
+    border-radius: 14px;
     padding: 30px;
     text-decoration: none;
     color: black;
@@ -16,6 +16,40 @@
     text-align: center;
 }
 
+
 .card:hover {
     transform: translateY(-5px);
+}
+/* CONTENEDORES DE GRÁFICOS */
+.grafico-barra-container{
+    height: 180px;
+    position: relative;
+}
+
+.grafico-circular-container{
+    height: 180px;
+    max-width: 320px;
+    margin: 0 auto;
+    position: relative;
+}
+
+/* TARJETAS MÁS COMPACTAS */
+.card-body{
+    padding: 1rem !important;
+}
+
+/* NÚMEROS MÁS PEQUEÑOS */
+.fs-3{
+    font-size: 1.8rem !important;
+}
+
+/* MENOS ESPACIO ENTRE BLOQUES */
+.mb-4{
+    margin-bottom: 1rem !important;
+}
+
+/* TITULOS MÁS PEQUEÑOS */
+h6{
+    font-size: 1rem;
+    margin-bottom: 10px !important;
 }
