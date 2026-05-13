@@ -7,12 +7,46 @@
 
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <h4 class="mb-0 fw-bold">Reportes por Sede</h4>
         <small class="text-muted">Resumen gerencial de todas las sedes</small>
     </div>
+    <a href="{% url 'exportar_reporte_excel' %}" class="btn btn-sm btn-success">
+        <i class="fas fa-file-excel me-1"></i> Exportar Excel
+    </a>
 </div>
+
+<!-- FILTRO POR FECHA -->
+<form method="get" class="card border-0 shadow-sm p-3 mb-3">
+    <div class="row g-2 align-items-end">
+        <div class="col-auto">
+            <label class="form-label small mb-1 text-muted">Desde</label>
+            <input type="date" name="fecha_inicio" class="form-control form-control-sm"
+                   value="{{ fecha_inicio_str }}">
+        </div>
+        <div class="col-auto">
+            <label class="form-label small mb-1 text-muted">Hasta</label>
+            <input type="date" name="fecha_fin" class="form-control form-control-sm"
+                   value="{{ fecha_fin_str }}">
+        </div>
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-filter me-1"></i> Filtrar
+            </button>
+            <a href="{% url 'reportes_sedes' %}" class="btn btn-outline-secondary btn-sm">
+                Limpiar
+            </a>
+        </div>
+        {% if fecha_inicio_str or fecha_fin_str %}
+        <div class="col-auto">
+            <span class="badge bg-info text-dark">
+                <i class="fas fa-info-circle me-1"></i> Ingresos filtrados por fecha
+            </span>
+        </div>
+        {% endif %}
+    </div>
+</form>
 
 {% if data_sedes %}
 
@@ -37,7 +71,7 @@
                     <span class="text-muted">Ingresos</span>
                     <span class="text-success fw-bold">S/. {{ item.ingresos }}</span>
                 </div>
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between mb-3">
                     <span class="text-muted">Deuda pendiente</span>
                     {% if item.deuda > 0 %}
                         <span class="text-danger fw-bold">S/. {{ item.deuda }}</span>
@@ -46,13 +80,19 @@
                     {% endif %}
                 </div>
             </div>
+            <div class="card-footer bg-white border-0 pt-0 pb-3 px-3">
+                <a href="{% url 'reporte_sede_detalle' item.sede.id %}"
+                   class="btn btn-outline-primary btn-sm w-100">
+                    <i class="fas fa-chart-bar me-1"></i> Ver detalle
+                </a>
+            </div>
         </div>
     </div>
     {% endfor %}
 </div>
 
 <!-- TABLA COMPARATIVA -->
-<div class="card border-0 shadow-sm">
+<div class="card border-0 shadow-sm mb-3">
     <div class="card-body">
         <h6 class="fw-semibold mb-3">
             <i class="fas fa-table text-primary me-1"></i> Comparativo de Sedes
@@ -66,6 +106,7 @@
                         <th class="text-center">Matrículas</th>
                         <th class="text-end">Ingresos</th>
                         <th class="text-end">Deuda</th>
+                        <th class="text-center">Detalle</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -81,6 +122,12 @@
                             {% else %}
                                 <span class="text-success"><i class="fas fa-check"></i></span>
                             {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'reporte_sede_detalle' item.sede.id %}"
+                               class="btn btn-outline-primary btn-sm">
+                                <i class="fas fa-chart-bar"></i>
+                            </a>
                         </td>
                     </tr>
                     {% endfor %}

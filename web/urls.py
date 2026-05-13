@@ -16,7 +16,8 @@ from .views.registro_views import (
 
 from .views.matriculas_views import matriculas, exportar_excel
 from .views.pagos_views import pagos
-from .views.reportes_views import reportes_sedes
+from .views.reportes_views import reportes_sedes, reporte_sede_detalle, exportar_reporte_excel
+from .views.finanzas_views import finanzas, historial_completo, exportar_finanzas_excel
 from .views.admin_views import (
     lista_ciclos,
     lista_sedes,
@@ -86,6 +87,12 @@ urlpatterns = [
     path("pagos/boleta/<int:pago_id>/", boleta_pdf, name="boleta_pdf"),
     # REPORTES
     path("reportes/sedes/", reportes_sedes, name="reportes_sedes"),
+    path("reportes/sede/<int:sede_id>/", reporte_sede_detalle, name="reporte_sede_detalle"),
+    path("reportes/exportar/", exportar_reporte_excel, name="exportar_reporte_excel"),
+    # FINANZAS
+    path("panel/finanzas/", finanzas, name="finanzas"),
+    path("panel/finanzas/historial/", historial_completo, name="historial_completo"),
+    path("panel/finanzas/exportar/", exportar_finanzas_excel, name="exportar_finanzas_excel"),
     # LISTA SEDE
     path("panel/sedes/", lista_sedes, name="lista_sedes"),
     path("panel/sedes/nueva/", crear_sede, name="crear_sede"),

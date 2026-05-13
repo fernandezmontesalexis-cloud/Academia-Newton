@@ -5,7 +5,11 @@
       "PowerShell(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\elvis\\\\OneDrive\\\\Escritorio\\\\Academia-newton\\\\web\\\\management\\\\commands\" -Force)",
       "PowerShell(New-Item -ItemType Directory -Path \"c:\\\\Users\\\\elvis\\\\OneDrive\\\\Escritorio\\\\Academia-newton\\\\web\\\\templates\\\\web\\\\administrador\\\\configuracion\" -Force)",
       "Bash(python manage.py check)",
-      "Bash(venv\\\\Scripts\\\\pip install *)"
+      "Bash(venv\\\\Scripts\\\\pip install *)",
+      "Bash(Get-ChildItem -Path \"c:\\\\Users\\\\elvis\\\\OneDrive\\\\Escritorio\\\\Academia-newton\" -Recurse -Directory)",
+      "PowerShell(head -50)",
+      "Bash(ls -la \"c:\\\\Users\\\\elvis\\\\OneDrive\\\\Escritorio\\\\Academia-newton\\\\\" | head -20)",
+      "Read(//c/Users/elvis/OneDrive/Escritorio/**)"
     ]
   }
 }

@@ -1,9 +1,8 @@
-import json
 from datetime import date
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, Count
+from django.db.models import Sum
 
 from ..models import Alumno, Matricula, Pago
 
@@ -24,37 +23,31 @@ def dashboard(request):
             Pago.objects.filter(fecha_pago__gte=mes_inicio)
             .aggregate(total=Sum('monto'))['total'] or 0
         )
-
-        # Deuda total: suma de todas las deudas pendientes
-        todas_matriculas = Matricula.objects.filter(estado='pendiente')
-        deuda_total = sum(m.deuda() for m in todas_matriculas)
-
-        # Chart: alumnos activos por sede
-        alumnos_por_sede = list(
-            Alumno.objects.filter(estado='activo')
-            .values('sede__nombre')
-            .annotate(total=Count('id'))
-            .order_by('sede__nombre')
+        deuda_total = sum(
+            m.deuda() for m in Matricula.objects.filter(estado='pendiente')
         )
-        chart_sedes_labels = json.dumps([x['sede__nombre'] for x in alumnos_por_sede])
-        chart_sedes_data = json.dumps([x['total'] for x in alumnos_por_sede])
-
-        # Chart: matrículas por estado
-        matriculas_por_estado = list(
-            Matricula.objects.values('estado').annotate(total=Count('id'))
+        ingresos_hoy = (
+            Pago.objects.filter(fecha_pago=hoy)
+            .aggregate(total=Sum('monto'))['total'] or 0
         )
-        chart_estado_labels = json.dumps([x['estado'].capitalize() for x in matriculas_por_estado])
-        chart_estado_data = json.dumps([x['total'] for x in matriculas_por_estado])
+        alumnos_con_deuda = (
+            Alumno.objects.filter(matricula__estado='pendiente')
+            .distinct()
+            .count()
+        )
+        actividad_reciente = list(
+            Pago.objects.select_related('matricula__alumno')
+            .order_by('-fecha_pago', '-id')[:5]
+        )
 
         return render(request, 'web/administrador/dashboard_admin.html', {
             'total_alumnos': total_alumnos,
             'matriculas_activas': matriculas_activas,
             'ingresos_mes': ingresos_mes,
             'deuda_total': deuda_total,
-            'chart_sedes_labels': chart_sedes_labels,
-            'chart_sedes_data': chart_sedes_data,
-            'chart_estado_labels': chart_estado_labels,
-            'chart_estado_data': chart_estado_data,
+            'ingresos_hoy': ingresos_hoy,
+            'alumnos_con_deuda': alumnos_con_deuda,
+            'actividad_reciente': actividad_reciente,
         })
 
     if perfil.tipo_usuario == 'secretaria':

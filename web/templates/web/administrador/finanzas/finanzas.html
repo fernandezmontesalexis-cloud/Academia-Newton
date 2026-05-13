@@ -1,0 +1,392 @@
+{% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/dashboard_admin.css' %}">
+<style>
+/* ── Métodos de pago ─────────────────────── */
+.metodo-badge {
+    font-size: 0.68rem;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    display: inline-block;
+}
+.metodo-efectivo      { background:#d1e7dd; color:#0a3622; }
+.metodo-yape          { background:#cfe2ff; color:#052c65; }
+.metodo-transferencia { background:#cff4fc; color:#055160; }
+
+/* ── Resumen Financiero — filas ───────────── */
+.resumen-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px;
+    border-bottom: 1px solid rgba(0,0,0,0.05);
+    font-size: 0.82rem;
+}
+.resumen-row:last-child { border-bottom: none; }
+.resumen-label { color: #6c757d; }
+.resumen-valor { font-weight: 600; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ══ ENCABEZADO ═══════════════════════════════════════════════════════ -->
+<div class="d-flex justify-content-between align-items-center mb-2">
+    <div>
+        <h4 class="mb-0 fw-bold">Finanzas</h4>
+        <span class="text-muted small">
+            <i class="fas fa-calendar-alt me-1 text-success"></i>{% now "d/m/Y" %}
+            {% if filtros_activos %}
+            <span class="badge bg-info text-dark ms-2">
+                <i class="fas fa-filter me-1"></i> Historial filtrado
+            </span>
+            {% endif %}
+        </span>
+    </div>
+</div>
+
+<!-- ══ FILTROS ══════════════════════════════════════════════════════════ -->
+<div class="card border-0 shadow-sm p-2 mb-2">
+    <form method="get">
+        <div class="row g-2 align-items-end">
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label small mb-1 text-muted">Desde</label>
+                <input type="date" name="fecha_desde" class="form-control form-control-sm"
+                       value="{{ fecha_desde_str }}">
+            </div>
+            <div class="col-md-3 col-sm-6">
+                <label class="form-label small mb-1 text-muted">Hasta</label>
+                <input type="date" name="fecha_hasta" class="form-control form-control-sm"
+                       value="{{ fecha_hasta_str }}">
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <label class="form-label small mb-1 text-muted">Sede</label>
+                <select name="sede_id" class="form-select form-select-sm">
+                    <option value="">Todas</option>
+                    {% for s in sedes %}
+                    <option value="{{ s.id }}"
+                        {% if sede_id == s.id|stringformat:"s" %}selected{% endif %}>
+                        {{ s.nombre }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 col-sm-6">
+                <label class="form-label small mb-1 text-muted">Método</label>
+                <select name="metodo" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    <option value="efectivo"      {% if metodo == 'efectivo' %}selected{% endif %}>Efectivo</option>
+                    <option value="yape"          {% if metodo == 'yape' %}selected{% endif %}>Yape</option>
+                    <option value="transferencia" {% if metodo == 'transferencia' %}selected{% endif %}>Transferencia</option>
+                </select>
+            </div>
+            <div class="col-auto">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="fas fa-filter me-1"></i> Filtrar
+                </button>
+                <a href="{% url 'finanzas' %}" class="btn btn-outline-secondary btn-sm">Limpiar</a>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- ══ KPIs ══════════════════════════════════════════════════════════════ -->
+<div class="row g-2 mb-2">
+
+    <div class="col-md-3 col-sm-6">
+        <div class="kpi-card kpi-info card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 py-2 px-3">
+                <div class="kpi-icon bg-info bg-opacity-10 text-info">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">S/.&nbsp;{{ ingresos_hoy }}</div>
+                    <div class="kpi-label">Ingresos del Día</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+        <div class="kpi-card kpi-success card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 py-2 px-3">
+                <div class="kpi-icon bg-success bg-opacity-10 text-success">
+                    <i class="fas fa-coins"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">S/.&nbsp;{{ ingresos_mes }}</div>
+                    <div class="kpi-label">Ingresos del Mes</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+        <div class="kpi-card kpi-danger card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 py-2 px-3">
+                <div class="kpi-icon bg-danger bg-opacity-10 text-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">S/.&nbsp;{{ deuda_total }}</div>
+                    <div class="kpi-label">Deuda Total</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-3 col-sm-6">
+        <div class="kpi-card kpi-warning card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 py-2 px-3">
+                <div class="kpi-icon bg-warning bg-opacity-10 text-warning">
+                    <i class="fas fa-user-times"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">{{ alumnos_con_deuda }}</div>
+                    <div class="kpi-label">Alumnos con Deuda</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ══ GRÁFICO + RESUMEN FINANCIERO ══════════════════════════════════════ -->
+<div class="row g-2 mb-2">
+
+    <!-- Gráfico -->
+    <div class="col-md-7">
+        <div class="card border-0 shadow-sm p-3 h-100">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="fw-semibold mb-0">
+                    <i class="fas fa-chart-bar text-success me-1"></i>
+                    Ingresos — últimos 7 días
+                </h6>
+                <span class="badge bg-success bg-opacity-10 text-success"
+                      style="font-size:0.65rem;">sin filtro · datos reales</span>
+            </div>
+            <div style="height:160px;">
+                <canvas id="chart7dias"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Resumen Financiero -->
+    <div class="col-md-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-3 pb-1 px-3">
+                <h6 class="fw-semibold mb-0">
+                    <i class="fas fa-chart-pie text-primary me-1"></i>
+                    Resumen Financiero
+                </h6>
+            </div>
+            <div class="card-body p-0">
+
+                <div class="resumen-row">
+                    <span class="resumen-label">
+                        <i class="fas fa-sun me-2 text-warning opacity-75"></i>Total hoy
+                    </span>
+                    <span class="resumen-valor text-success">S/. {{ ingresos_hoy }}</span>
+                </div>
+
+                <div class="resumen-row">
+                    <span class="resumen-label">
+                        <i class="fas fa-calendar-week me-2 text-info opacity-75"></i>Esta semana
+                    </span>
+                    <span class="resumen-valor text-success">S/. {{ total_semana }}</span>
+                </div>
+
+                <div class="resumen-row">
+                    <span class="resumen-label">
+                        <i class="fas fa-calculator me-2 text-secondary opacity-75"></i>Promedio de pago
+                    </span>
+                    <span class="resumen-valor">S/. {{ promedio_pago }}</span>
+                </div>
+
+                <div class="resumen-row">
+                    <span class="resumen-label">
+                        <i class="fas fa-credit-card me-2 text-primary opacity-75"></i>Método más usado
+                    </span>
+                    {% if metodo_mas_usado %}
+                    <span class="metodo-badge metodo-{{ metodo_mas_usado }}">{{ metodo_label }}</span>
+                    {% else %}
+                    <span class="text-muted small">—</span>
+                    {% endif %}
+                </div>
+
+                <div class="resumen-row">
+                    <span class="resumen-label">
+                        <i class="fas fa-clock me-2 text-secondary opacity-75"></i>Última actualización
+                    </span>
+                    <span class="text-muted" style="font-size:0.78rem;">
+                        {% if ultima_actualizacion %}{{ ultima_actualizacion|date:"d/m/Y" }}{% else %}—{% endif %}
+                    </span>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- ══ HISTORIAL DE PAGOS ═══════════════════════════════════════════════ -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 pt-3 pb-2 px-3 d-flex justify-content-between align-items-center">
+        <h6 class="fw-semibold mb-0">
+            <i class="fas fa-history text-primary me-1"></i>
+            Historial de Pagos
+        </h6>
+        <div class="d-flex gap-2">
+            <a href="{% url 'exportar_finanzas_excel' %}?{{ request.GET.urlencode }}"
+               class="btn btn-success btn-sm">
+                <i class="fas fa-file-excel me-1"></i> Exportar Excel
+            </a>
+            <a href="{% url 'historial_completo' %}" class="btn btn-outline-primary btn-sm">
+                <i class="fas fa-list me-1"></i> Ver historial completo
+            </a>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size:0.82rem;">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-3">Alumno</th>
+                        <th>Sede</th>
+                        <th>Ciclo</th>
+                        <th class="text-end">Monto</th>
+                        <th>Método</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pago in historial %}
+                    <tr>
+                        <td class="px-3 fw-semibold">{{ pago.matricula.alumno }}</td>
+                        <td class="text-muted">{{ pago.matricula.alumno.sede }}</td>
+                        <td class="text-muted">{{ pago.matricula.ciclo.nombre }}</td>
+                        <td class="text-end fw-bold text-success">S/. {{ pago.monto }}</td>
+                        <td>
+                            <span class="metodo-badge metodo-{{ pago.metodo_pago }}">
+                                {{ pago.get_metodo_pago_display }}
+                            </span>
+                        </td>
+                        <td class="text-muted">{{ pago.fecha_pago|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted py-4">
+                            <i class="fas fa-search d-block mb-1 opacity-25"></i>
+                            <small>Sin resultados para los filtros aplicados</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if historial.paginator.num_pages > 1 %}
+        <div class="px-3 py-2 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <small class="text-muted">
+                Pág. {{ historial.number }} de {{ historial.paginator.num_pages }}
+                &nbsp;·&nbsp;
+                {{ historial.paginator.count }} registro{{ historial.paginator.count|pluralize:",s" }}
+            </small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+                    <li class="page-item {% if not historial.has_previous %}disabled{% endif %}">
+                        {% if historial.has_previous %}
+                        <a class="page-link" href="{{ base_url }}page={{ historial.previous_page_number }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        {% else %}
+                        <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                        {% endif %}
+                    </li>
+                    {% for p in page_range %}
+                    {% if not p %}
+                    <li class="page-item disabled"><span class="page-link">…</span></li>
+                    {% elif p == historial.number %}
+                    <li class="page-item active"><span class="page-link">{{ p }}</span></li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ base_url }}page={{ p }}">{{ p }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+                    <li class="page-item {% if not historial.has_next %}disabled{% endif %}">
+                        {% if historial.has_next %}
+                        <a class="page-link" href="{{ base_url }}page={{ historial.next_page_number }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        {% else %}
+                        <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                        {% endif %}
+                    </li>
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    var labels = {{ chart_7d_labels|safe }};
+    var data   = {{ chart_7d_data|safe }};
+
+    new Chart(document.getElementById('chart7dias'), {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Ingresos (S/.)',
+                data: data,
+                backgroundColor: 'rgba(25, 135, 84, 0.65)',
+                borderColor:     'rgba(25, 135, 84, 0.9)',
+                borderWidth: 1.5,
+                borderRadius: 5,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(ctx) {
+                            return ' S/. ' + ctx.parsed.y.toFixed(2);
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    grid: { color: 'rgba(0,0,0,0.05)' },
+                    ticks: {
+                        callback: function(v) { return 'S/. ' + v; },
+                        font: { size: 10 }
+                    }
+                },
+                x: {
+                    grid: { display: false },
+                    ticks: { font: { size: 10 } }
+                }
+            }
+        }
+    });
+})();
+</script>
+{% endblock %}

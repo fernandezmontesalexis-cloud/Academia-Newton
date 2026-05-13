@@ -7,67 +7,112 @@
 
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-4">
+<!-- ======= ENCABEZADO ======= -->
+<div class="d-flex justify-content-between align-items-start mb-4">
     <div>
-        <h4 class="mb-0 fw-bold">Panel Gerencial</h4>
-        <small class="text-muted">Academia Newton — Vista general del sistema</small>
+        <h4 class="mb-1 fw-bold">Panel Gerencial</h4>
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <span class="text-muted small">
+                <i class="fas fa-calendar-alt me-1 text-primary"></i>{% now "d/m/Y" %}
+            </span>
+            <span class="small d-flex align-items-center">
+                <span class="status-dot"></span>
+                <span class="text-success fw-semibold">Sistema operativo</span>
+            </span>
+        </div>
+    </div>
+    <div class="d-flex gap-2 flex-shrink-0">
+        <a href="{% url 'reportes_sedes' %}" class="btn btn-sm btn-outline-primary">
+            <i class="fas fa-chart-pie me-1"></i> Reportes
+        </a>
+        <a href="{% url 'finanzas' %}" class="btn btn-sm btn-outline-success">
+            <i class="fas fa-coins me-1"></i> Finanzas
+        </a>
     </div>
 </div>
 
-<!-- TARJETAS DE ESTADÍSTICAS -->
+<!-- ======= KPI: 6 TARJETAS ======= -->
 <div class="row g-2 mb-3">
 
-    <div class="col-md-3 col-sm-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-2 py-3">
-                <div class="rounded-circle bg-primary bg-opacity-10 p-2">
-                    <i class="fas fa-users text-primary"></i>
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="kpi-card kpi-primary card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
+                <div class="kpi-icon bg-primary bg-opacity-10 text-primary">
+                    <i class="fas fa-users"></i>
                 </div>
                 <div>
-                    <div class="fs-4 fw-bold">{{ total_alumnos }}</div>
-                    <small class="text-muted">Alumnos Activos</small>
+                    <div class="kpi-value">{{ total_alumnos }}</div>
+                    <div class="kpi-label">Alumnos Activos</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-3 col-sm-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-2 py-3">
-                <div class="rounded-circle bg-warning bg-opacity-10 p-2">
-                    <i class="fas fa-book-open text-warning"></i>
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="kpi-card kpi-warning card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
+                <div class="kpi-icon bg-warning bg-opacity-10 text-warning">
+                    <i class="fas fa-book-open"></i>
                 </div>
                 <div>
-                    <div class="fs-4 fw-bold">{{ matriculas_activas }}</div>
-                    <small class="text-muted">Matrículas Pendientes</small>
+                    <div class="kpi-value">{{ matriculas_activas }}</div>
+                    <div class="kpi-label">Matrículas Pendientes</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-3 col-sm-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-2 py-3">
-                <div class="rounded-circle bg-success bg-opacity-10 p-2">
-                    <i class="fas fa-coins text-success"></i>
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="kpi-card kpi-success card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
+                <div class="kpi-icon bg-success bg-opacity-10 text-success">
+                    <i class="fas fa-coins"></i>
                 </div>
                 <div>
-                    <div class="fs-4 fw-bold">S/. {{ ingresos_mes }}</div>
-                    <small class="text-muted">Ingresos del Mes</small>
+                    <div class="kpi-value">S/.&nbsp;{{ ingresos_mes }}</div>
+                    <div class="kpi-label">Ingresos del Mes</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-md-3 col-sm-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-2 py-3">
-                <div class="rounded-circle bg-danger bg-opacity-10 p-2">
-                    <i class="fas fa-exclamation-circle text-danger"></i>
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="kpi-card kpi-danger card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
+                <div class="kpi-icon bg-danger bg-opacity-10 text-danger">
+                    <i class="fas fa-exclamation-circle"></i>
                 </div>
                 <div>
-                    <div class="fs-4 fw-bold">S/. {{ deuda_total }}</div>
-                    <small class="text-muted">Deuda Total</small>
+                    <div class="kpi-value">S/.&nbsp;{{ deuda_total }}</div>
+                    <div class="kpi-label">Deuda Total</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="kpi-card kpi-info card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
+                <div class="kpi-icon bg-info bg-opacity-10 text-info">
+                    <i class="fas fa-calendar-day"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">S/.&nbsp;{{ ingresos_hoy }}</div>
+                    <div class="kpi-label">Ingresos del Día</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-2 col-md-4 col-sm-6">
+        <div class="kpi-card kpi-danger card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3 py-3 px-3">
+                <div class="kpi-icon bg-danger bg-opacity-10 text-danger">
+                    <i class="fas fa-user-times"></i>
+                </div>
+                <div>
+                    <div class="kpi-value">{{ alumnos_con_deuda }}</div>
+                    <div class="kpi-label">Alumnos con Deuda</div>
                 </div>
             </div>
         </div>
@@ -75,144 +120,110 @@
 
 </div>
 
-<!-- GRÁFICOS -->
-<div class="row g-2 mb-3">
-
-    <div class="col-md-7">
-        <div class="card border-0 shadow-sm p-2">
-            <h6 class="fw-semibold mb-2">
-                <i class="fas fa-building text-primary me-1"></i>
-                Alumnos Activos por Sede
-            </h6>
-
-            <div class="grafico-barra-container">
-                <canvas id="chartSedes"></canvas>
-            </div>
-        </div>
+<!-- ======= ACTIVIDAD RECIENTE ======= -->
+<div class="card border-0 shadow-sm mb-3">
+    <div class="card-header bg-white border-0 pt-3 pb-2 px-3 d-flex justify-content-between align-items-center">
+        <h6 class="fw-semibold mb-0">
+            <i class="fas fa-stream text-secondary me-1"></i> Actividad Reciente
+        </h6>
+        <a href="{% url 'finanzas' %}" class="small text-primary text-decoration-none">
+            Ver historial completo <i class="fas fa-arrow-right ms-1"></i>
+        </a>
     </div>
-
-    <div class="col-md-5">
-        <div class="card border-0 shadow-sm p-2">
-            <h6 class="fw-semibold mb-2">
-                <i class="fas fa-circle-notch text-warning me-1"></i>
-                Estado de Matrículas
-            </h6>
-
-            <div class="grafico-circular-container">
-                <canvas id="chartEstado"></canvas>
-            </div>
+    <div class="card-body p-0">
+        {% if actividad_reciente %}
+        <ul class="list-unstyled mb-0">
+            {% for pago in actividad_reciente %}
+            <li class="activity-item px-3 py-3 d-flex align-items-start gap-3">
+                <div class="activity-dot bg-success mt-1"></div>
+                <div class="flex-grow-1 min-w-0">
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div class="min-w-0">
+                            <span class="fw-semibold small text-truncate d-block">
+                                {{ pago.matricula.alumno }}
+                            </span>
+                            <span class="badge mt-1
+                                {% if pago.metodo_pago == 'efectivo' %}bg-success bg-opacity-10 text-success border border-success border-opacity-25
+                                {% elif pago.metodo_pago == 'yape' %}bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25
+                                {% else %}bg-info bg-opacity-10 text-info border border-info border-opacity-25{% endif %}">
+                                <i class="fas fa-money-bill-wave me-1"></i>{{ pago.get_metodo_pago_display }}
+                            </span>
+                        </div>
+                        <div class="text-end flex-shrink-0">
+                            <div class="text-success fw-bold small">S/. {{ pago.monto }}</div>
+                            <div class="activity-meta">{{ pago.fecha_pago|date:"d/m/Y" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center text-muted py-5">
+            <i class="fas fa-inbox fa-2x mb-2 d-block opacity-25"></i>
+            <small>Sin actividad reciente</small>
         </div>
+        {% endif %}
     </div>
-
 </div>
 
-<!-- ACCESOS RÁPIDOS -->
-<div class="row g-3">
+<!-- ======= ACCESOS RÁPIDOS ======= -->
+<div class="row g-2">
 
     <div class="col-md-4">
         <a href="{% url 'lista_sedes' %}"
-            class="card border-0 shadow-sm text-decoration-none text-dark p-3 d-flex flex-row align-items-center gap-3">
-            <i class="fas fa-building fa-2x text-primary"></i>
-            <div>
-                <div class="fw-semibold">Sedes</div>
-                <small class="text-muted">Gestionar sedes</small>
+           class="acceso-card acceso-primary card border-0 shadow-sm text-decoration-none d-block p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="acceso-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="fas fa-building"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark">Sedes</div>
+                        <div class="kpi-label">Gestionar sedes</div>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-muted small"></i>
             </div>
         </a>
     </div>
 
     <div class="col-md-4">
         <a href="{% url 'lista_usuarios' %}"
-            class="card border-0 shadow-sm text-decoration-none text-dark p-3 d-flex flex-row align-items-center gap-3">
-            <i class="fas fa-users-cog fa-2x text-success"></i>
-            <div>
-                <div class="fw-semibold">Usuarios</div>
-                <small class="text-muted">Gestionar usuarios</small>
+           class="acceso-card acceso-success card border-0 shadow-sm text-decoration-none d-block p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="acceso-icon bg-success bg-opacity-10 text-success">
+                        <i class="fas fa-users-cog"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark">Usuarios</div>
+                        <div class="kpi-label">Gestionar usuarios</div>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-muted small"></i>
             </div>
         </a>
     </div>
 
     <div class="col-md-4">
         <a href="{% url 'lista_ciclos' %}"
-            class="card border-0 shadow-sm text-decoration-none text-dark p-3 d-flex flex-row align-items-center gap-3">
-            <i class="fas fa-calendar-alt fa-2x text-warning"></i>
-            <div>
-                <div class="fw-semibold">Ciclos</div>
-                <small class="text-muted">Gestionar ciclos</small>
+           class="acceso-card acceso-warning card border-0 shadow-sm text-decoration-none d-block p-3">
+            <div class="d-flex align-items-center justify-content-between">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="acceso-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="fas fa-calendar-alt"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold text-dark">Ciclos</div>
+                        <div class="kpi-label">Gestionar ciclos</div>
+                    </div>
+                </div>
+                <i class="fas fa-chevron-right text-muted small"></i>
             </div>
         </a>
     </div>
 
 </div>
 
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script>
-    (function () {
-
-        var sedesLabels = {{ chart_sedes_labels|safe }};
-        var sedesData = {{ chart_sedes_data|safe }};
-
-        var estadoLabels = {{ chart_estado_labels|safe }};
-        var estadoData = {{ chart_estado_data|safe }};
-
-        // GRÁFICO DE BARRAS
-        new Chart(document.getElementById('chartSedes'), {
-            type: 'bar',
-            data: {
-                labels: sedesLabels,
-                datasets: [{
-                    label: 'Alumnos',
-                    data: sedesData,
-                    backgroundColor: 'rgba(13, 110, 253, 0.7)',
-                    borderRadius: 6,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            stepSize: 1
-                        }
-                    }
-                }
-            }
-        });
-
-        // GRÁFICO CIRCULAR
-        new Chart(document.getElementById('chartEstado'), {
-            type: 'doughnut',
-            data: {
-                labels: estadoLabels,
-                datasets: [{
-                    data: estadoData,
-                    backgroundColor: ['#ffc107', '#28a745'],
-                    hoverOffset: 8,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-
-    })();
-</script>
 {% endblock %}

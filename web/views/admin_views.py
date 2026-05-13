@@ -168,7 +168,7 @@ def eliminar_ciclo(request, id):
     messages.success(request, f"Ciclo '{nombre}' eliminado correctamente")
     return redirect("lista_ciclos")
 
-
+#arreglar burrada de alvaro
 @login_required
 @permiso_requerido(['admin'])
 def crear_ciclo(request):

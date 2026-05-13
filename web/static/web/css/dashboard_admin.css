@@ -1,55 +1,134 @@
-.cards-container {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 30px;
-    margin-top: 30px;
+/* =============================================
+   KPI CARDS
+   ============================================= */
+.kpi-card {
+    border-left: 4px solid transparent;
+    border-radius: 12px !important;
+    transition: transform 0.22s ease, box-shadow 0.22s ease;
+    cursor: default;
+}
+.kpi-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.11) !important;
 }
 
-.card {
-    border: 1px solid #BCC4C7;
-    border-radius: 14px;
-    padding: 30px;
-    text-decoration: none;
-    color: black;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    transition: 0.3s;
-    text-align: center;
+.kpi-card.kpi-primary { border-left-color: #0d6efd; }
+.kpi-card.kpi-warning { border-left-color: #ffc107; }
+.kpi-card.kpi-success { border-left-color: #198754; }
+.kpi-card.kpi-danger  { border-left-color: #dc3545; }
+.kpi-card.kpi-info    { border-left-color: #0dcaf0; }
+
+.kpi-icon {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    font-size: 1.1rem;
 }
 
-
-.card:hover {
-    transform: translateY(-5px);
+.kpi-value {
+    font-size: 1.45rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
 }
-/* CONTENEDORES DE GRÁFICOS */
-.grafico-barra-container{
+
+.kpi-label {
+    font-size: 0.71rem;
+    color: #6c757d;
+    margin-top: 2px;
+}
+
+/* =============================================
+   ACTIVIDAD RECIENTE — TIMELINE
+   ============================================= */
+.activity-item {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+    transition: background-color 0.18s ease;
+}
+.activity-item:last-child {
+    border-bottom: none !important;
+}
+.activity-item:hover {
+    background-color: rgba(0, 0, 0, 0.018) !important;
+}
+
+.activity-dot {
+    width: 9px;
+    height: 9px;
+    min-width: 9px;
+    border-radius: 50%;
+    margin-top: 5px;
+}
+
+.activity-meta {
+    font-size: 0.70rem;
+    color: #adb5bd;
+}
+
+/* =============================================
+   ACCESOS RÁPIDOS
+   ============================================= */
+.acceso-card {
+    border-radius: 12px !important;
+    border-left: 4px solid transparent !important;
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-left-color 0.22s ease;
+    cursor: pointer;
+}
+.acceso-card:hover {
+    transform: translateX(5px);
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.11) !important;
+}
+.acceso-card.acceso-primary:hover { border-left-color: #0d6efd !important; }
+.acceso-card.acceso-success:hover { border-left-color: #198754 !important; }
+.acceso-card.acceso-warning:hover { border-left-color: #ffc107 !important; }
+
+.acceso-icon {
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    font-size: 1.2rem;
+    transition: transform 0.22s ease;
+}
+.acceso-card:hover .acceso-icon {
+    transform: scale(1.1);
+}
+
+/* =============================================
+   ESTADO DEL SISTEMA — PUNTO ANIMADO
+   ============================================= */
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: #198754;
+    border-radius: 50%;
+    animation: status-pulse 2.2s ease-in-out infinite;
+    vertical-align: middle;
+    margin-right: 4px;
+}
+@keyframes status-pulse {
+    0%, 100% { opacity: 1;   transform: scale(1);    }
+    50%       { opacity: 0.4; transform: scale(0.85); }
+}
+
+/* =============================================
+   CONTENEDORES DE GRÁFICOS (páginas de reporte)
+   ============================================= */
+.grafico-barra-container {
     height: 180px;
     position: relative;
 }
-
-.grafico-circular-container{
+.grafico-circular-container {
     height: 180px;
     max-width: 320px;
     margin: 0 auto;
     position: relative;
-}
-
-/* TARJETAS MÁS COMPACTAS */
-.card-body{
-    padding: 1rem !important;
-}
-
-/* NÚMEROS MÁS PEQUEÑOS */
-.fs-3{
-    font-size: 1.8rem !important;
-}
-
-/* MENOS ESPACIO ENTRE BLOQUES */
-.mb-4{
-    margin-bottom: 1rem !important;
-}
-
-/* TITULOS MÁS PEQUEÑOS */
-h6{
-    font-size: 1rem;
-    margin-bottom: 10px !important;
 }

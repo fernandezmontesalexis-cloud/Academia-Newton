@@ -1,0 +1,232 @@
+{% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/dashboard_admin.css' %}">
+<style>
+.metodo-badge {
+    font-size: 0.68rem;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    display: inline-block;
+}
+.metodo-efectivo      { background:#d1e7dd; color:#0a3622; }
+.metodo-yape          { background:#cfe2ff; color:#052c65; }
+.metodo-transferencia { background:#cff4fc; color:#055160; }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ENCABEZADO -->
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item">
+            <a href="{% url 'finanzas' %}">Finanzas</a>
+        </li>
+        <li class="breadcrumb-item active">Historial completo</li>
+    </ol>
+</nav>
+
+<div class="d-flex justify-content-between align-items-start mb-3">
+    <div>
+        <h4 class="mb-1 fw-bold">Historial de Pagos</h4>
+        <div class="d-flex align-items-center gap-3">
+            <span class="text-muted small">
+                <i class="fas fa-calendar-alt me-1 text-primary"></i>{% now "d/m/Y" %}
+            </span>
+            {% if filtros_activos %}
+            <span class="badge bg-info text-dark">
+                <i class="fas fa-filter me-1"></i> Filtros activos
+            </span>
+            {% endif %}
+            <span class="text-muted small">
+                {{ historial.paginator.count }} registro{{ historial.paginator.count|pluralize:",s" }}
+            </span>
+        </div>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'exportar_finanzas_excel' %}?{{ request.GET.urlencode }}"
+           class="btn btn-sm btn-success">
+            <i class="fas fa-file-excel me-1"></i> Exportar Excel
+        </a>
+        <a href="{% url 'finanzas' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="fas fa-arrow-left me-1"></i> Volver
+        </a>
+    </div>
+</div>
+
+<!-- FILTROS -->
+<form method="get" class="card border-0 shadow-sm p-3 mb-3">
+    <div class="row g-2 align-items-end">
+
+        <!-- Búsqueda -->
+        <div class="col-md-3 col-sm-6">
+            <label class="form-label small mb-1 text-muted">Buscar alumno</label>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text bg-white">
+                    <i class="fas fa-search text-muted"></i>
+                </span>
+                <input type="text" name="q" class="form-control"
+                       placeholder="Nombre o apellido…" value="{{ busqueda }}">
+            </div>
+        </div>
+
+        <!-- Desde -->
+        <div class="col-md-2 col-sm-6">
+            <label class="form-label small mb-1 text-muted">Desde</label>
+            <input type="date" name="fecha_desde" class="form-control form-control-sm"
+                   value="{{ fecha_desde_str }}">
+        </div>
+
+        <!-- Hasta -->
+        <div class="col-md-2 col-sm-6">
+            <label class="form-label small mb-1 text-muted">Hasta</label>
+            <input type="date" name="fecha_hasta" class="form-control form-control-sm"
+                   value="{{ fecha_hasta_str }}">
+        </div>
+
+        <!-- Sede -->
+        <div class="col-md-2 col-sm-6">
+            <label class="form-label small mb-1 text-muted">Sede</label>
+            <select name="sede_id" class="form-select form-select-sm">
+                <option value="">Todas las sedes</option>
+                {% for s in sedes %}
+                <option value="{{ s.id }}"
+                    {% if sede_id == s.id|stringformat:"s" %}selected{% endif %}>
+                    {{ s.nombre }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Método -->
+        <div class="col-md-2 col-sm-6">
+            <label class="form-label small mb-1 text-muted">Método</label>
+            <select name="metodo" class="form-select form-select-sm">
+                <option value="">Todos</option>
+                <option value="efectivo"      {% if metodo == 'efectivo' %}selected{% endif %}>Efectivo</option>
+                <option value="yape"          {% if metodo == 'yape' %}selected{% endif %}>Yape</option>
+                <option value="transferencia" {% if metodo == 'transferencia' %}selected{% endif %}>Transferencia</option>
+            </select>
+        </div>
+
+        <!-- Acciones -->
+        <div class="col-auto">
+            <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-filter me-1"></i> Filtrar
+            </button>
+            <a href="{% url 'historial_completo' %}" class="btn btn-outline-secondary btn-sm">
+                Limpiar
+            </a>
+        </div>
+
+    </div>
+</form>
+
+<!-- TABLA COMPLETA -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size:0.83rem;">
+                <thead class="table-light">
+                    <tr>
+                        <th class="px-3">#</th>
+                        <th>Alumno</th>
+                        <th>Sede</th>
+                        <th>Ciclo</th>
+                        <th class="text-end">Monto</th>
+                        <th>Método</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pago in historial %}
+                    <tr>
+                        <td class="px-3 text-muted">
+                            {{ historial.start_index|add:forloop.counter0 }}
+                        </td>
+                        <td class="fw-semibold">{{ pago.matricula.alumno }}</td>
+                        <td class="text-muted">{{ pago.matricula.alumno.sede }}</td>
+                        <td class="text-muted">{{ pago.matricula.ciclo.nombre }}</td>
+                        <td class="text-end fw-bold text-success">S/. {{ pago.monto }}</td>
+                        <td>
+                            <span class="metodo-badge metodo-{{ pago.metodo_pago }}">
+                                {{ pago.get_metodo_pago_display }}
+                            </span>
+                        </td>
+                        <td class="text-muted">{{ pago.fecha_pago|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <i class="fas fa-search fa-2x d-block mb-2 opacity-25"></i>
+                            <small>Sin resultados para los filtros aplicados</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- PAGINACIÓN -->
+        {% if historial.paginator.num_pages > 1 %}
+        <div class="px-3 py-3 border-top d-flex justify-content-between align-items-center flex-wrap gap-2">
+            <small class="text-muted">
+                Mostrando {{ historial.start_index }}–{{ historial.end_index }}
+                de {{ historial.paginator.count }} registros
+                &nbsp;·&nbsp; Pág. {{ historial.number }} de {{ historial.paginator.num_pages }}
+            </small>
+            <nav>
+                <ul class="pagination pagination-sm mb-0">
+
+                    <!-- Anterior -->
+                    <li class="page-item {% if not historial.has_previous %}disabled{% endif %}">
+                        {% if historial.has_previous %}
+                        <a class="page-link" href="{{ base_url }}page={{ historial.previous_page_number }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        {% else %}
+                        <span class="page-link"><i class="fas fa-chevron-left"></i></span>
+                        {% endif %}
+                    </li>
+
+                    <!-- Números -->
+                    {% for p in page_range %}
+                    {% if not p %}
+                    <li class="page-item disabled">
+                        <span class="page-link">…</span>
+                    </li>
+                    {% elif p == historial.number %}
+                    <li class="page-item active">
+                        <span class="page-link">{{ p }}</span>
+                    </li>
+                    {% else %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{ base_url }}page={{ p }}">{{ p }}</a>
+                    </li>
+                    {% endif %}
+                    {% endfor %}
+
+                    <!-- Siguiente -->
+                    <li class="page-item {% if not historial.has_next %}disabled{% endif %}">
+                        {% if historial.has_next %}
+                        <a class="page-link" href="{{ base_url }}page={{ historial.next_page_number }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                        {% else %}
+                        <span class="page-link"><i class="fas fa-chevron-right"></i></span>
+                        {% endif %}
+                    </li>
+
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+{% endblock %}
