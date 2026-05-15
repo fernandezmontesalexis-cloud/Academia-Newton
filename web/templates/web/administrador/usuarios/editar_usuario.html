@@ -1,59 +1,195 @@
 {% extends 'web/base/base.html' %}
-{% load static %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'web/css/formularios.css' %}">
-{% endblock %}
 
 {% block content %}
 
-<div class="container">
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Editar Usuario</h4>
+        <small class="text-muted">Modificar datos y seguridad de la cuenta</small>
+    </div>
+    <a href="{% url 'lista_usuarios' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Volver
+    </a>
+</div>
 
-    <div class="card">
+{% if messages %}
+{% for message in messages %}
+<div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+</div>
+{% endfor %}
+{% endif %}
 
-        <h2>Editar Usuario</h2>
-        <p class="subtitulo">Modifica los datos del usuario seleccionado</p>
+<form method="POST">
+{% csrf_token %}
 
-        <form method="POST">
-            {% csrf_token %}
+<div class="row g-4">
 
-            <div class="form-group">
-                <label>Usuario</label>
-                <input type="text" name="username" value="{{ user.username }}" class="input">
+    <!-- CARD IZQUIERDA: Información general -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold border-bottom">
+                <i class="fas fa-user text-primary me-1"></i> Información general
             </div>
+            <div class="card-body p-4">
 
-            <div class="form-group">
-                <label>Tipo de usuario</label>
-                <select name="tipo_usuario" class="input">
-                    <option value="admin" {% if perfil.tipo_usuario == "admin" %}selected{% endif %}>Administrador</option>
-                    <option value="secretaria" {% if perfil.tipo_usuario == "secretaria" %}selected{% endif %}>Secretaria</option>
-                </select>
-            </div>
+                <!-- Avatar inicial -->
+                <div class="text-center mb-4">
+                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold"
+                          style="width:64px;height:64px;font-size:24px;">
+                        {{ user.username|slice:":1"|upper }}
+                    </span>
+                    <div class="mt-2 fw-semibold">{{ user.username }}</div>
+                    <div class="small text-muted">
+                        {% if perfil.tipo_usuario == "admin" %}
+                            <span class="badge bg-primary">Administrador</span>
+                        {% else %}
+                            <span class="badge bg-success">Secretaria</span>
+                        {% endif %}
+                    </div>
+                </div>
 
-            <div class="form-group">
-                <label>Sede</label>
-                <select name="sede" class="input">
-                    {% for sede in sedes %}
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Nombre de usuario</label>
+                    <input type="text" name="username" class="form-control"
+                           value="{{ user.username }}" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Tipo de usuario</label>
+                    <select name="tipo_usuario" class="form-select">
+                        <option value="admin" {% if perfil.tipo_usuario == "admin" %}selected{% endif %}>
+                            Administrador
+                        </option>
+                        <option value="secretaria" {% if perfil.tipo_usuario == "secretaria" %}selected{% endif %}>
+                            Secretaria
+                        </option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Sede asignada</label>
+                    <select name="sede" class="form-select">
+                        {% for sede in sedes %}
                         <option value="{{ sede.id }}" {% if perfil.sede.id == sede.id %}selected{% endif %}>
                             {{ sede.nombre }}
                         </option>
-                    {% endfor %}
-                </select>
+                        {% endfor %}
+                    </select>
+                </div>
+
             </div>
+        </div>
+    </div>
 
-            <!-- 🔥 BOTONES -->
-            <div class="acciones-form">
-                <button type="submit" class="btn-guardar">Actualizar</button>
-
-                <a href="{% url 'lista_usuarios' %}" class="btn-cancelar">
-                    Cancelar
-                </a>
+    <!-- CARD DERECHA: Seguridad -->
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white fw-semibold border-bottom">
+                <i class="fas fa-shield-alt text-warning me-1"></i> Seguridad
             </div>
+            <div class="card-body p-4">
 
-        </form>
+                <!-- Último acceso -->
+                <div class="mb-4 p-3 rounded bg-light">
+                    <div class="small text-muted mb-1">Último acceso al sistema</div>
+                    <div class="fw-semibold">
+                        {% if user.last_login %}
+                            <i class="fas fa-clock text-success me-1"></i>
+                            {{ user.last_login|date:"d/m/Y \a \l\a\s H:i" }}
+                        {% else %}
+                            <i class="fas fa-clock text-muted me-1"></i>
+                            <span class="text-muted">Nunca ha iniciado sesión</span>
+                        {% endif %}
+                    </div>
+                </div>
 
+                <!-- Estado de cuenta -->
+                <div class="mb-4">
+                    <label class="form-label fw-semibold">Estado de la cuenta</label>
+                    <div class="d-flex gap-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="is_active"
+                                   id="activo" value="1" {% if user.is_active %}checked{% endif %}>
+                            <label class="form-check-label text-success fw-semibold" for="activo">
+                                <i class="fas fa-circle me-1" style="font-size:10px;"></i> Activo
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="is_active"
+                                   id="inactivo" value="0" {% if not user.is_active %}checked{% endif %}>
+                            <label class="form-check-label text-secondary fw-semibold" for="inactivo">
+                                <i class="fas fa-circle me-1" style="font-size:10px;"></i> Inactivo
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-text">Un usuario inactivo no puede iniciar sesión.</div>
+                </div>
+
+                <hr class="my-3">
+
+                <div class="mb-1 fw-semibold small text-muted text-uppercase tracking-wide">
+                    Cambiar contraseña
+                </div>
+                <div class="form-text mb-3">Dejar en blanco para mantener la contraseña actual.</div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Nueva contraseña</label>
+                    <div class="input-group">
+                        <input type="password" name="nueva_password" id="nuevaPass"
+                               class="form-control" placeholder="Mínimo 6 caracteres"
+                               autocomplete="new-password">
+                        <button class="btn btn-outline-secondary" type="button"
+                                onclick="togglePass('nuevaPass', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">Confirmar contraseña</label>
+                    <div class="input-group">
+                        <input type="password" name="confirmar_password" id="confirmarPass"
+                               class="form-control" placeholder="Repetir contraseña"
+                               autocomplete="new-password">
+                        <button class="btn btn-outline-secondary" type="button"
+                                onclick="togglePass('confirmarPass', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
 
 </div>
+
+<!-- BOTONES -->
+<div class="d-flex gap-2 justify-content-end mt-4">
+    <a href="{% url 'lista_usuarios' %}" class="btn btn-outline-secondary">
+        Cancelar
+    </a>
+    <button type="submit" class="btn btn-primary">
+        <i class="fas fa-save me-1"></i> Guardar cambios
+    </button>
+</div>
+
+</form>
+
+<script>
+function togglePass(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+</script>
 
 {% endblock %}

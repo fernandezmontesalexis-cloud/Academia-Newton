@@ -53,30 +53,109 @@
                             <small class="text-muted">DNI: {{ a.dni }}</small>
                         </td>
                         <td>{{ a.celular }}</td>
+                        <td><small>{{ a.distrito.nombre|default:"—" }}</small></td>
                         <td>
-                            <small>{{ a.distrito.nombre|default:"—" }}</small>
-                        </td>
-                        <td>
-                            {% if a.estado == "activo" %}
-                                <span class="badge bg-success">Activo</span>
+                            {% if a.estado_academico == "matriculado" %}
+                                <span class="badge bg-success">Matriculado</span>
+                            {% elif a.estado_academico == "sin_matricula" %}
+                                <span class="badge bg-warning text-dark">Sin matrícula</span>
                             {% else %}
                                 <span class="badge bg-danger">Inactivo</span>
                             {% endif %}
                         </td>
                         <td>
                             <div class="d-flex gap-1">
+
+                                <!-- 👁 Ver (siempre) -->
                                 <a href="{% url 'detalle_alumno' a.id %}"
-                                   class="btn btn-sm btn-outline-primary">
+                                   class="btn btn-sm btn-outline-primary"
+                                   title="Ver detalle">
                                     <i class="fas fa-eye"></i>
                                 </a>
-                                <a href="{% url 'cambiar_estado_alumno' a.id %}"
-                                   class="btn btn-sm {% if a.estado == 'activo' %}btn-outline-warning{% else %}btn-outline-success{% endif %}">
-                                    {% if a.estado == "activo" %}
+
+                                {% if a.estado_academico == 'matriculado' %}
+
+                                    <!-- ⛔ Desactivar -->
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger"
+                                            title="Desactivar alumno"
+                                            onclick="confirmarPost(
+                                                '{% url 'desactivar_alumno' a.id %}',
+                                                '¿Desactivar alumno?',
+                                                'El alumno dejará de aparecer en procesos académicos activos, pero conservará su historial de matrículas, pagos y reportes.',
+                                                {confirmText: 'Sí, desactivar', confirmColor: '#dc3545'}
+                                            )">
                                         <i class="fas fa-ban"></i>
-                                    {% else %}
-                                        <i class="fas fa-check"></i>
-                                    {% endif %}
-                                </a>
+                                    </button>
+
+                                {% elif a.estado_academico == 'sin_matricula' %}
+
+                                    <!-- 🔄 Renovar -->
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary"
+                                            title="Renovar matrícula"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalRenovar"
+                                            data-renovar-url="{% url 'renovar_matricula' a.id %}"
+                                            data-alumno="{{ a.nombres }} {{ a.apellido_paterno }} {{ a.apellido_materno }}"
+                                            data-dni="{{ a.dni }}"
+                                            data-sede="{{ a.sede.nombre }}"
+                                            data-ultimo-ciclo="{{ a.ultimo_ciclo_nombre }}"
+                                            data-celular="{{ a.celular }}"
+                                            data-email="{{ a.email|default:'' }}"
+                                            data-apo="{{ a.apoderado.nombre_completo|default:'' }}"
+                                            data-apo-celular="{{ a.apoderado.celular|default:'' }}">
+                                        <i class="fas fa-rotate"></i>
+                                    </button>
+
+                                    <!-- ⛔ Desactivar -->
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-danger"
+                                            title="Desactivar alumno"
+                                            onclick="confirmarPost(
+                                                '{% url 'desactivar_alumno' a.id %}',
+                                                '¿Desactivar alumno?',
+                                                'El alumno dejará de aparecer en procesos académicos activos, pero conservará su historial de matrículas, pagos y reportes.',
+                                                {confirmText: 'Sí, desactivar', confirmColor: '#dc3545'}
+                                            )">
+                                        <i class="fas fa-ban"></i>
+                                    </button>
+
+                                {% else %}{# inactivo #}
+
+                                    <!-- 🔄 Renovar -->
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-primary"
+                                            title="Renovar matrícula"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#modalRenovar"
+                                            data-renovar-url="{% url 'renovar_matricula' a.id %}"
+                                            data-alumno="{{ a.nombres }} {{ a.apellido_paterno }} {{ a.apellido_materno }}"
+                                            data-dni="{{ a.dni }}"
+                                            data-sede="{{ a.sede.nombre }}"
+                                            data-ultimo-ciclo="{{ a.ultimo_ciclo_nombre }}"
+                                            data-celular="{{ a.celular }}"
+                                            data-email="{{ a.email|default:'' }}"
+                                            data-apo="{{ a.apoderado.nombre_completo|default:'' }}"
+                                            data-apo-celular="{{ a.apoderado.celular|default:'' }}">
+                                        <i class="fas fa-rotate"></i>
+                                    </button>
+
+                                    <!-- ♻️ Reactivar -->
+                                    <button type="button"
+                                            class="btn btn-sm btn-outline-success"
+                                            title="Reactivar alumno"
+                                            onclick="confirmarPost(
+                                                '{% url 'reactivar_alumno' a.id %}',
+                                                '¿Reactivar alumno?',
+                                                'El alumno volverá a estar disponible para nuevos procesos académicos y renovaciones.',
+                                                {confirmText: 'Sí, reactivar', confirmColor: '#198754'}
+                                            )">
+                                        <i class="fas fa-arrow-rotate-left"></i>
+                                    </button>
+
+                                {% endif %}
+
                             </div>
                         </td>
                     </tr>
@@ -116,5 +195,149 @@
 
     </div>
 </div>
+
+
+<!-- ============================================================ -->
+<!-- MODAL: RENOVAR MATRÍCULA                                     -->
+<!-- ============================================================ -->
+<div class="modal fade" id="modalRenovar" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold">
+                    <i class="fas fa-rotate-right text-primary me-2"></i>Renovar Matrícula
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="POST" id="formRenovar">
+                {% csrf_token %}
+                <div class="modal-body pt-2">
+
+                    <!-- INFO SOLO LECTURA -->
+                    <div class="bg-light rounded-3 p-3 mb-4">
+                        <div class="row g-2 small">
+                            <div class="col-sm-6">
+                                <span class="text-muted d-block" style="font-size:0.68rem">Alumno</span>
+                                <strong id="renov-alumno"></strong>
+                            </div>
+                            <div class="col-sm-3">
+                                <span class="text-muted d-block" style="font-size:0.68rem">DNI</span>
+                                <strong id="renov-dni"></strong>
+                            </div>
+                            <div class="col-sm-3">
+                                <span class="text-muted d-block" style="font-size:0.68rem">Sede</span>
+                                <strong id="renov-sede"></strong>
+                            </div>
+                            <div class="col-12 mt-1">
+                                <span class="text-muted d-block" style="font-size:0.68rem">Último ciclo</span>
+                                <strong id="renov-ultimo-ciclo"></strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- CAMPOS EDITABLES -->
+                    <div class="row g-3">
+
+                        <!-- Contacto -->
+                        <div class="col-12">
+                            <p class="text-muted fw-semibold mb-0 text-uppercase"
+                               style="font-size:0.7rem;letter-spacing:.05em">Contacto</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Celular</label>
+                            <input type="text" name="celular" id="renov-celular"
+                                   class="form-control form-control-sm" maxlength="9">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Correo electrónico</label>
+                            <input type="email" name="email" id="renov-email"
+                                   class="form-control form-control-sm">
+                        </div>
+
+                        <!-- Apoderado (visible solo si tiene) -->
+                        <div class="col-12 d-none" id="renov-apo-section">
+                            <p class="text-muted fw-semibold mb-2 text-uppercase mt-1"
+                               style="font-size:0.7rem;letter-spacing:.05em">Apoderado</p>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small">Nombre del apoderado</label>
+                                    <input type="text" name="apo_nombre" id="renov-apo-nombre"
+                                           class="form-control form-control-sm">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small">Celular del apoderado</label>
+                                    <input type="text" name="apo_celular" id="renov-apo-celular"
+                                           class="form-control form-control-sm">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Nueva Matrícula -->
+                        <div class="col-12">
+                            <p class="text-muted fw-semibold mb-0 text-uppercase mt-1"
+                               style="font-size:0.7rem;letter-spacing:.05em">Nueva Matrícula</p>
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label small">
+                                Ciclo <span class="text-danger">*</span>
+                            </label>
+                            <select name="ciclo" class="form-select form-select-sm" required>
+                                <option value="">— Seleccionar ciclo —</option>
+                                {% for c in ciclos_disponibles %}
+                                <option value="{{ c.id }}">
+                                    {{ c.nombre }} &nbsp;·&nbsp; S/. {{ c.precio }}
+                                    &nbsp;·&nbsp; {{ c.fecha_inicio|date:"d/m/Y" }} – {{ c.fecha_fin|date:"d/m/Y" }}
+                                </option>
+                                {% empty %}
+                                <option value="" disabled>No hay ciclos disponibles en esta sede</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small">Fecha de matrícula</label>
+                            <input type="text" class="form-control form-control-sm bg-light"
+                                   value="Hoy (automática)" disabled>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 pt-1">
+                    <button type="button" class="btn btn-outline-secondary btn-sm"
+                            data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-rotate-right me-1"></i> Confirmar renovación
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+
+<script>
+// Modal renovar: llena datos del alumno seleccionado
+document.getElementById('modalRenovar').addEventListener('show.bs.modal', function (event) {
+    const btn = event.relatedTarget;
+    document.getElementById('formRenovar').action = btn.dataset.renovarUrl;
+    document.getElementById('renov-alumno').textContent = btn.dataset.alumno;
+    document.getElementById('renov-dni').textContent = btn.dataset.dni;
+    document.getElementById('renov-sede').textContent = btn.dataset.sede;
+    document.getElementById('renov-ultimo-ciclo').textContent = btn.dataset.ultimoCiclo || '—';
+    document.getElementById('renov-celular').value = btn.dataset.celular;
+    document.getElementById('renov-email').value = btn.dataset.email;
+
+    const apoSection = document.getElementById('renov-apo-section');
+    if (btn.dataset.apo) {
+        apoSection.classList.remove('d-none');
+        document.getElementById('renov-apo-nombre').value = btn.dataset.apo;
+        document.getElementById('renov-apo-celular').value = btn.dataset.apoCelular;
+    } else {
+        apoSection.classList.add('d-none');
+    }
+});
+</script>
 
 {% endblock %}

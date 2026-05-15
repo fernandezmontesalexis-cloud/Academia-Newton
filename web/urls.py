@@ -1,7 +1,10 @@
 from django.urls import path
 from .views.auth_views import login_view, logout_view
 from .views.dashboard_views import dashboard
-from .views.alumnos_views import lista_alumnos, cambiar_estado_alumno, detalle_alumno
+from .views.alumnos_views import (
+    lista_alumnos, detalle_alumno, editar_alumno,
+    desactivar_alumno, reactivar_alumno, renovar_matricula,
+)
 from .views.registro_views import (
     registrar_alumno,
     registrar_apoderado,
@@ -20,14 +23,17 @@ from .views.reportes_views import reportes_sedes, reporte_sede_detalle, exportar
 from .views.finanzas_views import finanzas, historial_completo, exportar_finanzas_excel
 from .views.admin_views import (
     lista_ciclos,
+    ciclos_sede_detalle,
     lista_sedes,
     crear_sede,
     editar_sede,
     eliminar_sede,
+    reactivar_sede,
     crear_usuario,
     lista_usuarios,
     editar_usuario,
     eliminar_usuario,
+    reactivar_usuario,
     crear_ciclo,
     editar_ciclo,
     eliminar_ciclo,
@@ -46,11 +52,10 @@ urlpatterns = [
     # SECRETARIA - ALUMNOS
     path("secretaria/alumnos/", lista_alumnos, name="lista_alumnos"),
     path("secretaria/alumnos/<int:alumno_id>/", detalle_alumno, name="detalle_alumno"),
-    path(
-        "secretaria/alumnos/estado/<int:alumno_id>/",
-        cambiar_estado_alumno,
-        name="cambiar_estado_alumno",
-    ),
+    path("secretaria/alumnos/<int:alumno_id>/editar/", editar_alumno, name="editar_alumno"),
+    path("secretaria/alumnos/<int:alumno_id>/renovar/", renovar_matricula, name="renovar_matricula"),
+    path("secretaria/alumnos/<int:alumno_id>/desactivar/", desactivar_alumno, name="desactivar_alumno"),
+    path("secretaria/alumnos/<int:alumno_id>/reactivar/", reactivar_alumno, name="reactivar_alumno"),
     # SECRETARIA - REGISTRO (YA CORREGIDO)
     path("secretaria/registrar-alumno/", registrar_alumno, name="registrar_alumno"),
     path(
@@ -103,20 +108,22 @@ urlpatterns = [
     path("buscar-colegios/", buscar_colegios),
     path("crear-colegio/", crear_colegio),
     path("panel/sedes/editar/<int:id>/", editar_sede, name="editar_sede"),
-    # eliminar sede
+    # desactivar/reactivar sede (soft-delete)
     path("panel/sedes/eliminar/<int:id>/", eliminar_sede, name="eliminar_sede"),
+    path("panel/sedes/reactivar/<int:id>/", reactivar_sede, name="reactivar_sede"),
     # crud crear usarios
     path("panel/usuarios/crear/", crear_usuario, name="crear_usuario"),
-    # lista de usaurios
+    # lista de usuarios
     path("panel/usuarios/", lista_usuarios, name="lista_usuarios"),
     # editar usuarios
     path("panel/usuarios/editar/<int:id>/", editar_usuario, name="editar_usuario"),
-    # eliminar usuario
-    path(
-        "panel/usuarios/eliminar/<int:id>/", eliminar_usuario, name="eliminar_usuario"
-    ),
-    # crear crud de ciclos
+    # desactivar usuario (soft-delete)
+    path("panel/usuarios/eliminar/<int:id>/", eliminar_usuario, name="eliminar_usuario"),
+    # reactivar usuario
+    path("panel/usuarios/reactivar/<int:id>/", reactivar_usuario, name="reactivar_usuario"),
+    # ciclos
     path("panel/ciclos/", lista_ciclos, name="lista_ciclos"),
+    path("panel/ciclos/sede/<int:sede_id>/", ciclos_sede_detalle, name="ciclos_sede_detalle"),
     path("panel/ciclos/crear/", crear_ciclo, name="crear_ciclo"),
     path("panel/ciclos/editar/<int:id>/", editar_ciclo, name="editar_ciclo"),
     path("panel/ciclos/eliminar/<int:id>/", eliminar_ciclo, name="eliminar_ciclo"),

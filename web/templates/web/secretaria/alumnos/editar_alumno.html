@@ -1,0 +1,113 @@
+{% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Editar Alumno</h4>
+        <small class="text-muted">{{ alumno.nombres }} {{ alumno.apellido_paterno }} {{ alumno.apellido_materno }}</small>
+    </div>
+    <a href="{% url 'detalle_alumno' alumno.id %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Volver al perfil
+    </a>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-4 pb-0 px-4">
+                <h6 class="fw-bold mb-0">
+                    <i class="fas fa-user-edit me-2 text-primary"></i>Datos del Alumno
+                </h6>
+            </div>
+            <div class="card-body px-4 pb-4">
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="row g-3">
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Apellido Paterno</label>
+                            <input type="text" name="apellido_paterno"
+                                   class="form-control"
+                                   value="{{ alumno.apellido_paterno }}"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Apellido Materno</label>
+                            <input type="text" name="apellido_materno"
+                                   class="form-control"
+                                   value="{{ alumno.apellido_materno }}"
+                                   required>
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Nombres</label>
+                            <input type="text" name="nombres"
+                                   class="form-control"
+                                   value="{{ alumno.nombres }}"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Celular</label>
+                            <input type="text" name="celular"
+                                   class="form-control"
+                                   value="{{ alumno.celular }}"
+                                   maxlength="9"
+                                   required>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">
+                                Correo electrónico <span class="text-muted fw-normal">(opcional)</span>
+                            </label>
+                            <input type="email" name="email"
+                                   class="form-control"
+                                   value="{{ alumno.email|default:'' }}">
+                        </div>
+
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Dirección</label>
+                            <input type="text" name="direccion"
+                                   class="form-control"
+                                   value="{{ alumno.direccion }}"
+                                   required>
+                        </div>
+
+                        <!-- DNI y Fecha de nacimiento: solo lectura -->
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-muted">DNI</label>
+                            <input type="text" class="form-control bg-light text-muted"
+                                   value="{{ alumno.dni }}" disabled>
+                            <div class="form-text">El DNI no puede modificarse.</div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-muted">Fecha de nacimiento</label>
+                            <input type="text" class="form-control bg-light text-muted"
+                                   value="{{ alumno.fecha_nacimiento|date:'d/m/Y' }}" disabled>
+                        </div>
+
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-flex gap-2 justify-content-end">
+                        <a href="{% url 'detalle_alumno' alumno.id %}" class="btn btn-outline-secondary">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> Guardar cambios
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

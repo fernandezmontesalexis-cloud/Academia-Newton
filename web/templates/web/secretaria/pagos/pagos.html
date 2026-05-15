@@ -1,59 +1,144 @@
 {% extends 'web/base/base.html' %}
-{% load static %}
 
 {% block content %}
 
-<h2><i class="fas fa-money-bill"></i> Registro de Pagos</h2>
-<div class="pagos-container">
+<!-- ── HEADER ─────────────────────────────────────────────────── -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Registro de Pago</h4>
+        <small class="text-muted">{{ matricula.alumno }} — {{ matricula.ciclo.nombre }}</small>
+    </div>
+    {% if deuda <= 0 %}
+    <a href="{% url 'lista_pagos' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Volver
+    </a>
+    {% endif %}
+</div>
 
-    <!-- 🔝 RESUMEN -->
-    <div class="card shadow-sm p-3 mb-4">
-        <h5 class="mb-3">Resumen de matrícula</h5>
+<!-- ── 1. RESUMEN FINANCIERO ──────────────────────────────────── -->
+<div class="row g-3 mb-4">
 
-        <div class="row text-center">
-            <div class="col-md-4">
-                <div class="border rounded p-3">
-                    <small>Total del ciclo</small>
-                    <h5>S/. {{ total_ciclo }}</h5>
+    <div class="col-4">
+        <div class="card border-0 h-100"
+             style="box-shadow:0 2px 8px rgba(0,0,0,.08);border-top:3px solid #94a3b8!important;">
+            <div class="card-body text-center py-3" style="background:#f8fafc;border-radius:inherit;">
+                <div class="text-muted mb-1" style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;">
+                    Total del ciclo
                 </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="border rounded p-3">
-                    <small>Total pagado</small>
-                    <h5 class="text-primary">S/. {{ total_pagado }}</h5>
-                </div>
-            </div>
-
-            <div class="col-md-4">
-                <div class="border rounded p-3">
-                    <small>Deuda</small>
-                    {% if deuda > 0 %}
-                    <h5 class="text-danger">S/. {{ deuda }}</h5>
-                    {% else %}
-                    <h5 class="text-success">0</h5>
-                    {% endif %}
-                </div>
+                <div class="fw-bold fs-5">S/. {{ total_ciclo }}</div>
             </div>
         </div>
     </div>
 
-    <!-- 💳 FORMULARIO -->
-    {% if deuda > 0 %}
-    <div class="card shadow-sm p-4 mb-4">
-        <h5 class="mb-3">Registrar pago</h5>
+    <div class="col-4">
+        <div class="card border-0 h-100"
+             style="box-shadow:0 2px 8px rgba(0,0,0,.08);border-top:3px solid #3b82f6!important;">
+            <div class="card-body text-center py-3" style="background:#f0f7ff;border-radius:inherit;">
+                <div class="text-muted mb-1" style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;">
+                    Total pagado
+                </div>
+                <div class="fw-bold fs-5 text-primary">S/. {{ total_pagado }}</div>
+            </div>
+        </div>
+    </div>
 
+    <div class="col-4">
+        {% if deuda > 0 %}
+        <div class="card border-0 h-100"
+             style="box-shadow:0 2px 8px rgba(0,0,0,.08);border-top:3px solid #ef4444!important;">
+            <div class="card-body text-center py-3" style="background:#fff5f5;border-radius:inherit;">
+                <div class="text-muted mb-1" style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;">
+                    Deuda pendiente
+                </div>
+                <div class="fw-bold fs-5 text-danger">S/. {{ deuda }}</div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card border-0 h-100"
+             style="box-shadow:0 2px 8px rgba(0,0,0,.08);border-top:3px solid #22c55e!important;">
+            <div class="card-body text-center py-3" style="background:#f0fdf4;border-radius:inherit;">
+                <div class="text-muted mb-1" style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;">
+                    Deuda pendiente
+                </div>
+                <div class="fw-bold fs-5 text-success">
+                    <i class="fas fa-check-circle me-1"></i> Al día
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- ── 2. INFORMACIÓN DEL PAGO ───────────────────────────────── -->
+<div class="card border-0 mb-4" style="box-shadow:0 2px 10px rgba(0,0,0,.07);">
+    <div class="card-header border-0 fw-semibold py-2 px-4"
+         style="background:linear-gradient(90deg,#1e3a5f,#1e4d8c);color:#fff;border-radius:calc(.375rem - 1px) calc(.375rem - 1px) 0 0;">
+        <i class="fas fa-receipt me-2 opacity-75"></i> Información del pago
+    </div>
+    <div class="card-body py-3 px-4" style="background:#f8fafd;">
+        <div class="row g-3">
+            <div class="col-6 col-md-4">
+                <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;" class="text-muted mb-1">
+                    <i class="fas fa-calendar-alt me-1"></i> Fecha y hora
+                </div>
+                <div class="fw-semibold small">{% now "d/m/Y H:i" %}</div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;" class="text-muted mb-1">
+                    <i class="fas fa-user-tie me-1"></i> Cajero
+                </div>
+                <div class="fw-semibold small">{{ request.user.username }}</div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;" class="text-muted mb-1">
+                    <i class="fas fa-building me-1"></i> Sede
+                </div>
+                <div class="fw-semibold small">{{ matricula.alumno.sede }}</div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;" class="text-muted mb-1">
+                    <i class="fas fa-user-graduate me-1"></i> Alumno
+                </div>
+                <div class="fw-semibold small">{{ matricula.alumno }}</div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;" class="text-muted mb-1">
+                    <i class="fas fa-id-card me-1"></i> DNI
+                </div>
+                <div class="fw-semibold small">{{ matricula.alumno.dni }}</div>
+            </div>
+            <div class="col-6 col-md-4">
+                <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;" class="text-muted mb-1">
+                    <i class="fas fa-book me-1"></i> Ciclo
+                </div>
+                <div class="fw-semibold small">{{ matricula.ciclo.nombre }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ── 3. FORMULARIO ─────────────────────────────────────────── -->
+{% if deuda > 0 %}
+<div class="card border-0 mb-4" style="box-shadow:0 2px 10px rgba(0,0,0,.07);">
+    <div class="card-header border-0 fw-semibold py-2 px-4 d-flex justify-content-between align-items-center"
+         style="background:linear-gradient(90deg,#14532d,#166534);color:#fff;border-radius:calc(.375rem - 1px) calc(.375rem - 1px) 0 0;">
+        <span><i class="fas fa-money-bill-wave me-2 opacity-75"></i> Registrar pago</span>
+        <a href="{% url 'lista_pagos' %}" class="btn btn-outline-light btn-sm py-1">
+            <i class="fas fa-arrow-left me-1"></i> Volver
+        </a>
+    </div>
+    <div class="card-body px-4 pt-4 pb-4">
         <form method="POST">
             {% csrf_token %}
-
-            <div class="row">
-                <div class="col-md-4">
-                    <label>Monto</label>
-                    <input type="number" name="monto" id="monto" class="form-control" step="0.01" min="1" required>
+            <div class="row g-3 align-items-end">
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold small">Monto (S/.)</label>
+                    <input type="number" name="monto" id="monto" class="form-control"
+                           step="0.01" min="1" required placeholder="0.00">
                 </div>
-
-                <div class="col-md-4">
-                    <label>Método de pago</label>
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold small">Método de pago</label>
                     <select name="metodo_pago" class="form-select" required>
                         <option value="">Seleccione</option>
                         <option value="efectivo">Efectivo</option>
@@ -61,72 +146,98 @@
                         <option value="transferencia">Transferencia</option>
                     </select>
                 </div>
-
-                <div class="col-md-4 d-flex align-items-end">
+                <div class="col-md-4">
+                    <label class="form-label fw-semibold small">
+                        Apoderado
+                        <span class="text-muted fw-normal">(opcional)</span>
+                    </label>
+                    <input type="text" name="apoderado" class="form-control"
+                           placeholder="Nombre del responsable">
+                </div>
+                <div class="col-md-2">
                     <button type="submit" class="btn btn-success w-100">
-                        Registrar pago
+                        <i class="fas fa-save me-1"></i> Registrar pago
                     </button>
                 </div>
             </div>
-
-            <!-- 🔥 PAGAR TODO -->
-            <div class="mt-3 text-end">
-                <button type="button" class="btn btn-outline-primary btn-sm" onclick="pagarTodo()">
-                    Pagar todo
-                </button>
-            </div>
         </form>
     </div>
-    {% else %}
-    <div class="alert alert-success text-center">
-        ✔ Matrícula pagada completamente
+</div>
+{% endif %}
+
+<!-- ── 4. HISTORIAL ──────────────────────────────────────────── -->
+<div class="card border-0" style="box-shadow:0 2px 10px rgba(0,0,0,.07);">
+    <div class="card-header border-0 fw-semibold py-2 px-4"
+         style="background:#f1f5f9;color:#334155;border-radius:calc(.375rem - 1px) calc(.375rem - 1px) 0 0;border-bottom:1px solid #e2e8f0;">
+        <i class="fas fa-history me-2 text-muted"></i> Historial de pagos
     </div>
-    {% endif %}
-
-    <!-- 📜 HISTORIAL -->
-    <div class="card shadow-sm p-3">
-        <h5 class="mb-3">Historial de pagos</h5>
-
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
-                <tr>
-                    <th>Fecha</th>
-                    <th>Monto</th>
-                    <th>Método</th>
-                    <th>Acción</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for p in pagos %}
-                <tr>
-                    <td>{{ p.fecha_pago|date:"d/m/Y" }}</td>
-                    <td>S/. {{ p.monto }}</td>
-                    <td>{{ p.get_metodo_pago_display }}</td>
-                    <td>
-                        <!-- 🔥 LISTO PARA PDF -->
-                        <a href="{% url 'boleta_pdf' p.id %}" class="btn btn-sm btn-outline-secondary">
-                            PDF
-                        </a>
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4" class="text-center">
-                        No hay pagos registrados
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead style="background:#f8fafc;">
+                    <tr>
+                        <th class="ps-4 py-3 text-muted fw-semibold" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Fecha</th>
+                        <th class="text-end py-3 text-muted fw-semibold" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Monto</th>
+                        <th class="py-3 text-muted fw-semibold" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Método</th>
+                        <th class="py-3 text-muted fw-semibold" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Cajero</th>
+                        <th class="py-3 text-muted fw-semibold" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Apoderado</th>
+                        <th class="text-center py-3 text-muted fw-semibold" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Estado</th>
+                        <th class="text-center py-3 text-muted fw-semibold" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;">PDF</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in pagos %}
+                    <tr>
+                        <td class="ps-4">{{ p.fecha_pago|date:"d/m/Y" }}</td>
+                        <td class="text-end fw-semibold">S/. {{ p.monto }}</td>
+                        <td>{{ p.get_metodo_pago_display }}</td>
+                        <td class="small text-muted">{{ p.registrado_por.user.username }}</td>
+                        <td class="small text-muted">{{ p.apoderado|default:"—" }}</td>
+                        <td class="text-center">
+                            {% if deuda <= 0 %}
+                            <span class="badge bg-success">Pagado</span>
+                            {% elif total_pagado > 0 %}
+                            <span class="badge bg-warning text-dark">Parcial</span>
+                            {% else %}
+                            <span class="badge bg-danger">Pendiente</span>
+                            {% endif %}
+                        </td>
+                        <td class="text-center">
+                            <a href="{% url 'boleta_pdf' p.id %}"
+                               class="btn btn-sm btn-outline-secondary"
+                               title="Descargar comprobante PDF">
+                                <i class="fas fa-file-pdf"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">
+                            <i class="fas fa-receipt fa-2x d-block mb-2 opacity-25"></i>
+                            No hay pagos registrados aún
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
     </div>
-
 </div>
 
-<!-- ⚡ SCRIPT -->
-<script>
-function pagarTodo() {
-    document.getElementById("monto").value = parseFloat("{{ deuda|default:0 }}");
-}
-</script>
+{% endblock %}
 
+{% block extra_js %}
+{% if request.GET.ok %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    Swal.fire({
+        icon: 'success',
+        title: 'Pago registrado',
+        text: 'El pago fue registrado exitosamente.',
+        confirmButtonText: 'Aceptar',
+        confirmButtonColor: '#0d6efd',
+    });
+});
+</script>
+{% endif %}
 {% endblock %}

@@ -8,6 +8,7 @@ from django.db.models import Sum
 class Sede(models.Model):
     nombre = models.CharField(max_length=70)
     direccion = models.CharField(max_length=100)
+    is_active = models.BooleanField(default=True)
 
     def __str__(self):
         return self.nombre
@@ -102,6 +103,7 @@ class Matricula(models.Model):
 class Pago(models.Model):
     matricula = models.ForeignKey(Matricula, on_delete=models.CASCADE)
     registrado_por = models.ForeignKey(Perfil, on_delete=models.CASCADE)
+    apoderado = models.CharField(max_length=100, blank=True, default='')
 
     fecha_pago = models.DateField(default=timezone.now)
     monto = models.DecimalField(max_digits=10, decimal_places=2)

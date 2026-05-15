@@ -204,6 +204,31 @@
                 if (result.isConfirmed) window.location.href = url;
             });
         }
+
+        function confirmarPost(url, titulo, texto, opts) {
+            opts = opts || {};
+            Swal.fire({
+                title: titulo,
+                text: texto,
+                icon: opts.icon || 'warning',
+                showCancelButton: true,
+                confirmButtonColor: opts.confirmColor || '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: opts.confirmText || 'Confirmar',
+                cancelButtonText: opts.cancelText || 'Volver',
+            }).then(function (result) {
+                if (!result.isConfirmed) return;
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = url;
+                const existing = document.querySelector('[name=csrfmiddlewaretoken]');
+                if (existing) {
+                    form.appendChild(existing.cloneNode(true));
+                }
+                document.body.appendChild(form);
+                form.submit();
+            });
+        }
     </script>
 
     {% block extra_js %}{% endblock %}
