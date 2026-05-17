@@ -8,11 +8,9 @@
         <h4 class="mb-0 fw-bold">Registro de Pago</h4>
         <small class="text-muted">{{ matricula.alumno }} — {{ matricula.ciclo.nombre }}</small>
     </div>
-    {% if deuda <= 0 %}
     <a href="{% url 'lista_pagos' %}" class="btn btn-outline-secondary btn-sm">
         <i class="fas fa-arrow-left me-1"></i> Volver
     </a>
-    {% endif %}
 </div>
 
 <!-- ── 1. RESUMEN FINANCIERO ──────────────────────────────────── -->
@@ -121,29 +119,32 @@
 <!-- ── 3. FORMULARIO ─────────────────────────────────────────── -->
 {% if deuda > 0 %}
 <div class="card border-0 mb-4" style="box-shadow:0 2px 10px rgba(0,0,0,.07);">
-    <div class="card-header border-0 fw-semibold py-2 px-4 d-flex justify-content-between align-items-center"
+    <div class="card-header border-0 fw-semibold py-2 px-4"
          style="background:linear-gradient(90deg,#14532d,#166534);color:#fff;border-radius:calc(.375rem - 1px) calc(.375rem - 1px) 0 0;">
-        <span><i class="fas fa-money-bill-wave me-2 opacity-75"></i> Registrar pago</span>
-        <a href="{% url 'lista_pagos' %}" class="btn btn-outline-light btn-sm py-1">
-            <i class="fas fa-arrow-left me-1"></i> Volver
-        </a>
+        <i class="fas fa-money-bill-wave me-2 opacity-75"></i> Registrar pago
     </div>
     <div class="card-body px-4 pt-4 pb-4">
-        <form method="POST">
+        <form method="POST" id="form-pago">
             {% csrf_token %}
             <div class="row g-3 align-items-end">
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small">Monto (S/.)</label>
-                    <input type="number" name="monto" id="monto" class="form-control"
-                           step="0.01" min="1" required placeholder="0.00">
+                    <input type="number" name="monto" id="monto"
+                           class="form-control"
+                           step="0.01" min="0.01" required placeholder="0.00"
+                           value="{{ monto_prev }}"
+                           oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'El monto es obligatorio' : 'Ingresa un monto mayor a 0')"
+                           oninput="this.setCustomValidity('')">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small">Método de pago</label>
-                    <select name="metodo_pago" class="form-select" required>
+                    <select name="metodo_pago" class="form-select" required
+                        oninvalid="this.setCustomValidity('Selecciona un método de pago')"
+                        oninput="this.setCustomValidity('')">
                         <option value="">Seleccione</option>
-                        <option value="efectivo">Efectivo</option>
-                        <option value="yape">Yape</option>
-                        <option value="transferencia">Transferencia</option>
+                        <option value="efectivo" {% if metodo_prev == "efectivo" %}selected{% endif %}>Efectivo</option>
+                        <option value="yape" {% if metodo_prev == "yape" %}selected{% endif %}>Yape</option>
+                        <option value="transferencia" {% if metodo_prev == "transferencia" %}selected{% endif %}>Transferencia</option>
                     </select>
                 </div>
                 <div class="col-md-4">
@@ -237,6 +238,26 @@ document.addEventListener('DOMContentLoaded', function () {
         confirmButtonText: 'Aceptar',
         confirmButtonColor: '#0d6efd',
     });
+});
+</script>
+{% endif %}
+
+{% if error_monto or error_metodo %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    function _marcarError(selector, msg) {
+        var el = document.querySelector(selector);
+        if (el && msg) { el.setCustomValidity(msg); return el; }
+        return null;
+    }
+    var primero = null;
+    {% if error_monto %}
+    primero = primero || _marcarError('#monto', "{{ error_monto|escapejs }}");
+    {% endif %}
+    {% if error_metodo %}
+    primero = primero || _marcarError('[name="metodo_pago"]', "{{ error_metodo|escapejs }}");
+    {% endif %}
+    if (primero) setTimeout(function () { primero.reportValidity(); }, 350);
 });
 </script>
 {% endif %}

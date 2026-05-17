@@ -165,8 +165,13 @@ class Distrito(models.Model):
         return f"{self.nombre} - {self.provincia.nombre} - {self.provincia.departamento.nombre}"
     
 class InstitucionEducativa(models.Model):
+    TIPO_IE = [
+        ('Nacional', 'Nacional'),
+        ('Particular', 'Particular'),
+    ]
     nombre = models.CharField(max_length=150)
     distrito = models.ForeignKey(Distrito, on_delete=models.CASCADE)
+    tipo_ie = models.CharField(max_length=20, choices=TIPO_IE, blank=True, default='')
 
     def __str__(self):
         return self.nombre

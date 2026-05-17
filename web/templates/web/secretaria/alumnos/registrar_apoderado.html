@@ -8,61 +8,85 @@
 
     <h1>Registro Académico</h1>
     <p class="subtitle">Paso 2: Datos del apoderado</p>
-    <form method="POST">
+    <p class="text-muted" style="font-size:0.9rem;">
+        Todos los campos son opcionales. Si el alumno se matricula sin apoderado, puedes dejarlo en blanco.
+    </p>
+
+    <form method="POST" id="form-apoderado">
         {% csrf_token %}
 
-        <!-- DATOS APODERADO -->
         <div class="form-grid">
 
             <div class="form-group">
-                <label>Nombre Completo *</label>
-                <input type="text" name="nombre_apoderado" value="{{ apoderado.nombre_apoderado }}" required>
+                <label>Nombre Completo</label>
+                <input type="text" name="nombre_apoderado" value="{{ apoderado.nombre_apoderado }}"
+                    placeholder="Nombre del apoderado"
+                    oninput="this.setCustomValidity('')">
             </div>
 
             <div class="form-group">
-                <label>DNI *</label>
-
-                <input type="text" name="dni_apoderado" value="{{ apoderado.dni_apoderado }}" maxlength="8"
-                    inputmode="numeric" pattern="[0-9]{8}" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                    placeholder="Ingrese DNI" required>
+                <label>DNI</label>
+                <input type="text" name="dni_apoderado" value="{{ apoderado.dni_apoderado }}"
+                    maxlength="8" inputmode="numeric" pattern="[0-9]{8}"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 8); this.setCustomValidity('');"
+                    oninvalid="if(this.value) this.setCustomValidity('El DNI debe tener exactamente 8 dígitos')"
+                    placeholder="8 dígitos (opcional)">
             </div>
 
             <div class="form-group">
-                <label>Celular *</label>
-
-                <input type="text" name="celular_apoderado" value="{{ apoderado.celular_apoderado }}" maxlength="9"
-                    inputmode="numeric" pattern="[0-9]{9}" oninput="this.value = this.value.replace(/[^0-9]/g, '')"
-                    placeholder="Ingrese celular" required>
+                <label>Celular</label>
+                <input type="text" name="celular_apoderado" value="{{ apoderado.celular_apoderado }}"
+                    maxlength="9" inputmode="numeric" pattern="9[0-9]{8}"
+                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9); this.setCustomValidity('');"
+                    oninvalid="if(this.value) this.setCustomValidity('El celular debe tener 9 dígitos e iniciar con 9')"
+                    placeholder="9XXXXXXXX (opcional)">
             </div>
 
             <div class="form-group">
                 <label>Dirección</label>
-
-                <input type="text" name="direccion_apoderado" value="{{ apoderado.direccion_apoderado }}">
+                <input type="text" name="direccion_apoderado" value="{{ apoderado.direccion_apoderado }}"
+                    placeholder="Dirección (opcional)">
             </div>
 
         </div>
-        <div class="botones-form">
 
+        <div class="botones-form">
             <a href="{% url 'registrar_alumno' %}" class="btn btn-outline-dark">
                 ← Atrás
             </a>
-
             <button type="submit" class="btn btn-outline-primary">
                 Siguiente →
             </button>
-
             <a href="{% url 'cancelar_registro' %}" class="btn btn-outline-secondary"
                 onclick="confirmarCancelacion(event, this.href)">
                 Cancelar
             </a>
-
         </div>
-</div>
 
+    </form>
 
-
-</form>
+    {% if field_errors %}
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            function _marcarError(selector, msg) {
+                var el = document.querySelector(selector);
+                if (el && msg) { el.setCustomValidity(msg); return el; }
+                return null;
+            }
+            var primero = null;
+            {% if field_errors.nombre_apoderado %}
+            primero = primero || _marcarError('[name="nombre_apoderado"]', "{{ field_errors.nombre_apoderado|escapejs }}");
+            {% endif %}
+            {% if field_errors.dni_apoderado %}
+            primero = primero || _marcarError('[name="dni_apoderado"]', "{{ field_errors.dni_apoderado|escapejs }}");
+            {% endif %}
+            {% if field_errors.celular_apoderado %}
+            primero = primero || _marcarError('[name="celular_apoderado"]', "{{ field_errors.celular_apoderado|escapejs }}");
+            {% endif %}
+            if (primero) setTimeout(function () { primero.reportValidity(); }, 350);
+        });
+    </script>
+    {% endif %}
 
 </div>
 

@@ -6,113 +6,134 @@
 
     <h1>Registro Académico</h1>
     <p class="subtitle">Paso 1: Datos del Alumno</p>
-    <form method="POST">
+
+    <form method="POST" id="form-alumno">
         {% csrf_token %}
 
-        {% if messages %}
-        {% for message in messages %}
-        <div class="alert alert-danger">
-            {{ message }}
-        </div>
-        {% endfor %}
-        {% endif %}
-
-        <!-- DATOS DEL ALUMNO -->
         <div class="form-section">
             <div class="form-grid">
 
                 <div class="form-group">
                     <label>Apellido Paterno *</label>
-                    <input type="text" name="apellido_paterno" required value="{{ alumno.apellido_paterno }}">
+                    <input type="text" name="apellido_paterno" required
+                        value="{{ alumno.apellido_paterno }}"
+                        oninvalid="this.setCustomValidity('El apellido paterno es obligatorio')"
+                        oninput="this.setCustomValidity('')">
                 </div>
 
                 <div class="form-group">
                     <label>Apellido Materno *</label>
-                    <input type="text" name="apellido_materno" required value="{{ alumno.apellido_materno }}">
-
+                    <input type="text" name="apellido_materno" required
+                        value="{{ alumno.apellido_materno }}"
+                        oninvalid="this.setCustomValidity('El apellido materno es obligatorio')"
+                        oninput="this.setCustomValidity('')">
                 </div>
 
                 <div class="form-group">
                     <label>Nombres *</label>
-                    <input type="text" name="nombres" required value="{{ alumno.nombres }}">
+                    <input type="text" name="nombres" required
+                        value="{{ alumno.nombres }}"
+                        oninvalid="this.setCustomValidity('Los nombres son obligatorios')"
+                        oninput="this.setCustomValidity('')">
                 </div>
 
                 <div class="form-group">
                     <label>DNI *</label>
-                    <input type="text" name="dni" value="{{ alumno.dni }}" pattern="[0-9]{8}" required maxlength="8">
+                    <input type="text" name="dni" value="{{ alumno.dni }}"
+                        required maxlength="8" inputmode="numeric" pattern="\d{8}"
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 8); this.setCustomValidity('');"
+                        oninvalid="this.setCustomValidity(this.value ? 'El DNI debe tener exactamente 8 dígitos' : 'El DNI es obligatorio')"
+                        placeholder="8 dígitos">
                 </div>
 
                 <div class="form-group">
                     <label>Celular</label>
-                    <input type="text" name="celular" value="{{ alumno.celular }}">
+                    <input type="text" name="celular" value="{{ alumno.celular }}"
+                        maxlength="9" inputmode="numeric" pattern="9[0-9]{8}"
+                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9); this.setCustomValidity('');"
+                        oninvalid="if(this.value) this.setCustomValidity('El celular debe tener 9 dígitos e iniciar con 9')"
+                        placeholder="9XXXXXXXX">
                 </div>
-
 
                 <div class="form-group">
-                    <label>Fecha de Nacimiento</label>
-                    <input type="date" name="fecha_nacimiento" value="{{ alumno.fecha_nacimiento }}"">
+                    <label>Fecha de Nacimiento *</label>
+                    <input type="date" name="fecha_nacimiento"
+                        value="{{ alumno.fecha_nacimiento }}"
+                        required
+                        min="{{ fecha_min_iso }}" max="{{ fecha_max_iso }}"
+                        oninvalid="
+                            if (this.validity.valueMissing) {
+                                this.setCustomValidity('La fecha de nacimiento es obligatoria');
+                            } else if (this.validity.rangeOverflow) {
+                                this.setCustomValidity('El alumno debe tener al menos 12 años');
+                            } else if (this.validity.rangeUnderflow) {
+                                this.setCustomValidity('Edad no válida (máximo 60 años)');
+                            } else {
+                                this.setCustomValidity('');
+                            }
+                        "
+                        oninput="this.setCustomValidity('')">
                 </div>
 
-                <div class=" form-group">
+                <div class="form-group">
                     <label>Dirección</label>
                     <input type="text" name="direccion" value="{{ alumno.direccion }}">
                 </div>
+
                 <div class="form-group">
                     <label>Departamento *</label>
-
-                    <select id="departamento" name="departamento" class="form-control">
-
+                    <select id="departamento" name="departamento" class="form-control" required
+                        oninvalid="this.setCustomValidity('Debes seleccionar un departamento')"
+                        oninput="this.setCustomValidity('')">
                         <option value="">Seleccione</option>
-
                         {% for d in departamentos %}
                         <option value="{{ d.id }}" {% if d.id == departamento_seleccionado %}selected{% endif %}>
                             {{ d.nombre }}
                         </option>
                         {% endfor %}
-
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label>Provincia *</label>
-
-                    <select id="provincia" name="provincia" class="form-control">
+                    <select id="provincia" name="provincia" class="form-control" required
+                        oninvalid="this.setCustomValidity('Debes seleccionar una provincia')"
+                        oninput="this.setCustomValidity('')">
                         <option value="">Seleccione un departamento</option>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label>Distrito *</label>
-
-                    <select id="distrito" name="distrito" class="form-control">
+                    <select id="distrito" name="distrito" class="form-control" required
+                        oninvalid="this.setCustomValidity('Debes seleccionar un distrito')"
+                        oninput="this.setCustomValidity('')">
                         <option value="">Seleccione una provincia</option>
                     </select>
                 </div>
 
                 <div class="form-group">
                     <label>Correo Electrónico</label>
-                    <input type="email" name="email" value="{{ alumno.email }}" placeholder="correo@ejemplo.com">
+                    <input type="email" name="email" value="{{ alumno.email }}"
+                        placeholder="correo@ejemplo.com">
                 </div>
 
             </div>
         </div>
 
         <div class="d-flex gap-2 justify-content-end mt-4">
-
             <button type="submit" class="btn btn-outline-primary">
                 Siguiente →
             </button>
-
             <a href="{% url 'cancelar_registro' %}" class="btn btn-outline-secondary"
                 onclick="confirmarCancelacion(event, this.href)">
                 Cancelar
             </a>
-
         </div>
 
     </form>
-    <script>
 
+    <script>
         document.addEventListener("DOMContentLoaded", async function () {
 
             const departamento = document.getElementById("departamento");
@@ -122,94 +143,76 @@
             const provinciaSeleccionada = "{{ alumno.provincia }}";
             const distritoSeleccionado = "{{ alumno.distrito }}";
 
-            // =========================
-            // CARGAR PROVINCIAS
-            // =========================
-            async function cargarProvincias(departamentoId, selectedProvincia = null) {
-
-                provincia.innerHTML =
-                    '<option value="">Seleccione una provincia</option>';
-
-                distrito.innerHTML =
-                    '<option value="">Seleccione un distrito</option>';
-
+            async function cargarProvincias(departamentoId, selectedProvincia) {
+                provincia.innerHTML = '<option value="">Seleccione una provincia</option>';
+                distrito.innerHTML = '<option value="">Seleccione un distrito</option>';
                 if (!departamentoId) return;
-
-                const response =
-                    await fetch(`/get-provincias/${departamentoId}/`);
-
-                const data = await response.json();
-
+                const data = await fetch(`/get-provincias/${departamentoId}/`).then(r => r.json());
                 data.forEach(p => {
-
-                    provincia.innerHTML += `
-                <option value="${p.id}"
-                ${selectedProvincia == p.id ? "selected" : ""}
-                >
-                    ${p.nombre}
-                </option>
-            `;
+                    const opt = document.createElement("option");
+                    opt.value = p.id;
+                    opt.textContent = p.nombre;
+                    if (String(p.id) === String(selectedProvincia)) opt.selected = true;
+                    provincia.appendChild(opt);
                 });
-
-                // cargar distritos automáticamente
                 if (selectedProvincia) {
-                    cargarDistritos(selectedProvincia, distritoSeleccionado);
+                    await cargarDistritos(selectedProvincia, distritoSeleccionado);
                 }
+                // Limpiar validez de provincia/distrito tras carga AJAX
+                provincia.setCustomValidity('');
+                distrito.setCustomValidity('');
             }
 
-            // =========================
-            // CARGAR DISTRITOS
-            // =========================
-            async function cargarDistritos(provinciaId, selectedDistrito = null) {
-
-                distrito.innerHTML =
-                    '<option value="">Seleccione un distrito</option>';
-
+            async function cargarDistritos(provinciaId, selectedDistrito) {
+                distrito.innerHTML = '<option value="">Seleccione un distrito</option>';
                 if (!provinciaId) return;
-
-                const response =
-                    await fetch(`/get-distritos/${provinciaId}/`);
-
-                const data = await response.json();
-
+                const data = await fetch(`/get-distritos/${provinciaId}/`).then(r => r.json());
                 data.forEach(d => {
-
-                    distrito.innerHTML += `
-                <option value="${d.id}"
-                ${selectedDistrito == d.id ? "selected" : ""}
-                >
-                    ${d.nombre}
-                </option>
-            `;
+                    const opt = document.createElement("option");
+                    opt.value = d.id;
+                    opt.textContent = d.nombre;
+                    if (String(d.id) === String(selectedDistrito)) opt.selected = true;
+                    distrito.appendChild(opt);
                 });
+                // Limpiar validez de distrito tras carga AJAX
+                distrito.setCustomValidity('');
             }
 
-            // =========================
-            // EVENTOS
-            // =========================
             departamento.addEventListener("change", function () {
-
-                cargarProvincias(this.value);
+                this.setCustomValidity('');
+                cargarProvincias(this.value, null);
             });
 
             provincia.addEventListener("change", function () {
-
-                cargarDistritos(this.value);
+                this.setCustomValidity('');
+                cargarDistritos(this.value, null);
             });
 
-            // =========================
-            // RECUPERAR DATOS
-            // =========================
             if (departamento.value) {
-
-                cargarProvincias(
-                    departamento.value,
-                    provinciaSeleccionada
-                );
+                await cargarProvincias(departamento.value, provinciaSeleccionada);
             }
 
-        });
+            // ── Errores de backend: mostrar tooltip nativo ────────────────
+            {% if field_errors %}
+            function _marcarError(selector, msg) {
+                var el = document.querySelector(selector);
+                if (el && msg) { el.setCustomValidity(msg); return el; }
+                return null;
+            }
+            var primero = null;
+            {% if field_errors.dni %}
+            primero = primero || _marcarError('[name="dni"]', "{{ field_errors.dni|escapejs }}");
+            {% endif %}
+            {% if field_errors.celular %}
+            primero = primero || _marcarError('[name="celular"]', "{{ field_errors.celular|escapejs }}");
+            {% endif %}
+            {% if field_errors.fecha_nacimiento %}
+            primero = primero || _marcarError('[name="fecha_nacimiento"]', "{{ field_errors.fecha_nacimiento|escapejs }}");
+            {% endif %}
+            if (primero) setTimeout(function () { primero.reportValidity(); }, 350);
+            {% endif %}
 
+        });
     </script>
 
 </div>

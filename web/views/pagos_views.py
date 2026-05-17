@@ -31,34 +31,64 @@ def pagos(request, matricula_id):
         messages.error(request, "No tienes acceso a esta matrícula")
         return redirect('matriculas')
 
-    total_pagado = Pago.objects.filter(matricula=matricula).aggregate(
-        Sum('monto')
-    )['monto__sum'] or 0
-
-    total_ciclo = matricula.ciclo.precio
-    deuda = total_ciclo - total_pagado
+    def _contexto(error_monto=None, error_metodo=None, monto_prev="", metodo_prev=""):
+        total_pagado = Pago.objects.filter(matricula=matricula).aggregate(
+            Sum('monto')
+        )['monto__sum'] or 0
+        total_ciclo = matricula.ciclo.precio
+        deuda = total_ciclo - total_pagado
+        lista_pagos = Pago.objects.filter(matricula=matricula).order_by('-fecha_pago')
+        return {
+            'matricula': matricula,
+            'total_pagado': total_pagado,
+            'total_ciclo': total_ciclo,
+            'deuda': deuda,
+            'pagos': lista_pagos,
+            'error_monto': error_monto,
+            'error_metodo': error_metodo,
+            'monto_prev': monto_prev,
+            'metodo_prev': metodo_prev,
+        }
 
     if request.method == 'POST':
-        try:
-            monto = Decimal(request.POST.get('monto'))
-        except (InvalidOperation, TypeError):
-            messages.error(request, "Monto inválido")
-            return redirect('pagos', matricula_id=matricula.id)
-
-        if monto <= 0:
-            messages.error(request, "El monto debe ser mayor a 0")
-            return redirect('pagos', matricula_id=matricula.id)
-
-        metodo = request.POST.get('metodo_pago')
-        if not metodo:
-            messages.error(request, "Debe seleccionar un método de pago")
-            return redirect('pagos', matricula_id=matricula.id)
-
-        if total_pagado + monto > total_ciclo:
-            messages.error(request, "El monto excede lo que debe pagar")
-            return redirect('pagos', matricula_id=matricula.id)
-
+        monto_raw = request.POST.get('monto', '').strip()
+        metodo = request.POST.get('metodo_pago', '').strip()
         apoderado = request.POST.get('apoderado', '').strip()
+
+        total_pagado = Pago.objects.filter(matricula=matricula).aggregate(
+            Sum('monto')
+        )['monto__sum'] or 0
+        total_ciclo = matricula.ciclo.precio
+
+        error_monto = None
+        error_metodo = None
+
+        try:
+            monto = Decimal(monto_raw)
+        except (InvalidOperation, TypeError, ValueError):
+            error_monto = "Ingresa un monto numérico válido"
+            monto = None
+
+        if monto is not None:
+            if monto <= 0:
+                error_monto = "El monto debe ser mayor a 0"
+            elif total_pagado + monto > total_ciclo:
+                error_monto = f"El monto excede la deuda restante (S/. {total_ciclo - total_pagado:.2f})"
+
+        if not metodo:
+            error_metodo = "Debes seleccionar un método de pago"
+
+        if error_monto or error_metodo:
+            return render(
+                request,
+                'web/secretaria/pagos/pagos.html',
+                _contexto(
+                    error_monto=error_monto,
+                    error_metodo=error_metodo,
+                    monto_prev=monto_raw,
+                    metodo_prev=metodo,
+                ),
+            )
 
         Pago.objects.create(
             matricula=matricula,
@@ -78,15 +108,7 @@ def pagos(request, matricula_id):
         url = reverse('pagos', kwargs={'matricula_id': matricula.id})
         return redirect(f"{url}?ok=1")
 
-    lista_pagos = Pago.objects.filter(matricula=matricula).order_by('-fecha_pago')
-
-    return render(request, 'web/secretaria/pagos/pagos.html', {
-        'matricula': matricula,
-        'total_pagado': total_pagado,
-        'total_ciclo': total_ciclo,
-        'deuda': deuda,
-        'pagos': lista_pagos,
-    })
+    return render(request, 'web/secretaria/pagos/pagos.html', _contexto())
 
 
 @login_required

@@ -1,7 +1,6 @@
 from django.shortcuts import render, redirect
 from web.permisos import permiso_requerido
 from django.contrib.auth.decorators import login_required
-from django.contrib import messages
 from django.http import JsonResponse
 import json
 
@@ -18,6 +17,13 @@ from ..models import (
     InstitucionEducativa,
 )
 from datetime import datetime, date
+from ..utils import (
+    estado_ciclo_hoy,
+    normalizar_nombre,
+    normalizar_texto,
+    validar_dni,
+    validar_celular,
+)
 
 
 @login_required
@@ -25,102 +31,85 @@ from datetime import datetime, date
 def registrar_alumno(request):
 
     departamentos = Departamento.objects.all()
+    hoy = date.today()
+
+    # Rango de fechas válido para el navegador (12-60 años)
+    try:
+        fecha_max_iso = date(hoy.year - 12, hoy.month, hoy.day).isoformat()
+        fecha_min_iso = date(hoy.year - 61, hoy.month, hoy.day).isoformat()
+    except ValueError:
+        # 29 de febrero en año bisiesto
+        fecha_max_iso = date(hoy.year - 12, hoy.month, 28).isoformat()
+        fecha_min_iso = date(hoy.year - 61, hoy.month, 28).isoformat()
 
     if request.method == "POST":
 
-        apellido_paterno = request.POST.get("apellido_paterno")
-        apellido_materno = request.POST.get("apellido_materno")
-        nombres = request.POST.get("nombres")
-        dni = request.POST.get("dni")
-        celular = request.POST.get("celular")
-
-        fecha_nacimiento = request.POST.get("fecha_nacimiento")
-        direccion = request.POST.get("direccion")
+        apellido_paterno = normalizar_nombre(request.POST.get("apellido_paterno", ""))
+        apellido_materno = normalizar_nombre(request.POST.get("apellido_materno", ""))
+        nombres = normalizar_nombre(request.POST.get("nombres", ""))
+        dni = request.POST.get("dni", "").strip()
+        celular = request.POST.get("celular", "").strip()
+        fecha_nacimiento = request.POST.get("fecha_nacimiento", "").strip()
+        direccion = normalizar_texto(request.POST.get("direccion", ""))
         departamento_id = request.POST.get("departamento")
         provincia_id = request.POST.get("provincia")
         distrito_id = request.POST.get("distrito")
-        email = request.POST.get("email")
+        email = request.POST.get("email", "").strip().lower()
 
+        field_errors = {}
+
+        # ── DNI ──────────────────────────────────────────────────────────
         if not dni:
-            messages.error(request, "El DNI es obligatorio")
+            field_errors['dni'] = "El DNI es obligatorio"
+        elif not validar_dni(dni):
+            field_errors['dni'] = "El DNI debe tener exactamente 8 dígitos numéricos"
+        elif Alumno.objects.filter(dni=dni).exists():
+            field_errors['dni'] = "Este DNI ya está registrado en el sistema"
+
+        # ── Celular ───────────────────────────────────────────────────────
+        if celular and not validar_celular(celular):
+            field_errors['celular'] = "El celular debe tener 9 dígitos y comenzar con 9 (ej: 987654321)"
+
+        # ── Fecha nacimiento ──────────────────────────────────────────────
+        if fecha_nacimiento:
+            try:
+                fecha_nac = datetime.strptime(fecha_nacimiento, "%Y-%m-%d").date()
+                if fecha_nac > hoy:
+                    field_errors['fecha_nacimiento'] = "La fecha no puede ser futura"
+                else:
+                    edad = (
+                        hoy.year - fecha_nac.year
+                        - ((hoy.month, hoy.day) < (fecha_nac.month, fecha_nac.day))
+                    )
+                    if edad < 12:
+                        field_errors['fecha_nacimiento'] = "El alumno debe tener al menos 12 años"
+                    elif edad > 60:
+                        field_errors['fecha_nacimiento'] = "Edad no válida para este registro (máximo 60 años)"
+            except ValueError:
+                field_errors['fecha_nacimiento'] = "Formato de fecha inválido"
+
+        if field_errors:
+            def _int_or_none(val):
+                try:
+                    return int(val) if val else None
+                except (ValueError, TypeError):
+                    return None
+
             return render(
                 request,
                 "web/secretaria/alumnos/registrar_alumno.html",
-                {"alumno": request.POST, "departamentos": departamentos},
+                {
+                    "alumno": request.POST,
+                    "departamentos": departamentos,
+                    "field_errors": field_errors,
+                    "fecha_max_iso": fecha_max_iso,
+                    "fecha_min_iso": fecha_min_iso,
+                    "departamento_seleccionado": _int_or_none(request.POST.get("departamento")),
+                    "provincia_seleccionada": _int_or_none(request.POST.get("provincia")),
+                    "distrito_seleccionado": _int_or_none(request.POST.get("distrito")),
+                },
             )
 
-        if len(dni) != 8 or not dni.isdigit():
-            messages.error(request, "El DNI debe tener 8 números")
-            return render(
-                request,
-                "web/secretaria/alumnos/registrar_alumno.html",
-                {"alumno": request.POST, "departamentos": departamentos},
-            )
-
-        if Alumno.objects.filter(dni=dni).exists():
-            messages.error(request, "Este DNI ya está registrado")
-            return render(
-                request,
-                "web/secretaria/alumnos/registrar_alumno.html",
-                {"alumno": request.POST, "departamentos": departamentos},
-            )
-
-        if not fecha_nacimiento:
-            messages.error(request, "Debes ingresar la fecha de nacimiento")
-            return render(
-                request,
-                "web/secretaria/alumnos/registrar_alumno.html",
-                {"alumno": request.POST, "departamentos": departamentos},
-            )
-
-        #  VALIDACIÓN DE FECHA Y EDAD
-        try:
-            fecha_nac = datetime.strptime(fecha_nacimiento, "%Y-%m-%d").date()
-        except ValueError:
-            messages.error(request, "Fecha inválida")
-            return render(
-                request,
-                "web/secretaria/alumnos/registrar_alumno.html",
-                {"alumno": request.POST, "departamentos": departamentos},
-            )
-
-        hoy = date.today()
-
-        # no permitir fechas futuras
-        if fecha_nac > hoy:
-            messages.error(request, "La fecha no puede ser futura")
-            return render(
-                request,
-                "web/secretaria/alumnos/registrar_alumno.html",
-                {"alumno": request.POST, "departamentos": departamentos},
-            )
-
-        # calcular edad
-        edad = (
-            hoy.year
-            - fecha_nac.year
-            - ((hoy.month, hoy.day) < (fecha_nac.month, fecha_nac.day))
-        )
-
-        # muy joven (ej: 2020)
-        if edad < 12:
-            messages.error(request, "El alumno debe tener al menos 12 años")
-            return render(
-                request,
-                "web/secretaria/alumnos/registrar_alumno.html",
-                {"alumno": request.POST, "departamentos": departamentos},
-            )
-
-        # edad poco
-        if edad > 60:
-            messages.error(request, "Edad no válida para este registro")
-            return render(
-                request,
-                "web/secretaria/alumnos/registrar_alumno.html",
-                {"alumno": request.POST, "departamentos": departamentos},
-            )
-
-        # guardar en session
         request.session["alumno"] = {
             "apellido_paterno": apellido_paterno,
             "apellido_materno": apellido_materno,
@@ -146,6 +135,8 @@ def registrar_alumno(request):
         {
             "alumno": alumno,
             "departamentos": departamentos,
+            "fecha_max_iso": fecha_max_iso,
+            "fecha_min_iso": fecha_min_iso,
             "departamento_seleccionado": (
                 int(alumno.get("departamento")) if alumno.get("departamento") else None
             ),
@@ -165,32 +156,33 @@ def registrar_apoderado(request):
 
     if request.method == "POST":
 
-        nombre = request.POST.get("nombre_apoderado", "").strip()
+        nombre = normalizar_nombre(request.POST.get("nombre_apoderado", ""))
         dni = request.POST.get("dni_apoderado", "").strip()
         celular = request.POST.get("celular_apoderado", "").strip()
-        direccion = request.POST.get("direccion_apoderado", "").strip()
+        direccion = normalizar_texto(request.POST.get("direccion_apoderado", ""))
 
-        # 🔥 VALIDACIONES
+        field_errors = {}
 
-        if dni and (not dni.isdigit() or len(dni) != 8):
-            messages.error(request, "El DNI debe tener exactamente 8 números")
+        # Validar solo si el usuario llenó algo
+        any_filled = any([nombre, dni, celular, direccion])
 
+        if any_filled:
+            if not nombre:
+                field_errors['nombre_apoderado'] = "Si ingresa datos del apoderado, el nombre es obligatorio"
+            if not dni:
+                field_errors['dni_apoderado'] = "Si ingresa datos del apoderado, el DNI es obligatorio"
+            elif not validar_dni(dni):
+                field_errors['dni_apoderado'] = "El DNI debe tener exactamente 8 dígitos numéricos"
+            if celular and not validar_celular(celular):
+                field_errors['celular_apoderado'] = "El celular debe tener 9 dígitos y comenzar con 9"
+
+        if field_errors:
             return render(
                 request,
                 "web/secretaria/alumnos/registrar_apoderado.html",
-                {"apoderado": request.POST},
+                {"apoderado": request.POST, "field_errors": field_errors},
             )
 
-        if celular and (not celular.isdigit() or len(celular) != 9):
-            messages.error(request, "El celular debe tener exactamente 9 números")
-
-            return render(
-                request,
-                "web/secretaria/alumnos/registrar_apoderado.html",
-                {"apoderado": request.POST},
-            )
-
-        # guardar en sesión
         request.session["apoderado"] = {
             "nombre_apoderado": nombre,
             "dni_apoderado": dni,
@@ -216,13 +208,53 @@ def regis_form_academica(request):
     departamentos = Departamento.objects.all()
 
     if request.method == "POST":
+        colegio_id = request.POST.get("colegio_id", "").strip()
+
+        field_errors = {}
+        colegio = None
+
+        if not colegio_id:
+            field_errors['colegio'] = (
+                "Debes seleccionar un colegio de la lista o crear uno nuevo con '+ Agregar colegio'"
+            )
+        else:
+            colegio = InstitucionEducativa.objects.filter(id=colegio_id).first()
+            if not colegio:
+                field_errors['colegio'] = "El colegio seleccionado no existe. Selecciona uno válido o créalo."
+
+        if field_errors:
+            colegio_nombre = colegio.nombre if colegio else ""
+            return render(
+                request,
+                "web/secretaria/alumnos/regis_form_academica.html",
+                {
+                    "formacion": {
+                        "colegio_id": colegio_id,
+                        "colegio_nombre": colegio_nombre,
+                    },
+                    "departamentos": departamentos,
+                    "field_errors": field_errors,
+                },
+            )
+
+        # tipo_institucion viene del colegio, no del formulario
+        tipo_institucion = colegio.tipo_ie if colegio else ""
+
         request.session["formacion_academica"] = {
-            "tipo_institucion": request.POST.get("tipo_institucion"),
-            "colegio_id": request.POST.get("colegio_id"),
+            "tipo_institucion": tipo_institucion,
+            "colegio_id": colegio_id,
         }
         return redirect("regis_form_adicional")
-        # ESTO VA FUERA DEL IF
+
+    # GET — recuperar nombre del colegio para mostrarlo
     formacion = request.session.get("formacion_academica", {})
+    colegio_nombre = ""
+    if formacion.get("colegio_id"):
+        ie = InstitucionEducativa.objects.filter(id=formacion["colegio_id"]).first()
+        if ie:
+            colegio_nombre = ie.nombre
+    formacion = dict(formacion)
+    formacion["colegio_nombre"] = colegio_nombre
 
     return render(
         request,
@@ -235,17 +267,58 @@ def regis_form_academica(request):
 @permiso_requerido(["admin", "secretaria"])
 def regis_form_adicional(request):
 
+    today = date.today()
+
+    # Solo ciclos activos usando la función centralizada
+    ciclos_activos = [
+        c for c in Ciclo.objects.filter(sede=request.user.perfil.sede)
+        if estado_ciclo_hoy(c, today) == 'activa'
+    ]
+
     if request.method == "POST":
 
-        request.session["formacion_adicional"] = {
-            "estudio_previo": request.POST.get("estudio_previo"),
-            "tipo_estudio": request.POST.get("tipo_estudio"),
-            "academia_anterior": request.POST.get("academia_anterior"),
-            "carrera_interes": request.POST.get("carrera_interes"),
-            "segunda_carrera": request.POST.get("segunda_carrera"),
-            "ciclo": request.POST.get("ciclo"),
-        }
+        estudio_previo = request.POST.get("estudio_previo", "no")
+        tipo_estudio = request.POST.get("tipo_estudio", "")
+        academia_anterior = (
+            normalizar_texto(request.POST.get("academia_anterior", ""))
+            if estudio_previo == "si" else ""
+        )
+        carrera_interes = normalizar_texto(request.POST.get("carrera_interes", ""))
+        segunda_carrera = normalizar_texto(request.POST.get("segunda_carrera", ""))
+        ciclo_id = request.POST.get("ciclo", "").strip()
 
+        # ── Validaciones ANTES de crear nada ─────────────────────────────
+        field_errors = {}
+
+        if estudio_previo == "si" and not academia_anterior:
+            field_errors['academia_anterior'] = "Debes ingresar el nombre de la academia anterior"
+
+        ciclo = None
+        if not ciclo_id:
+            field_errors['ciclo'] = "Debes seleccionar un ciclo activo"
+        else:
+            try:
+                ciclo = Ciclo.objects.get(id=int(ciclo_id))
+                if estado_ciclo_hoy(ciclo, today) != 'activa':
+                    field_errors['ciclo'] = "El ciclo seleccionado no está activo"
+            except (Ciclo.DoesNotExist, ValueError):
+                field_errors['ciclo'] = "Ciclo inválido"
+
+        if field_errors:
+            return render(
+                request,
+                "web/secretaria/alumnos/regis_form_adicional.html",
+                {
+                    "formacion_adicional": request.POST,
+                    "ciclos": ciclos_activos,
+                    "ciclo_seleccionado": (
+                        int(ciclo_id) if ciclo_id and ciclo_id.isdigit() else None
+                    ),
+                    "field_errors": field_errors,
+                },
+            )
+
+        # ── Verificar datos de sesión ─────────────────────────────────────
         alumno_data = request.session.get("alumno")
         apoderado_data = request.session.get("apoderado")
         formacion_acad_data = request.session.get("formacion_academica")
@@ -253,13 +326,13 @@ def regis_form_adicional(request):
         if not alumno_data or not formacion_acad_data:
             return redirect("registrar_alumno")
 
-        # apoderado opcional
-        # apoderado opcional
-
+        # ── Crear apoderado (solo si nombre Y dni están presentes) ────────
         apoderado = None
-
-        if apoderado_data and apoderado_data.get("nombre_apoderado"):
-
+        if (
+            apoderado_data
+            and apoderado_data.get("nombre_apoderado")
+            and apoderado_data.get("dni_apoderado")
+        ):
             apoderado, created = Apoderado.objects.get_or_create(
                 dni=apoderado_data["dni_apoderado"],
                 defaults={
@@ -268,8 +341,6 @@ def regis_form_adicional(request):
                     "direccion": apoderado_data["direccion_apoderado"],
                 },
             )
-
-            # 🔥 actualizar si ya existía
             if not created:
                 apoderado.nombre_completo = apoderado_data["nombre_apoderado"]
                 apoderado.celular = apoderado_data["celular_apoderado"]
@@ -279,12 +350,11 @@ def regis_form_adicional(request):
         sede = request.user.perfil.sede
 
         distrito = None
-
         distrito_id = alumno_data.get("distrito")
-
         if distrito_id:
             distrito = Distrito.objects.filter(id=distrito_id).first()
 
+        # ── Crear alumno ──────────────────────────────────────────────────
         alumno = Alumno.objects.create(
             apellido_paterno=alumno_data["apellido_paterno"],
             apellido_materno=alumno_data["apellido_materno"],
@@ -299,6 +369,8 @@ def regis_form_adicional(request):
             sede=sede,
             apoderado=apoderado,
         )
+
+        # ── Formación académica ───────────────────────────────────────────
         colegio = InstitucionEducativa.objects.filter(
             id=formacion_acad_data.get("colegio_id")
         ).first()
@@ -308,38 +380,26 @@ def regis_form_adicional(request):
             institucion=colegio,
         )
 
-        form_adicional = request.session.get("formacion_adicional")
-
+        # ── Formación adicional ───────────────────────────────────────────
         FormacionAdicional.objects.create(
             alumno=alumno,
-            estudio_previo=form_adicional["estudio_previo"] == "si",
-            tipo_estudio=form_adicional["tipo_estudio"],
-            academia_anterior=form_adicional["academia_anterior"],
-            carrera_interes=form_adicional["carrera_interes"],
-            segunda_carrera=form_adicional["segunda_carrera"],
+            estudio_previo=estudio_previo == "si",
+            tipo_estudio=tipo_estudio,
+            academia_anterior=academia_anterior,
+            carrera_interes=carrera_interes,
+            segunda_carrera=segunda_carrera,
         )
 
-        ciclo_id = form_adicional.get("ciclo")
-
-        if not ciclo_id or ciclo_id == "":
-            messages.error(request, "Debe seleccionar un ciclo")
-            return redirect("regis_form_adicional")
-
-        try:
-            ciclo = Ciclo.objects.get(id=int(ciclo_id))
-        except (Ciclo.DoesNotExist, ValueError):
-            messages.error(request, "Ciclo inválido")
-            return redirect("regis_form_adicional")
-
+        # ── Matrícula ─────────────────────────────────────────────────────
         matricula = Matricula.objects.create(
             alumno=alumno,
             ciclo=ciclo,
-            fecha_matricula=date.today(),
+            fecha_matricula=today,
             estado="pendiente",
             registrado_por=request.user.perfil,
         )
 
-        # limpiar sesión
+        # Limpiar sesión
         request.session.pop("alumno", None)
         request.session.pop("apoderado", None)
         request.session.pop("formacion_academica", None)
@@ -347,7 +407,7 @@ def regis_form_adicional(request):
 
         return redirect("pagos", matricula_id=matricula.id)
 
-    ciclos = Ciclo.objects.filter(sede=request.user.perfil.sede)
+    # GET
     formacion_adicional = request.session.get("formacion_adicional", {})
 
     return render(
@@ -355,7 +415,7 @@ def regis_form_adicional(request):
         "web/secretaria/alumnos/regis_form_adicional.html",
         {
             "formacion_adicional": formacion_adicional,
-            "ciclos": ciclos,
+            "ciclos": ciclos_activos,
             "ciclo_seleccionado": (
                 int(formacion_adicional.get("ciclo"))
                 if formacion_adicional.get("ciclo")
@@ -393,11 +453,8 @@ def get_distritos(request, provincia_id):
 @login_required
 def buscar_colegios(request):
     q = request.GET.get("q", "")
-
     colegios = InstitucionEducativa.objects.filter(nombre__icontains=q)[:10]
-
-    data = list(colegios.values("id", "nombre"))
-
+    data = list(colegios.values("id", "nombre", "tipo_ie"))
     return JsonResponse(data, safe=False)
 
 
@@ -407,17 +464,36 @@ def crear_colegio(request):
     if request.method == "POST":
         data = json.loads(request.body)
 
-        nombre = data.get("nombre")
+        nombre = normalizar_texto(data.get("nombre", ""))
         distrito_id = data.get("distrito")
+        tipo_ie = (data.get("tipo_ie") or "").strip()
 
-        if not nombre or not distrito_id:
-            return JsonResponse({"error": "Faltan datos"}, status=400)
+        if not nombre:
+            return JsonResponse({"error": "El nombre del colegio es obligatorio"}, status=400)
+
+        if not distrito_id:
+            return JsonResponse(
+                {"error": "Debes seleccionar departamento, provincia y distrito"}, status=400
+            )
+
+        if not tipo_ie:
+            return JsonResponse(
+                {"error": "Debes seleccionar el tipo de institución (Nacional o Particular)"}, status=400
+            )
+
+        if tipo_ie not in ("Nacional", "Particular"):
+            return JsonResponse({"error": "Tipo de institución inválido"}, status=400)
+
+        if not Distrito.objects.filter(id=distrito_id).exists():
+            return JsonResponse({"error": "El distrito seleccionado no existe"}, status=400)
 
         colegio = InstitucionEducativa.objects.create(
-            nombre=nombre, distrito_id=distrito_id
+            nombre=nombre,
+            distrito_id=distrito_id,
+            tipo_ie=tipo_ie,
         )
 
-        return JsonResponse({"id": colegio.id, "nombre": colegio.nombre})
+        return JsonResponse({"id": colegio.id, "nombre": colegio.nombre, "tipo_ie": colegio.tipo_ie})
 
 
 @login_required

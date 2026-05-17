@@ -7,206 +7,216 @@
 {% block content %}
 <div class="alumno-container">
 
-
     <h2>Registro Académico</h2>
     <p>Paso 3: Formación Académica</p>
     <p>I.E en donde realizó sus estudios</p>
 
-    <form method="POST">
+    <form method="POST" id="form-academica">
         {% csrf_token %}
 
         <div class="row">
-            <div class="col-md-6">
+            <div class="col-md-8">
                 <label>Institución *</label>
 
                 <!-- INPUT VISIBLE -->
-                <input type="text" id="colegio" placeholder="Buscar colegio..." class="form-control">
+                <input type="text" id="colegio" placeholder="Buscar colegio..."
+                    class="form-control" autocomplete="off"
+                    value="{{ formacion.colegio_nombre }}">
 
-                <!-- ID OCULTO -->
-                <input type="hidden" name="colegio_id" id="colegio_id">
+                <!-- ID OCULTO — requerido para validar -->
+                <input type="hidden" name="colegio_id" id="colegio_id"
+                    value="{{ formacion.colegio_id }}">
 
-                <!-- RESULTADOS -->
-                <div id="resultados" style="background:white; border:1px solid #ccc;"></div>
+                <!-- RESULTADOS DE BÚSQUEDA -->
+                <div id="resultados"
+                    style="background:white; border:1px solid #ccc; border-top:none; max-height:200px; overflow-y:auto;">
+                </div>
 
-                <!-- AGREGAR-->
+                <!-- BOTÓN AGREGAR -->
                 <button type="button" class="btn btn-sm btn-primary mt-2" onclick="mostrarAgregar()">
                     + Agregar colegio
                 </button>
 
-                <!-- FORM NUEVO -->
-                <div id="nuevoColegio" style="display:none; margin-top:10px;">
+                <!-- FORM NUEVO COLEGIO -->
+                <div id="nuevoColegio"
+                    style="display:none; margin-top:10px; padding:10px; border:1px solid #ccc; border-radius:4px;">
 
-                    <input type="text" id="nuevo_nombre" placeholder="Nombre colegio" class="form-control mb-2">
+                    <input type="text" id="nuevo_nombre" placeholder="Nombre del colegio *"
+                        class="form-control mb-2">
 
-                    <!-- DEPARTAMENTO -->
+                    <select id="tipo_ie_nuevo" class="form-control mb-2">
+                        <option value="">Tipo de institución *</option>
+                        <option value="Nacional">Nacional</option>
+                        <option value="Particular">Particular</option>
+                    </select>
+
                     <select id="dep_ie" class="form-control mb-2">
-                        <option value="">Departamento</option>
+                        <option value="">Departamento *</option>
                         {% for d in departamentos %}
                         <option value="{{ d.id }}">{{ d.nombre }}</option>
                         {% endfor %}
                     </select>
 
-                    <!-- PROVINCIA -->
                     <select id="prov_ie" class="form-control mb-2">
-                        <option value="">Provincia</option>
+                        <option value="">Provincia *</option>
                     </select>
 
-                    <!-- DISTRITO -->
                     <select id="dist_ie" class="form-control mb-2">
-                        <option value="">Distrito</option>
+                        <option value="">Distrito *</option>
                     </select>
 
-                    <button type="button" class="btn btn-success btn-sm" onclick="crearColegio()">
-                        Guardar
-                    </button>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-success btn-sm" onclick="crearColegio()">
+                            Guardar
+                        </button>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="ocultarAgregar()">
+                            Cancelar
+                        </button>
+                    </div>
 
                 </div>
             </div>
-
-            <div class="col-md-6">
-                <label>Tipo de institución *</label>
-                <select name="tipo_institucion" class="form-control">
-                    <option value="">Seleccione</option>
-
-                    <option value="Nacional" {% if formacion.tipo_institucion == "Nacional" %}selected{% endif %}>
-                        Nacional
-                    </option>
-
-                    <option value="Particular" {% if formacion.tipo_institucion == "Particular" %}selected{% endif %}>
-                        Particular
-                    </option>
-                </select>
-            </div>
-
-
         </div>
 
         <br>
 
         <div class="botones-form">
-
             <a href="{% url 'registrar_apoderado' %}" class="btn btn-outline-dark">
                 ← Atrás
             </a>
-
             <button type="submit" class="btn btn-outline-primary">
                 Siguiente →
             </button>
-
             <a href="{% url 'cancelar_registro' %}"
-   class="btn btn-outline-secondary"
-   onclick="confirmarCancelacion(event, this.href)">
-    Cancelar
-</a>
-
+               class="btn btn-outline-secondary"
+               onclick="confirmarCancelacion(event, this.href)">
+                Cancelar
+            </a>
         </div>
 
     </form>
 </div>
-<script>
-    document.getElementById("colegio").addEventListener("keyup", function () {
-        let query = this.value;
 
-        fetch(`/buscar-colegios/?q=${query}`)
+<script>
+    // ── Validar colegio antes de enviar (tooltip nativo) ──────────────────
+    document.getElementById("form-academica").addEventListener("submit", function (e) {
+        const input = document.getElementById("colegio");
+        const colegioId = document.getElementById("colegio_id").value;
+        if (!colegioId) {
+            e.preventDefault();
+            input.setCustomValidity("Debes seleccionar un colegio de la lista o crear uno nuevo con '+ Agregar colegio'");
+            input.reportValidity();
+        }
+    });
+
+    // ── Error de backend: mostrar tooltip nativo ──────────────────────────
+    {% if field_errors.colegio %}
+    document.addEventListener("DOMContentLoaded", function () {
+        var input = document.getElementById("colegio");
+        if (input) {
+            input.setCustomValidity("{{ field_errors.colegio|escapejs }}");
+            setTimeout(function () { input.reportValidity(); }, 350);
+        }
+    });
+    {% endif %}
+
+    // ── Búsqueda de colegios ──────────────────────────────────────────────
+    document.getElementById("colegio").addEventListener("keyup", function () {
+        const query = this.value.trim();
+        this.setCustomValidity('');
+        if (!query) {
+            document.getElementById("colegio_id").value = "";
+            document.getElementById("resultados").innerHTML = "";
+            return;
+        }
+        if (document.getElementById("colegio_id").value) {
+            document.getElementById("colegio_id").value = "";
+        }
+        fetch(`/buscar-colegios/?q=${encodeURIComponent(query)}`)
             .then(res => res.json())
             .then(data => {
-                let resultados = document.getElementById("resultados");
+                const resultados = document.getElementById("resultados");
                 resultados.innerHTML = "";
-
                 data.forEach(c => {
-                    resultados.innerHTML += `
-                    <div style="cursor:pointer; padding:5px;"
-                        onclick="seleccionar(${c.id}, '${c.nombre}')">
-                        ${c.nombre}
-                    </div>
-                `;
+                    const div = document.createElement("div");
+                    div.style.cssText = "cursor:pointer; padding:8px; border-bottom:1px solid #eee;";
+                    div.textContent = c.nombre;
+                    div.addEventListener("mouseenter", function () { this.style.background = "#f0f0f0"; });
+                    div.addEventListener("mouseleave", function () { this.style.background = ""; });
+                    div.addEventListener("click", function () { seleccionar(c.id, c.nombre); });
+                    resultados.appendChild(div);
                 });
             });
     });
 
     function seleccionar(id, nombre) {
-        document.getElementById("colegio").value = nombre;
+        const input = document.getElementById("colegio");
+        input.value = nombre;
+        input.setCustomValidity('');
         document.getElementById("colegio_id").value = id;
         document.getElementById("resultados").innerHTML = "";
     }
 
     function mostrarAgregar() {
         document.getElementById("nuevoColegio").style.display = "block";
+        document.getElementById("nuevo_nombre").focus();
     }
+
+    function ocultarAgregar() {
+        document.getElementById("nuevoColegio").style.display = "none";
+        document.getElementById("nuevo_nombre").value = "";
+        document.getElementById("tipo_ie_nuevo").value = "";
+        document.getElementById("dep_ie").value = "";
+        document.getElementById("prov_ie").innerHTML = '<option value="">Provincia *</option>';
+        document.getElementById("dist_ie").innerHTML = '<option value="">Distrito *</option>';
+    }
+
+    document.getElementById("dep_ie").addEventListener("change", function () {
+        const prov = document.getElementById("prov_ie");
+        const dist = document.getElementById("dist_ie");
+        prov.innerHTML = '<option value="">Provincia *</option>';
+        dist.innerHTML = '<option value="">Distrito *</option>';
+        if (!this.value) return;
+        fetch(`/get-provincias/${this.value}/`).then(r => r.json()).then(data => {
+            data.forEach(p => {
+                const opt = document.createElement("option");
+                opt.value = p.id; opt.textContent = p.nombre;
+                prov.appendChild(opt);
+            });
+        });
+    });
+
+    document.getElementById("prov_ie").addEventListener("change", function () {
+        const dist = document.getElementById("dist_ie");
+        dist.innerHTML = '<option value="">Distrito *</option>';
+        if (!this.value) return;
+        fetch(`/get-distritos/${this.value}/`).then(r => r.json()).then(data => {
+            data.forEach(d => {
+                const opt = document.createElement("option");
+                opt.value = d.id; opt.textContent = d.nombre;
+                dist.appendChild(opt);
+            });
+        });
+    });
 
     function crearColegio() {
-        let nombre = document.getElementById("nuevo_nombre").value;
-        let distrito = document.getElementById("dist_ie").value;
-
-        console.log("Nombre:", nombre);
-        console.log("Distrito:", distrito);
-
-        if (!nombre || !distrito) {
-            alert("Completa todos los campos");
-            return;
-        }
-
+        const nombre = document.getElementById("nuevo_nombre").value.trim();
+        const distrito = document.getElementById("dist_ie").value;
+        const tipoIe = document.getElementById("tipo_ie_nuevo").value;
+        if (!nombre) { alert("El nombre del colegio es obligatorio"); return; }
+        if (!tipoIe) { alert("Debes seleccionar el tipo de institución (Nacional o Particular)"); return; }
+        if (!document.getElementById("dep_ie").value) { alert("Debes seleccionar el departamento"); return; }
+        if (!document.getElementById("prov_ie").value) { alert("Debes seleccionar la provincia"); return; }
+        if (!distrito) { alert("Debes seleccionar el distrito"); return; }
         fetch("/crear-colegio/", {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": "{{ csrf_token }}"
-            },
-            body: JSON.stringify({
-                nombre: nombre,
-                distrito: distrito
-            })
+            headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
+            body: JSON.stringify({ nombre, distrito, tipo_ie: tipoIe })
         })
-            .then(res => {
-                if (!res.ok) {
-                    throw new Error("Error en servidor");
-                }
-                return res.json();
-            })
-            .then(data => {
-                console.log("Respuesta:", data);
-
-                seleccionar(data.id, data.nombre);
-                document.getElementById("nuevoColegio").style.display = "none";
-            })
-            .catch(error => {
-                console.error("ERROR:", error);
-                alert("Error al guardar colegio");
-            });
+        .then(r => { if (!r.ok) return r.json().then(d => { throw new Error(d.error || "Error"); }); return r.json(); })
+        .then(data => { seleccionar(data.id, data.nombre); ocultarAgregar(); })
+        .catch(err => { alert(err.message || "Error al guardar el colegio"); });
     }
 </script>
-<script>
-    document.getElementById("dep_ie").addEventListener("change", function () {
-        let id = this.value;
-
-        fetch(`/get-provincias/${id}/`)
-            .then(res => res.json())
-            .then(data => {
-                let prov = document.getElementById("prov_ie");
-                prov.innerHTML = '<option value="">Provincia</option>';
-
-                data.forEach(p => {
-                    prov.innerHTML += `<option value="${p.id}">${p.nombre}</option>`;
-                });
-            });
-    });
-</script>
-<script>
-    document.getElementById("prov_ie").addEventListener("change", function () {
-        let id = this.value;
-
-        fetch(`/get-distritos/${id}/`)
-            .then(res => res.json())
-            .then(data => {
-                let dist = document.getElementById("dist_ie");
-                dist.innerHTML = '<option value="">Distrito</option>';
-
-                data.forEach(d => {
-                    dist.innerHTML += `<option value="${d.id}">${d.nombre}</option>`;
-                });
-            });
-    });
-</script>
-
 
 {% endblock %}

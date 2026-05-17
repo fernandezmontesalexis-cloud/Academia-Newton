@@ -7,102 +7,155 @@
 {% block content %}
 <div class="alumno-container">
 
-
     <h2>Registro Académico Adicional</h2>
     <p>Paso 4: Formación Académica</p>
     <p>I.E en donde realizó sus estudios</p>
 
-    <form method="POST">
+    <form method="POST" id="form-adicional">
         {% csrf_token %}
 
         <div class="row">
 
-            <!-- RADIO -->
+            <!-- RADIO: estudio previo -->
             <div class="col-12 mb-3">
                 <label class="form-label">¿Has estudiado en alguna academia anteriormente?</label>
 
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="estudio_previo" value="si" {% if formacion_adicional.estudio_previo == "si" %} checked {% endif %}>
-                    <label class="form-check-label">Sí</label>
+                    <input class="form-check-input" type="radio" name="estudio_previo"
+                        id="radio_si" value="si"
+                        {% if formacion_adicional.estudio_previo == "si" %} checked {% endif %}>
+                    <label class="form-check-label" for="radio_si">Sí</label>
                 </div>
 
                 <div class="form-check">
-                    <input class="form-check-input" type="radio" name="estudio_previo" value="no" {% if formacion_adicional.estudio_previo == "no" %} checked {% endif %}>
-                    <label class="form-check-label">No</label>
+                    <input class="form-check-input" type="radio" name="estudio_previo"
+                        id="radio_no" value="no"
+                        {% if formacion_adicional.estudio_previo == "no" or not formacion_adicional.estudio_previo %} checked {% endif %}>
+                    <label class="form-check-label" for="radio_no">No</label>
                 </div>
             </div>
 
-            <!-- FILA 1 -->
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Carrera profesional de tu interés *</label>
-                <input type="text" name="carrera_interes" class="form-control" required
-                    value="{{ formacion_adicional.carrera_interes }}">
+            <!-- ACADEMIA ANTERIOR — visible solo si "Sí" -->
+            <div class="col-md-4 mb-3" id="campo_academia" style="display:none;">
+                <label class="form-label">Academia anterior *</label>
+                <input type="text" name="academia_anterior" id="academia_anterior"
+                    class="form-control"
+                    value="{{ formacion_adicional.academia_anterior }}"
+                    oninput="this.setCustomValidity('')"
+                    oninvalid="this.setCustomValidity('Debes ingresar el nombre de la academia anterior')">
             </div>
 
-            <div class="col-md-6 mb-3">
-                <label class="form-label">Segunda carrera profesional *</label>
-                <input type="text" name="segunda_carrera" class="form-control" required
-                    value="{{ formacion_adicional.segunda_carrera }}">
-            </div>
-
-            <!-- FILA 2 -->
-            <div class="col-md-4 mb-3">
+            <!-- TIPO DE ESTUDIO — visible solo si "Sí" -->
+            <div class="col-md-4 mb-3" id="campo_tipo_estudio" style="display:none;">
                 <label class="form-label">Tipo de estudio</label>
                 <select name="tipo_estudio" class="form-select">
                     <option value="">Seleccione</option>
-
-                    <option value="anual" {% if formacion_adicional.tipo_estudio == "anual" %}selected{% endif %}>Anual
-                    </option>
-                    <option value="semestral" {% if formacion_adicional.tipo_estudio == "semestral" %}selected{% endif %}>
-                        Semestral</option>
-                    <option value="otros" {% if formacion_adicional.tipo_estudio == "otros" %}selected{% endif %}>Otros
-                    </option>
+                    <option value="anual" {% if formacion_adicional.tipo_estudio == "anual" %}selected{% endif %}>Anual</option>
+                    <option value="semestral" {% if formacion_adicional.tipo_estudio == "semestral" %}selected{% endif %}>Semestral</option>
+                    <option value="otros" {% if formacion_adicional.tipo_estudio == "otros" %}selected{% endif %}>Otros</option>
                 </select>
             </div>
 
-            <div class="col-md-4 mb-3">
-                <label class="form-label">Academia anterior</label>
-                <input type="text" name="academia_anterior" class="form-control"
-                    value="{{ formacion_adicional.academia_anterior }}">
+            <!-- CARRERAS -->
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Carrera profesional de tu interés *</label>
+                <input type="text" name="carrera_interes" class="form-control" required
+                    value="{{ formacion_adicional.carrera_interes }}"
+                    oninvalid="this.setCustomValidity('La carrera de interés es obligatoria')"
+                    oninput="this.setCustomValidity('')">
             </div>
 
+            <div class="col-md-6 mb-3">
+                <label class="form-label">Segunda carrera profesional</label>
+                <input type="text" name="segunda_carrera" class="form-control"
+                    value="{{ formacion_adicional.segunda_carrera }}">
+            </div>
+
+            <!-- CICLO -->
             <div class="col-md-4 mb-3">
                 <label class="form-label">Ciclo *</label>
-                <select name="ciclo" class="form-select" required>
+                <select name="ciclo" id="ciclo_select" class="form-select" required
+                    oninvalid="this.setCustomValidity('Debes seleccionar un ciclo activo')"
+                    oninput="this.setCustomValidity('')">
                     <option value="">Seleccione un ciclo</option>
-
                     {% for ciclo in ciclos %}
                     <option value="{{ ciclo.id }}" {% if ciclo.id == ciclo_seleccionado %} selected {% endif %}>
                         {{ ciclo.nombre }} - S/ {{ ciclo.precio }}
                     </option>
                     {% endfor %}
+                    {% if not ciclos %}
+                    <option value="" disabled>No hay ciclos activos disponibles</option>
+                    {% endif %}
                 </select>
+                {% if not ciclos %}
+                <small class="text-muted d-block mt-1">
+                    No hay ciclos activos. Contacta al administrador.
+                </small>
+                {% endif %}
             </div>
 
         </div>
 
-
         <br>
 
         <div class="botones-form">
-
-
             <a href="{% url 'regis_form_academica' %}" class="btn btn-outline-dark">
                 ← Atrás
             </a>
-
             <button type="submit" class="btn btn-outline-primary">
-                Siguiente →
+                Finalizar registro →
             </button>
-
             <a href="{% url 'cancelar_registro' %}" class="btn btn-outline-secondary"
                 onclick="confirmarCancelacion(event, this.href)">
                 Cancelar
             </a>
-
         </div>
 
     </form>
 </div>
+
+<script>
+    // ── Mostrar/ocultar academia anterior ────────────────────────────────
+    document.addEventListener("DOMContentLoaded", function () {
+        var radioSi = document.getElementById("radio_si");
+        var radioNo = document.getElementById("radio_no");
+        var campoAcademia = document.getElementById("campo_academia");
+        var campoTipoEstudio = document.getElementById("campo_tipo_estudio");
+        var inputAcademia = document.getElementById("academia_anterior");
+
+        function toggleCampos() {
+            var visible = radioSi.checked;
+            campoAcademia.style.display = visible ? "block" : "none";
+            campoTipoEstudio.style.display = visible ? "block" : "none";
+            inputAcademia.required = visible;
+            if (!visible) {
+                inputAcademia.value = "";
+                inputAcademia.setCustomValidity('');
+            }
+        }
+
+        radioSi.addEventListener("change", toggleCampos);
+        radioNo.addEventListener("change", toggleCampos);
+        toggleCampos();
+
+        // ── Errores de backend: tooltip nativo ───────────────────────────
+        {% if field_errors %}
+        function _marcarError(selector, msg) {
+            var el = document.querySelector(selector);
+            if (el && msg) { el.setCustomValidity(msg); return el; }
+            return null;
+        }
+        var primero = null;
+        {% if field_errors.academia_anterior %}
+        primero = primero || _marcarError('[name="academia_anterior"]', "{{ field_errors.academia_anterior|escapejs }}");
+        {% endif %}
+        {% if field_errors.ciclo %}
+        primero = primero || _marcarError('[name="ciclo"]', "{{ field_errors.ciclo|escapejs }}");
+        {% endif %}
+        if (primero) setTimeout(function () { primero.reportValidity(); }, 350);
+        {% endif %}
+
+    });
+</script>
 
 {% endblock %}
