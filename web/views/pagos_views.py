@@ -1,16 +1,22 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.db.models import Sum
+from django.db.models import Sum, F, ExpressionWrapper, DecimalField, Value
+from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
+import json
 
 from web.permisos import permiso_requerido
-from ..models import Matricula, Pago
+from ..models import Matricula, Pago, Ciclo
+
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment
 
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.platypus.flowables import HRFlowable
@@ -25,11 +31,17 @@ from reportlab.lib.colors import HexColor
 @login_required
 @permiso_requerido(['admin', 'secretaria'])
 def pagos(request, matricula_id):
-    matricula = get_object_or_404(Matricula, id=matricula_id)
+    matricula = get_object_or_404(
+        Matricula.objects.select_related('alumno__apoderado', 'alumno__sede', 'ciclo'),
+        id=matricula_id,
+    )
 
     if matricula.alumno.sede != request.user.perfil.sede:
         messages.error(request, "No tienes acceso a esta matrícula")
         return redirect('matriculas')
+
+    apoderado = matricula.alumno.apoderado
+    apoderado_nombre = apoderado.nombre_completo if apoderado else None
 
     def _contexto(error_monto=None, error_metodo=None, monto_prev="", metodo_prev=""):
         total_pagado = Pago.objects.filter(matricula=matricula).aggregate(
@@ -37,23 +49,22 @@ def pagos(request, matricula_id):
         )['monto__sum'] or 0
         total_ciclo = matricula.ciclo.precio
         deuda = total_ciclo - total_pagado
-        lista_pagos = Pago.objects.filter(matricula=matricula).order_by('-fecha_pago')
         return {
-            'matricula': matricula,
-            'total_pagado': total_pagado,
-            'total_ciclo': total_ciclo,
-            'deuda': deuda,
-            'pagos': lista_pagos,
-            'error_monto': error_monto,
-            'error_metodo': error_metodo,
-            'monto_prev': monto_prev,
-            'metodo_prev': metodo_prev,
+            'matricula':       matricula,
+            'total_pagado':    total_pagado,
+            'total_ciclo':     total_ciclo,
+            'deuda':           deuda,
+            'apoderado_nombre':apoderado_nombre,
+            'error_monto':     error_monto,
+            'error_metodo':    error_metodo,
+            'monto_prev':      monto_prev,
+            'metodo_prev':     metodo_prev,
         }
 
     if request.method == 'POST':
-        monto_raw = request.POST.get('monto', '').strip()
-        metodo = request.POST.get('metodo_pago', '').strip()
-        apoderado = request.POST.get('apoderado', '').strip()
+        monto_raw  = request.POST.get('monto',       '').strip()
+        metodo     = request.POST.get('metodo_pago', '').strip()
+        apo_value  = request.POST.get('apoderado',   '').strip()
 
         total_pagado = Pago.objects.filter(matricula=matricula).aggregate(
             Sum('monto')
@@ -80,14 +91,9 @@ def pagos(request, matricula_id):
 
         if error_monto or error_metodo:
             return render(
-                request,
-                'web/secretaria/pagos/pagos.html',
-                _contexto(
-                    error_monto=error_monto,
-                    error_metodo=error_metodo,
-                    monto_prev=monto_raw,
-                    metodo_prev=metodo,
-                ),
+                request, 'web/secretaria/pagos/pagos.html',
+                _contexto(error_monto=error_monto, error_metodo=error_metodo,
+                          monto_prev=monto_raw, metodo_prev=metodo),
             )
 
         Pago.objects.create(
@@ -96,8 +102,18 @@ def pagos(request, matricula_id):
             fecha_pago=date.today(),
             monto=monto,
             metodo_pago=metodo,
-            apoderado=apoderado,
+            apoderado=apo_value,
         )
+
+        # Guardar próximo pago si fue ingresado
+        proximo_pago_raw = request.POST.get('proximo_pago', '').strip()
+        if proximo_pago_raw:
+            try:
+                matricula.proximo_pago = datetime.strptime(proximo_pago_raw, '%Y-%m-%d').date()
+            except ValueError:
+                pass
+        else:
+            matricula.proximo_pago = None
 
         total_actual = Pago.objects.filter(matricula=matricula).aggregate(
             Sum('monto')
@@ -111,40 +127,292 @@ def pagos(request, matricula_id):
     return render(request, 'web/secretaria/pagos/pagos.html', _contexto())
 
 
+@csrf_exempt
+@login_required
+@permiso_requerido(['admin', 'secretaria'])
+def cancelar_matricula_nueva(request, matricula_id):
+    """Elimina una matrícula solo si no tiene ningún pago registrado."""
+    if request.method != 'POST':
+        return redirect('matriculas')
+    matricula = get_object_or_404(
+        Matricula, id=matricula_id, alumno__sede=request.user.perfil.sede
+    )
+    total = Pago.objects.filter(matricula=matricula).aggregate(
+        t=Sum('monto')
+    )['t'] or 0
+    if total == 0:
+        matricula.delete()
+    return redirect('matriculas')
+
+
+def _matriculas_financieras(sede):
+    return (
+        Matricula.objects
+        .filter(alumno__sede=sede, alumno__estado='activo')
+        .annotate(
+            total_pagado_db=Coalesce(
+                Sum('pago__monto'), Value(Decimal('0')),
+                output_field=DecimalField(),
+            )
+        )
+        .annotate(
+            deuda_db=ExpressionWrapper(
+                F('ciclo__precio') - F('total_pagado_db'),
+                output_field=DecimalField(),
+            )
+        )
+    )
+
+
+def _matriculas_ciclo_qs(sede, ciclo):
+    return (
+        Matricula.objects
+        .filter(alumno__sede=sede, alumno__estado='activo', ciclo=ciclo)
+        .select_related('alumno', 'alumno__sede', 'ciclo')
+        .prefetch_related('pago_set__registrado_por__user')
+        .annotate(
+            total_pagado_db=Coalesce(
+                Sum('pago__monto'), Value(Decimal('0')),
+                output_field=DecimalField(),
+            )
+        )
+        .annotate(
+            deuda_db=ExpressionWrapper(
+                F('ciclo__precio') - F('total_pagado_db'),
+                output_field=DecimalField(),
+            )
+        )
+    )
+
+
+def _calc_estado_pago(m, today):
+    if m.deuda_db <= 0:
+        return 'pagado'
+    if m.ciclo.fecha_fin < today:
+        return 'vencido'
+    if m.total_pagado_db > 0:
+        return 'parcial'
+    return 'sin_pago'
+
+
+def _pagos_json(m):
+    pagos_data = []
+    for p in m.pago_set.all().order_by('-fecha_pago'):
+        pagos_data.append({
+            'fecha':      p.fecha_pago.strftime('%d/%m/%Y'),
+            'monto':      str(p.monto),
+            'metodo':     p.get_metodo_pago_display(),
+            'cajero':     p.registrado_por.user.username,
+            'boleta_url': reverse('boleta_pdf', kwargs={'pago_id': p.id}),
+        })
+    return json.dumps(pagos_data, ensure_ascii=True)
+
+
 @login_required
 @permiso_requerido(['admin', 'secretaria'])
 def lista_pagos(request):
-    sede = request.user.perfil.sede
+    sede  = request.user.perfil.sede
+    today = date.today()
 
-    matriculas = Matricula.objects.filter(
-        alumno__sede=sede
-    ).select_related('alumno', 'ciclo')
+    ciclos_raw = Ciclo.objects.filter(sede=sede).order_by('-fecha_inicio')
 
-    data = []
-    for m in matriculas:
-        total_pagado = m.pago_set.aggregate(total=Sum('monto'))['total'] or 0
-        deuda = m.ciclo.precio - total_pagado
-        data.append({
-            'matricula': m,
-            'total_pagado': total_pagado,
-            'deuda': deuda,
+    ciclos_data = []
+    for c in ciclos_raw:
+        total_matriculas = Matricula.objects.filter(
+            ciclo=c, alumno__estado='activo', alumno__sede=sede,
+        ).count()
+
+        if total_matriculas == 0:
+            continue
+
+        total_recaudado = (
+            Pago.objects.filter(
+                matricula__ciclo=c,
+                matricula__alumno__estado='activo',
+                matricula__alumno__sede=sede,
+            ).aggregate(t=Sum('monto'))['t'] or Decimal('0')
+        )
+
+        total_esperado = c.precio * total_matriculas
+        total_deuda    = max(total_esperado - total_recaudado, Decimal('0'))
+
+        alumnos_con_deuda = (
+            Matricula.objects
+            .filter(ciclo=c, alumno__estado='activo', alumno__sede=sede)
+            .annotate(
+                pagado_m=Coalesce(
+                    Sum('pago__monto'), Value(Decimal('0')),
+                    output_field=DecimalField(),
+                )
+            )
+            .filter(pagado_m__lt=c.precio)
+            .count()
+        )
+
+        pct = int(total_recaudado / total_esperado * 100) if total_esperado > 0 else 0
+
+        ciclos_data.append({
+            'ciclo':             c,
+            'total_matriculas':  total_matriculas,
+            'total_recaudado':   total_recaudado,
+            'total_esperado':    total_esperado,
+            'total_deuda':       total_deuda,
+            'alumnos_con_deuda': alumnos_con_deuda,
+            'pct_recaudado':     min(pct, 100),
         })
 
-    data.sort(key=lambda x: x['deuda'], reverse=True)
-
-    pagos_hoy = (
-        Pago.objects.filter(fecha_pago=date.today(), matricula__alumno__sede=sede)
-        .aggregate(total=Sum('monto'))['total'] or 0
-    )
-    deuda_total = sum(x['deuda'] for x in data)
-    alumnos_con_deuda = sum(1 for x in data if x['deuda'] > 0)
-
     return render(request, 'web/secretaria/pagos/lista_pagos.html', {
-        'data': data,
-        'pagos_hoy': pagos_hoy,
-        'deuda_total': deuda_total,
-        'alumnos_con_deuda': alumnos_con_deuda,
+        'ciclos_data': ciclos_data,
     })
+
+
+@login_required
+@permiso_requerido(['admin', 'secretaria'])
+def reporte_ciclo(request, ciclo_id):
+    sede  = request.user.perfil.sede
+    today = date.today()
+
+    ciclo = get_object_or_404(Ciclo, id=ciclo_id, sede=sede)
+
+    mat_qs = _matriculas_ciclo_qs(sede, ciclo)
+
+    estado_sel = request.GET.get('estado', '').strip()
+    dni        = request.GET.get('dni',    '').strip()
+
+    if dni:
+        mat_qs = mat_qs.filter(alumno__dni__icontains=dni)
+    if estado_sel == 'pagado':
+        mat_qs = mat_qs.filter(deuda_db__lte=0)
+    elif estado_sel == 'vencido':
+        mat_qs = mat_qs.filter(deuda_db__gt=0, ciclo__fecha_fin__lt=today)
+    elif estado_sel == 'parcial':
+        mat_qs = mat_qs.filter(
+            deuda_db__gt=0, total_pagado_db__gt=0, ciclo__fecha_fin__gte=today)
+    elif estado_sel == 'sin_pago':
+        mat_qs = mat_qs.filter(
+            total_pagado_db=0, deuda_db__gt=0, ciclo__fecha_fin__gte=today)
+
+    # Stat cards del ciclo
+    pagos_hoy_c = (
+        Pago.objects.filter(
+            fecha_pago=today, matricula__ciclo=ciclo, matricula__alumno__sede=sede,
+        ).aggregate(t=Sum('monto'))['t'] or Decimal('0')
+    )
+    total_recaudado_c = (
+        Pago.objects.filter(
+            matricula__ciclo=ciclo, matricula__alumno__estado='activo',
+            matricula__alumno__sede=sede,
+        ).aggregate(t=Sum('monto'))['t'] or Decimal('0')
+    )
+    total_matriculas_c = Matricula.objects.filter(
+        ciclo=ciclo, alumno__estado='activo', alumno__sede=sede,
+    ).count()
+    total_deuda_c = max(
+        ciclo.precio * total_matriculas_c - total_recaudado_c, Decimal('0')
+    )
+    alumnos_con_deuda_c = (
+        Matricula.objects
+        .filter(ciclo=ciclo, alumno__estado='activo', alumno__sede=sede)
+        .annotate(
+            pagado_m=Coalesce(
+                Sum('pago__monto'), Value(Decimal('0')),
+                output_field=DecimalField(),
+            )
+        )
+        .filter(pagado_m__lt=ciclo.precio)
+        .count()
+    )
+
+    from django.core.paginator import Paginator
+    paginator = Paginator(
+        mat_qs.order_by('alumno__apellido_paterno', 'alumno__nombres'), 12
+    )
+    matriculas_page = paginator.get_page(request.GET.get('page'))
+
+    for m in matriculas_page:
+        m.estado_pago = _calc_estado_pago(m, today)
+        m.pagos_json  = _pagos_json(m)
+
+    return render(request, 'web/secretaria/pagos/reporte_ciclo.html', {
+        'ciclo':             ciclo,
+        'matriculas':        matriculas_page,
+        'pagos_hoy':         pagos_hoy_c,
+        'total_recaudado':   total_recaudado_c,
+        'total_deuda':       total_deuda_c,
+        'alumnos_con_deuda': alumnos_con_deuda_c,
+        'estado_sel':        estado_sel,
+        'dni':               dni,
+    })
+
+
+@login_required
+@permiso_requerido(['admin', 'secretaria'])
+def exportar_reportes(request):
+    sede = request.user.perfil.sede
+
+    pagos_qs = (
+        Pago.objects.filter(matricula__alumno__sede=sede)
+        .select_related(
+            'matricula__alumno', 'matricula__ciclo',
+            'registrado_por__user',
+        )
+        .order_by('-fecha_pago', '-id')
+    )
+
+    fecha_desde = request.GET.get('fecha_desde', '').strip()
+    fecha_hasta = request.GET.get('fecha_hasta', '').strip()
+    metodo_sel  = request.GET.get('metodo', '').strip()
+    ciclo_sel   = request.GET.get('ciclo', '').strip()
+    dni         = request.GET.get('dni', '').strip()
+
+    if fecha_desde:
+        pagos_qs = pagos_qs.filter(fecha_pago__gte=fecha_desde)
+    if fecha_hasta:
+        pagos_qs = pagos_qs.filter(fecha_pago__lte=fecha_hasta)
+    if metodo_sel:
+        pagos_qs = pagos_qs.filter(metodo_pago=metodo_sel)
+    if ciclo_sel:
+        pagos_qs = pagos_qs.filter(matricula__ciclo_id=ciclo_sel)
+    if dni:
+        pagos_qs = pagos_qs.filter(matricula__alumno__dni__icontains=dni)
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Movimientos"
+
+    header_fill = PatternFill("solid", fgColor="1F4E79")
+    header_font = Font(bold=True, color="FFFFFF")
+    center = Alignment(horizontal="center")
+
+    headers = ['N°', 'Fecha', 'Alumno', 'DNI', 'Ciclo', 'Monto (S/.)', 'Método', 'Cajero']
+    for col, texto in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=texto)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = center
+
+    for i, p in enumerate(pagos_qs, 1):
+        ws.append([
+            i,
+            p.fecha_pago.strftime('%d/%m/%Y'),
+            str(p.matricula.alumno),
+            p.matricula.alumno.dni,
+            p.matricula.ciclo.nombre,
+            float(p.monto),
+            p.get_metodo_pago_display(),
+            p.registrado_por.user.username,
+        ])
+
+    for col in ws.columns:
+        max_len = max((len(str(cell.value or '')) for cell in col), default=10)
+        ws.column_dimensions[col[0].column_letter].width = max_len + 4
+
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="reportes_{sede.nombre}.xlsx"'
+    wb.save(response)
+    return response
 
 
 @login_required

@@ -7,14 +7,14 @@
 .reg-wrapper {
     max-width: 820px;
     margin: 0 auto;
-    padding-bottom: 48px;
+    padding-bottom: 32px;
 }
 
 /* ── STEPPER ──────────────────────────────────────────────────────── */
 .reg-stepper {
     display: flex;
     align-items: flex-start;
-    margin-bottom: 18px;
+    margin-bottom: 12px;
     padding: 0 2px;
 }
 
@@ -75,7 +75,7 @@
 }
 
 .reg-card-head {
-    padding: 22px 28px 16px;
+    padding: 16px 28px 12px;
     border-bottom: 1px solid #f1f5f9;
 }
 
@@ -94,12 +94,12 @@
 }
 
 .reg-card-body {
-    padding: 24px 28px 30px;
+    padding: 18px 28px 22px;
 }
 
 /* ── SECTIONS ─────────────────────────────────────────────────────── */
 .reg-section {
-    margin-bottom: 26px;
+    margin-bottom: 18px;
 }
 .reg-section:last-child { margin-bottom: 0; }
 
@@ -109,15 +109,15 @@
     letter-spacing: .8px;
     text-transform: uppercase;
     color: #94a3b8;
-    margin-bottom: 14px;
-    padding-bottom: 7px;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
     border-bottom: 1px solid #f1f5f9;
 }
 
 /* ── GRIDS ────────────────────────────────────────────────────────── */
-.reg-grid-2 { display: grid; grid-template-columns: 1fr 1fr;     gap: 14px; }
-.reg-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-.reg-grid-1 { display: grid; grid-template-columns: 1fr;         gap: 14px; }
+.reg-grid-2 { display: grid; grid-template-columns: 1fr 1fr;     gap: 10px 12px; }
+.reg-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px 12px; }
+.reg-grid-1 { display: grid; grid-template-columns: 1fr;         gap: 10px; }
 .reg-span-2 { grid-column: span 2; }
 
 /* ── FIELDS ───────────────────────────────────────────────────────── */
@@ -315,8 +315,8 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    padding-top: 22px;
-    margin-top: 10px;
+    padding-top: 16px;
+    margin-top: 6px;
     border-top: 1px solid #f1f5f9;
     flex-wrap: wrap;
 }
@@ -437,10 +437,10 @@
     .reg-grid-2 { grid-template-columns: 1fr; }
     .reg-grid-3 { grid-template-columns: 1fr 1fr; }
     .reg-span-2 { grid-column: span 1; }
-    .reg-card-body  { padding: 16px 14px 20px; }
-    .reg-card-head  { padding: 16px 14px 12px; }
+    .reg-card-body  { padding: 14px 14px 16px; }
+    .reg-card-head  { padding: 12px 14px 10px; }
     .reg-step-label { display: none; }
-    .reg-wrapper    { padding-bottom: 24px; }
+    .reg-wrapper    { padding-bottom: 20px; }
 }
 
 @media (max-width: 400px) {

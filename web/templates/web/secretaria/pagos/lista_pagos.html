@@ -4,144 +4,105 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h4 class="mb-0 fw-bold">Pagos</h4>
-        <small class="text-muted">
-            <i class="fas fa-coins me-1"></i> Módulo Financiero — Estado de pagos y deudas
-        </small>
+        <h4 class="mb-0 fw-bold">Reportes Financieros</h4>
+        <small class="text-muted">Resumen por ciclos académicos — selecciona un ciclo para ver el detalle</small>
     </div>
-    <a href="{% url 'matriculas' %}" class="btn btn-outline-secondary btn-sm">
-        <i class="fas fa-arrow-left me-1"></i> Volver a Matrículas
-    </a>
 </div>
 
-<!-- CARDS DE RESUMEN -->
-<div class="row g-3 mb-4">
+{% if ciclos_data %}
+<div class="row g-3">
+    {% for item in ciclos_data %}
+    {% with c=item.ciclo %}
 
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="rounded-circle bg-success bg-opacity-10 p-3">
-                    <i class="fas fa-coins fa-lg text-success"></i>
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm h-100"
+             style="border-top: 3px solid {% if c.alerta_vigencia == 'activo' %}#22c55e{% elif c.alerta_vigencia == 'finaliza_pronto' %}#eab308{% elif c.alerta_vigencia == 'pendiente' %}#3b82f6{% else %}#94a3b8{% endif %} !important">
+            <div class="card-body p-4">
+
+                <!-- Nombre + badge estado ciclo -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-0" style="font-size:15px">{{ c.nombre }}</h6>
+                        <small class="text-muted">
+                            {{ c.fecha_inicio|date:"d/m/Y" }} – {{ c.fecha_fin|date:"d/m/Y" }}
+                        </small>
+                    </div>
+                    {% if c.alerta_vigencia == 'activo' %}
+                        <span class="badge bg-success" style="font-size:11px">Activo</span>
+                    {% elif c.alerta_vigencia == 'finaliza_pronto' %}
+                        <span class="badge bg-warning" style="font-size:11px">Finaliza pronto</span>
+                    {% elif c.alerta_vigencia == 'pendiente' %}
+                        <span class="badge bg-primary" style="font-size:11px">Próximo</span>
+                    {% else %}
+                        <span class="badge bg-secondary" style="font-size:11px">Finalizado</span>
+                    {% endif %}
                 </div>
-                <div>
-                    <div class="fs-4 fw-bold">S/. {{ pagos_hoy }}</div>
-                    <small class="text-muted">Cobrado Hoy</small>
+
+                <!-- Métricas 2×2 -->
+                <div class="row g-2 mb-3">
+                    <div class="col-6">
+                        <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Matrículas</div>
+                        <div class="fw-bold" style="font-size:17px">{{ item.total_matriculas }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Recaudado</div>
+                        <div class="fw-bold text-success" style="font-size:17px">S/. {{ item.total_recaudado }}</div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Deuda</div>
+                        <div class="fw-bold {% if item.total_deuda > 0 %}text-danger{% else %}text-success{% endif %}" style="font-size:17px">
+                            S/. {{ item.total_deuda }}
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Con deuda</div>
+                        <div class="fw-bold {% if item.alumnos_con_deuda > 0 %}text-warning{% endif %}" style="font-size:17px">
+                            {{ item.alumnos_con_deuda }}
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Barra de progreso -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted" style="font-size:11px">Recaudación</span>
+                        <span class="fw-semibold" style="font-size:12px">{{ item.pct_recaudado }}%</span>
+                    </div>
+                    <div class="progress" style="height:7px;border-radius:4px;background:#f1f5f9">
+                        <div class="progress-bar
+                                {% if item.pct_recaudado >= 80 %}bg-success
+                                {% elif item.pct_recaudado >= 50 %}bg-warning
+                                {% else %}bg-danger{% endif %}"
+                             role="progressbar"
+                             style="width:{{ item.pct_recaudado }}%;border-radius:4px">
+                        </div>
+                    </div>
+                    <div class="text-muted mt-1" style="font-size:11px">
+                        S/. {{ item.total_recaudado }} de S/. {{ item.total_esperado }}
+                    </div>
+                </div>
+
+                <!-- Acción principal -->
+                <a href="{% url 'reporte_ciclo' c.id %}"
+                   class="btn btn-primary btn-sm w-100">
+                    <i class="fas fa-chart-bar me-1"></i> Ver reporte
+                </a>
+
             </div>
         </div>
     </div>
 
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="rounded-circle bg-danger bg-opacity-10 p-3">
-                    <i class="fas fa-exclamation-circle fa-lg text-danger"></i>
-                </div>
-                <div>
-                    <div class="fs-4 fw-bold">S/. {{ deuda_total }}</div>
-                    <small class="text-muted">Deuda Total</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="rounded-circle bg-warning bg-opacity-10 p-3">
-                    <i class="fas fa-users fa-lg text-warning"></i>
-                </div>
-                <div>
-                    <div class="fs-4 fw-bold">{{ alumnos_con_deuda }}</div>
-                    <small class="text-muted">Alumnos con Deuda</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    {% endwith %}
+    {% endfor %}
 </div>
 
-<!-- TABLA -->
+{% else %}
 <div class="card border-0 shadow-sm">
-    <div class="card-body">
-
-        <h6 class="fw-semibold mb-3">Detalle por Matrícula</h6>
-
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>#</th>
-                        <th>Alumno</th>
-                        <th>Ciclo</th>
-                        <th class="text-end">Total</th>
-                        <th class="text-end">Pagado</th>
-                        <th class="text-end">Deuda</th>
-                        <th>Estado</th>
-                        <th>Acciones</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in data %}
-                    {% with m=item.matricula %}
-                    <tr>
-                        <td class="text-muted small">{{ forloop.counter }}</td>
-
-                        <td>
-                            <div class="fw-semibold">{{ m.alumno }}</div>
-                            <small class="text-muted">DNI: {{ m.alumno.dni }}</small>
-                        </td>
-
-                        <td>{{ m.ciclo.nombre }}</td>
-
-                        <td class="text-end">S/. {{ m.ciclo.precio }}</td>
-
-                        <td class="text-end text-primary fw-semibold">
-                            S/. {{ item.total_pagado }}
-                        </td>
-
-                        <td class="text-end">
-                            {% if item.deuda > 0 %}
-                                <span class="text-danger fw-bold">S/. {{ item.deuda }}</span>
-                            {% else %}
-                                <span class="text-success"><i class="fas fa-check"></i> 0</span>
-                            {% endif %}
-                        </td>
-
-                        <td>
-                            {% if item.deuda > 0 %}
-                                {% if item.total_pagado == 0 %}
-                                    <span class="badge bg-danger">Sin pago</span>
-                                {% else %}
-                                    <span class="badge bg-warning text-dark">Parcial</span>
-                                {% endif %}
-                            {% else %}
-                                <span class="badge bg-success">Pagado</span>
-                            {% endif %}
-                        </td>
-
-                        <td>
-                            <a href="{% url 'pagos' m.id %}" class="btn btn-sm btn-success">
-                                <i class="fas fa-money-bill-wave me-1"></i>
-                                {% if item.deuda > 0 %}Pagar{% else %}Ver{% endif %}
-                            </a>
-                        </td>
-
-                    </tr>
-                    {% endwith %}
-                    {% empty %}
-                    <tr>
-                        <td colspan="8" class="text-center text-muted py-4">
-                            <i class="fas fa-inbox fa-2x d-block mb-2"></i>
-                            No hay matrículas registradas
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
-
+    <div class="card-body text-center py-5 text-muted">
+        <i class="fas fa-inbox fa-2x d-block mb-2"></i>
+        No hay ciclos con matrículas registradas en esta sede.
     </div>
 </div>
+{% endif %}
 
 {% endblock %}

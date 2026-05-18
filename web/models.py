@@ -51,8 +51,9 @@ class Alumno(models.Model):
     distrito = models.ForeignKey('Distrito', on_delete=models.SET_NULL, null=True)
     email = models.EmailField(null=True, blank=True)
     ESTADOS =[
-        ('activo','Activo'),
-        ('inactivo','Inactivo'),
+        ('activo',   'Activo'),
+        ('inactivo', 'Inactivo'),
+        ('bloqueado','Bloqueado'),
     ]
     estado = models.CharField(max_length=10, choices=ESTADOS, default='activo' )
 
@@ -73,14 +74,24 @@ class Ciclo(models.Model):
 
     def __str__(self):
         return self.nombre
-    
 
+    @property
+    def alerta_vigencia(self):
+        today = timezone.localdate()
+        if self.fecha_fin < today:
+            return 'finalizado'
+        if self.fecha_inicio > today:
+            return 'pendiente'
+        if (self.fecha_fin - today).days <= 14:
+            return 'finaliza_pronto'
+        return 'activo'
 
 
 class Matricula(models.Model):
     alumno = models.ForeignKey(Alumno, on_delete=models.CASCADE)
     ciclo = models.ForeignKey(Ciclo, on_delete=models.CASCADE)
     fecha_matricula = models.DateField()
+    proximo_pago = models.DateField(null=True, blank=True)
 
     ESTADOS = [
         ('pendiente', 'Pendiente'),
@@ -130,6 +141,27 @@ class Pago(models.Model):
             matricula.estado = 'pendiente'
 
         matricula.save()
+
+class DesactivacionLog(models.Model):
+    MOTIVOS = [
+        ('retiro_voluntario', 'Retiro voluntario'),
+        ('deuda_pendiente',   'Deuda pendiente'),
+        ('inasistencia',      'Inasistencia prolongada'),
+        ('expulsion',         'Expulsión'),
+        ('otro',              'Otro'),
+    ]
+    alumno         = models.ForeignKey(Alumno, on_delete=models.CASCADE, related_name='desactivaciones')
+    motivo         = models.CharField(max_length=30, choices=MOTIVOS)
+    comentario     = models.TextField(blank=True)
+    fecha          = models.DateTimeField(auto_now_add=True)
+    registrado_por = models.ForeignKey(Perfil, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ['-fecha']
+
+    def __str__(self):
+        return f"{self.alumno} — {self.get_motivo_display()}"
+
 
 class FormacionAcademica(models.Model):
     alumno = models.OneToOneField(Alumno, on_delete=models.CASCADE)

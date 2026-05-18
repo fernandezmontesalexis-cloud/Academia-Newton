@@ -1,0 +1,350 @@
+{% extends 'web/base/base.html' %}
+
+{% block content %}
+
+<!-- HEADER con breadcrumb -->
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <div class="d-flex align-items-center gap-2 mb-1">
+            <a href="{% url 'lista_pagos' %}" class="text-muted text-decoration-none"
+               style="font-size:13px">
+                <i class="fas fa-chart-bar me-1"></i>Reportes
+            </a>
+            <span class="text-muted" style="font-size:13px">/</span>
+            <span style="font-size:13px;color:#374151;font-weight:500">{{ ciclo.nombre }}</span>
+        </div>
+        <h4 class="mb-0 fw-bold">{{ ciclo.nombre }}</h4>
+        <small class="text-muted">
+            {{ ciclo.fecha_inicio|date:"d/m/Y" }} – {{ ciclo.fecha_fin|date:"d/m/Y" }}
+            &nbsp;·&nbsp;
+            {% if ciclo.alerta_vigencia == 'activo' %}
+                <span class="badge bg-success" style="font-size:10.5px">Activo</span>
+            {% elif ciclo.alerta_vigencia == 'finaliza_pronto' %}
+                <span class="badge bg-warning" style="font-size:10.5px">Finaliza pronto</span>
+            {% elif ciclo.alerta_vigencia == 'pendiente' %}
+                <span class="badge bg-primary" style="font-size:10.5px">Próximo</span>
+            {% else %}
+                <span class="badge bg-secondary" style="font-size:10.5px">Finalizado</span>
+            {% endif %}
+        </small>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{% url 'lista_pagos' %}" class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-arrow-left me-1"></i> Volver
+        </a>
+        <a href="{% url 'exportar_reportes' %}?ciclo={{ ciclo.id }}&estado={{ estado_sel }}&dni={{ dni }}"
+           class="btn btn-outline-secondary btn-sm">
+            <i class="fas fa-file-excel me-1"></i> Exportar Excel
+        </a>
+    </div>
+</div>
+
+<!-- STAT CHIPS del ciclo -->
+<div class="d-flex flex-wrap gap-2 mb-3">
+
+    <div class="card border-0 shadow-sm" style="flex:1;min-width:140px">
+        <div class="card-body py-2 px-3 d-flex align-items-center gap-2">
+            <i class="fas fa-coins text-success" style="font-size:14px;flex-shrink:0"></i>
+            <div>
+                <div class="fw-bold" style="font-size:15px">S/. {{ pagos_hoy }}</div>
+                <div class="text-muted" style="font-size:11px">Cobrado hoy</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="flex:1;min-width:140px">
+        <div class="card-body py-2 px-3 d-flex align-items-center gap-2">
+            <i class="fas fa-check-circle text-primary" style="font-size:14px;flex-shrink:0"></i>
+            <div>
+                <div class="fw-bold" style="font-size:15px">S/. {{ total_recaudado }}</div>
+                <div class="text-muted" style="font-size:11px">Total recaudado</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="flex:1;min-width:140px">
+        <div class="card-body py-2 px-3 d-flex align-items-center gap-2">
+            <i class="fas fa-exclamation-circle text-danger" style="font-size:14px;flex-shrink:0"></i>
+            <div>
+                <div class="fw-bold" style="font-size:15px">S/. {{ total_deuda }}</div>
+                <div class="text-muted" style="font-size:11px">Deuda del ciclo</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm" style="flex:1;min-width:140px">
+        <div class="card-body py-2 px-3 d-flex align-items-center gap-2">
+            <i class="fas fa-users text-warning" style="font-size:14px;flex-shrink:0"></i>
+            <div>
+                <div class="fw-bold" style="font-size:15px">{{ alumnos_con_deuda }}</div>
+                <div class="text-muted" style="font-size:11px">Con deuda</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- CARD PRINCIPAL -->
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+
+        <!-- Filtros compactos -->
+        <form method="GET" class="d-flex gap-2 flex-wrap align-items-center mb-3">
+            <select name="estado" class="form-select form-select-sm" style="width:150px">
+                <option value="">Estado pago</option>
+                <option value="sin_pago"  {% if estado_sel == 'sin_pago'  %}selected{% endif %}>Sin pago</option>
+                <option value="parcial"   {% if estado_sel == 'parcial'   %}selected{% endif %}>Parcial</option>
+                <option value="vencido"   {% if estado_sel == 'vencido'   %}selected{% endif %}>Vencido</option>
+                <option value="pagado"    {% if estado_sel == 'pagado'    %}selected{% endif %}>Pagado</option>
+            </select>
+            <input type="text" name="dni"
+                   class="form-control form-control-sm"
+                   style="width:110px" placeholder="DNI" value="{{ dni }}">
+            <button type="submit" class="btn btn-primary btn-sm">
+                <i class="fas fa-search"></i>
+            </button>
+            {% if estado_sel or dni %}
+            <a href="{% url 'reporte_ciclo' ciclo.id %}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-times"></i>
+            </a>
+            {% endif %}
+        </form>
+
+        <!-- Tabla por matrícula -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th>Alumno</th>
+                        <th class="text-end">Total ciclo</th>
+                        <th class="text-end">Pagado</th>
+                        <th class="text-end">Deuda</th>
+                        <th>Próx. pago</th>
+                        <th>Estado</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for m in matriculas %}
+                    <tr>
+                        <td class="text-muted small">{{ matriculas.start_index|add:forloop.counter0 }}</td>
+
+                        <td>
+                            <div class="fw-semibold">{{ m.alumno }}</div>
+                            <small class="text-muted">DNI: {{ m.alumno.dni }}</small>
+                        </td>
+
+                        <td class="text-end">S/. {{ m.ciclo.precio }}</td>
+
+                        <td class="text-end">
+                            <span class="fw-semibold text-success">S/. {{ m.total_pagado_db }}</span>
+                        </td>
+
+                        <td class="text-end">
+                            {% if m.deuda_db > 0 %}
+                                <span class="fw-bold text-danger">S/. {{ m.deuda_db }}</span>
+                            {% else %}
+                                <span class="text-success"><i class="fas fa-check"></i> 0</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if m.proximo_pago %}
+                                <small>{{ m.proximo_pago|date:"d/m/Y" }}</small>
+                            {% else %}
+                                <small class="text-muted">—</small>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if m.estado_pago == 'vencido' %}
+                                <span class="badge bg-danger">Vencido</span>
+                            {% elif m.estado_pago == 'parcial' %}
+                                <span class="badge bg-warning">Parcial</span>
+                            {% elif m.estado_pago == 'sin_pago' %}
+                                <span class="badge bg-danger" style="opacity:.75">Sin pago</span>
+                            {% else %}
+                                <span class="badge bg-success">Pagado</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            <button type="button"
+                                    class="btn btn-sm btn-outline-secondary"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalHistorial"
+                                    title="Ver historial de pagos"
+                                    data-alumno="{{ m.alumno }}"
+                                    data-ciclo="{{ m.ciclo.nombre }}"
+                                    data-total="{{ m.ciclo.precio }}"
+                                    data-pagado="{{ m.total_pagado_db }}"
+                                    data-deuda="{{ m.deuda_db }}"
+                                    data-estado="{{ m.estado_pago }}"
+                                    data-pagos="{{ m.pagos_json }}">
+                                <i class="fas fa-history me-1"></i>Historial
+                            </button>
+                        </td>
+
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center text-muted py-5">
+                            <i class="fas fa-inbox fa-2x d-block mb-2"></i>
+                            No hay matrículas con los filtros aplicados.
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Paginación -->
+        {% if matriculas.paginator.num_pages > 1 %}
+        <div class="d-flex justify-content-center align-items-center gap-2 mt-3">
+            {% if matriculas.has_previous %}
+                <a class="btn btn-outline-primary btn-sm"
+                   href="?page={{ matriculas.previous_page_number }}&estado={{ estado_sel }}&dni={{ dni }}">
+                    ← Anterior
+                </a>
+            {% endif %}
+            <span class="text-muted small">
+                Página {{ matriculas.number }} de {{ matriculas.paginator.num_pages }}
+            </span>
+            {% if matriculas.has_next %}
+                <a class="btn btn-outline-primary btn-sm"
+                   href="?page={{ matriculas.next_page_number }}&estado={{ estado_sel }}&dni={{ dni }}">
+                    Siguiente →
+                </a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+
+
+<!-- MODAL HISTORIAL DE PAGOS -->
+<div class="modal fade" id="modalHistorial" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+
+            <div class="modal-header border-0 pb-1 pt-3 px-4">
+                <div>
+                    <div class="fw-bold" id="mh-alumno" style="font-size:15px"></div>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <small class="text-muted" id="mh-ciclo"></small>
+                        <span id="mh-badge"></span>
+                    </div>
+                </div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="px-4 pt-2 pb-0">
+                <div class="d-flex gap-3" style="font-size:12.5px">
+                    <span class="text-muted">
+                        Total: <strong id="mh-total" class="text-dark ms-1"></strong>
+                    </span>
+                    <span class="text-muted">
+                        Pagado: <strong id="mh-pagado" class="text-success ms-1"></strong>
+                    </span>
+                    <span class="text-muted">
+                        Deuda: <strong id="mh-deuda" class="ms-1"></strong>
+                    </span>
+                </div>
+            </div>
+
+            <div class="modal-body px-4 pt-3 pb-2">
+                <div id="mh-sin-pagos" class="text-center text-muted py-4 d-none">
+                    <i class="fas fa-receipt fa-2x d-block mb-2 opacity-25"></i>
+                    Sin pagos registrados aún
+                </div>
+                <div class="table-responsive" id="mh-tabla-wrapper">
+                    <table class="table table-hover align-middle mb-0" style="font-size:13.5px">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Fecha</th>
+                                <th class="text-end">Monto</th>
+                                <th>Método</th>
+                                <th>Cajero</th>
+                                <th class="text-center">Comprobante</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mh-tbody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="modal-footer border-0 pt-0 pb-3 px-4">
+                <button type="button" class="btn btn-outline-secondary btn-sm"
+                        data-bs-dismiss="modal">Cerrar</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const badgeMap = {
+    vencido:  ['danger',  'Vencido'],
+    parcial:  ['warning', 'Parcial'],
+    sin_pago: ['danger',  'Sin pago'],
+    pagado:   ['success', 'Pagado'],
+};
+
+document.getElementById('modalHistorial').addEventListener('show.bs.modal', function (e) {
+    const b = e.relatedTarget;
+
+    document.getElementById('mh-alumno').textContent = b.dataset.alumno;
+    document.getElementById('mh-ciclo').textContent  = b.dataset.ciclo;
+    document.getElementById('mh-total').textContent  = 'S/. ' + b.dataset.total;
+    document.getElementById('mh-pagado').textContent = 'S/. ' + b.dataset.pagado;
+
+    const deuda = parseFloat(b.dataset.deuda);
+    const deudaEl = document.getElementById('mh-deuda');
+    deudaEl.textContent = 'S/. ' + b.dataset.deuda;
+    deudaEl.className   = deuda > 0 ? 'ms-1 text-danger fw-bold' : 'ms-1 text-success';
+
+    const [color, label] = badgeMap[b.dataset.estado] || ['secondary', b.dataset.estado];
+    document.getElementById('mh-badge').innerHTML =
+        `<span class="badge bg-${color}" style="font-size:11px">${label}</span>`;
+
+    let pagos = [];
+    try { pagos = JSON.parse(b.getAttribute('data-pagos')); } catch (_) {}
+
+    const sinPagos  = document.getElementById('mh-sin-pagos');
+    const tablaWrap = document.getElementById('mh-tabla-wrapper');
+    const tbody     = document.getElementById('mh-tbody');
+    tbody.innerHTML = '';
+
+    if (!pagos.length) {
+        sinPagos.classList.remove('d-none');
+        tablaWrap.classList.add('d-none');
+        return;
+    }
+
+    sinPagos.classList.add('d-none');
+    tablaWrap.classList.remove('d-none');
+
+    pagos.forEach(function (p) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${p.fecha}</td>
+            <td class="text-end fw-semibold">S/. ${p.monto}</td>
+            <td>${p.metodo}</td>
+            <td class="text-muted small">${p.cajero}</td>
+            <td class="text-center">
+                <a href="${p.boleta_url}" target="_blank"
+                   class="btn btn-sm btn-outline-secondary py-0 px-2"
+                   title="Descargar comprobante">
+                    <i class="fas fa-file-pdf text-danger"></i>
+                </a>
+            </td>`;
+        tbody.appendChild(tr);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,376 @@
+/* ═══════════════════════════════════════════════════════════
+   SISTEMA.CSS — Newton en Red
+   Estilos globales compartidos — identidad visual unificada
+   Referencia: diseño Registro Académico
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── PAGE HEADERS ─────────────────────────────────────────── */
+h4.fw-bold, .fw-bold.mb-0 {
+    font-size: 17px;
+    color: #0f172a;
+    letter-spacing: -.2px;
+}
+
+.content .d-flex.justify-content-between.align-items-center {
+    margin-bottom: 20px !important;
+}
+
+/* ── CARDS ────────────────────────────────────────────────── */
+.card {
+    border-radius: 10px !important;
+    border: 1px solid #e8edf3 !important;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05), 0 4px 16px rgba(0,0,0,.03) !important;
+    background: #fff;
+}
+
+.card-body {
+    padding: 18px 20px;
+}
+
+/* Stat icon circles — override Bootstrap p-3 con tamaño fijo */
+.card-body .rounded-circle {
+    width: 44px;
+    height: 44px;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0 !important;
+}
+
+/* ── TABLES ───────────────────────────────────────────────── */
+.table {
+    font-size: 13.5px;
+    color: #374151;
+    margin-bottom: 0;
+    --bs-table-hover-bg: #f8fafc;
+    --bs-table-hover-color: #374151;
+}
+
+.table thead th {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .55px;
+    text-transform: uppercase;
+    color: #64748b;
+    padding: 10px 14px;
+    border-bottom: 1px solid #e2e8f0 !important;
+    white-space: nowrap;
+    background: #f8fafc;
+    border-top: none;
+}
+
+.table-light, .table-light > * {
+    background-color: #f8fafc !important;
+    --bs-table-bg: #f8fafc;
+}
+
+.table > tbody > tr > td {
+    padding: 10px 14px;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f5f9;
+    color: #374151;
+}
+
+.table > tbody > tr:last-child > td {
+    border-bottom: none;
+}
+
+.table-hover > tbody > tr:hover > td {
+    background: #f8fafc;
+}
+
+.table .fw-semibold {
+    font-size: 13.5px;
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.table small.text-muted {
+    font-size: 12px;
+    color: #94a3b8 !important;
+}
+
+.table .text-muted.small {
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* ── BADGES ───────────────────────────────────────────────── */
+.badge {
+    font-size: 11px !important;
+    font-weight: 600 !important;
+    padding: 4px 9px !important;
+    border-radius: 6px !important;
+    letter-spacing: .15px;
+}
+
+/* Soft-pill badges — reemplazo del sólido Bootstrap */
+.badge.bg-success {
+    background: #dcfce7 !important;
+    color: #15803d !important;
+}
+
+.badge.bg-warning {
+    background: #fef9c3 !important;
+    color: #a16207 !important;
+}
+
+.badge.bg-danger {
+    background: #fee2e2 !important;
+    color: #b91c1c !important;
+}
+
+.badge.bg-secondary {
+    background: #f1f5f9 !important;
+    color: #475569 !important;
+}
+
+.badge.bg-primary {
+    background: #dbeafe !important;
+    color: #1d4ed8 !important;
+}
+
+.badge.bg-info {
+    background: #e0f2fe !important;
+    color: #0369a1 !important;
+}
+
+/* ── BUTTONS ──────────────────────────────────────────────── */
+.btn {
+    font-size: 13.5px;
+    font-weight: 500;
+    border-radius: 7px;
+    transition: all .15s ease;
+    font-family: inherit;
+}
+
+.btn:active { transform: scale(.98); }
+
+.btn-sm {
+    font-size: 12.5px !important;
+    padding: 5px 12px !important;
+    border-radius: 6px !important;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+}
+
+.btn-primary {
+    background: #2563eb;
+    border-color: #2563eb;
+}
+.btn-primary:hover {
+    background: #1d4ed8;
+    border-color: #1d4ed8;
+    box-shadow: 0 3px 10px rgba(37,99,235,.22);
+}
+.btn-primary:focus-visible {
+    box-shadow: 0 0 0 3px rgba(37,99,235,.25);
+}
+
+.btn-success {
+    background: #16a34a;
+    border-color: #16a34a;
+}
+.btn-success:hover {
+    background: #15803d;
+    border-color: #15803d;
+    box-shadow: 0 3px 10px rgba(22,163,74,.2);
+}
+
+.btn-outline-primary {
+    color: #2563eb;
+    border-color: #bfdbfe;
+}
+.btn-outline-primary:hover {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border-color: #93c5fd;
+}
+
+.btn-outline-secondary {
+    color: #64748b;
+    border-color: #e2e8f0;
+    background: transparent;
+}
+.btn-outline-secondary:hover {
+    background: #f8fafc;
+    color: #374151;
+    border-color: #94a3b8;
+}
+
+.btn-outline-danger {
+    color: #dc2626;
+    border-color: #fecaca;
+}
+.btn-outline-danger:hover {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-color: #fca5a5;
+}
+
+.btn-outline-success {
+    color: #16a34a;
+    border-color: #bbf7d0;
+}
+.btn-outline-success:hover {
+    background: #f0fdf4;
+    color: #15803d;
+    border-color: #86efac;
+}
+
+/* ── FORM CONTROLS ────────────────────────────────────────── */
+.form-control,
+.form-select {
+    border: 1.5px solid #e2e8f0;
+    border-radius: 7px;
+    font-size: 13.5px;
+    color: #1e293b;
+    transition: border-color .15s, box-shadow .15s;
+    outline: none;
+    font-family: inherit;
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+}
+
+.form-control-sm,
+.form-select-sm {
+    border-radius: 6px;
+    font-size: 13px;
+    height: 32px;
+}
+
+.form-label.small {
+    font-size: 12.5px;
+    font-weight: 500;
+    color: #374151;
+}
+
+/* ── ALERTS ───────────────────────────────────────────────── */
+.alert {
+    border-radius: 8px;
+    font-size: 13.5px;
+    padding: 10px 16px;
+    margin-bottom: 16px;
+    border: none;
+}
+
+.alert-success {
+    background: #f0fdf4;
+    color: #15803d;
+    border-left: 3px solid #4ade80 !important;
+}
+
+.alert-danger,
+.alert-error {
+    background: #fef2f2;
+    color: #b91c1c;
+    border-left: 3px solid #f87171 !important;
+}
+
+.alert-warning {
+    background: #fffbeb;
+    color: #a16207;
+    border-left: 3px solid #fbbf24 !important;
+}
+
+.alert-info {
+    background: #f0f9ff;
+    color: #0369a1;
+    border-left: 3px solid #38bdf8 !important;
+}
+
+/* ── MODALS ───────────────────────────────────────────────── */
+.modal-content {
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 20px 60px rgba(0,0,0,.12);
+}
+
+.modal-header {
+    padding: 18px 22px 10px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.modal-body {
+    padding: 14px 22px 16px;
+}
+
+.modal-footer {
+    padding: 10px 22px 16px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.modal-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+/* ── DROPDOWN MENU ────────────────────────────────────────── */
+.dropdown-menu {
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 8px 24px rgba(0,0,0,.1);
+    font-size: 13.5px;
+    padding: 4px;
+}
+
+.dropdown-item {
+    border-radius: 6px;
+    padding: 7px 12px;
+    font-size: 13.5px;
+    transition: background .12s;
+}
+
+.dropdown-item:hover {
+    background: #f8fafc;
+}
+
+/* ── PAGINATION ───────────────────────────────────────────── */
+.d-flex.justify-content-center.align-items-center.gap-2.mt-3 {
+    margin-top: 14px !important;
+    padding-top: 10px;
+    border-top: 1px solid #f1f5f9;
+}
+
+.d-flex.justify-content-center.align-items-center.gap-2.mt-3 .text-muted.small {
+    font-size: 12.5px;
+}
+
+/* ── CARD INNER TABLE HEADER ──────────────────────────────── */
+.card-body h6.fw-semibold {
+    font-size: 13.5px;
+    color: #374151;
+    font-weight: 600;
+}
+
+/* ── EMPTY STATE ──────────────────────────────────────────── */
+.table td.text-center.text-muted.py-4 {
+    color: #94a3b8 !important;
+    font-size: 13.5px;
+}
+
+.table td.text-center.text-muted.py-4 a {
+    color: #2563eb;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.table td.text-center.text-muted.py-4 a:hover {
+    text-decoration: underline;
+}
+
+/* ── GLOBAL UTILITY ───────────────────────────────────────── */
+.text-muted { color: #64748b !important; }
+
+.bg-light.rounded-3 {
+    background: #f8fafc !important;
+    border: 1px solid #f1f5f9;
+    border-radius: 8px !important;
+}

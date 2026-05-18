@@ -8,8 +8,8 @@
         <h4 class="mb-0 fw-bold">Registro de Pago</h4>
         <small class="text-muted">{{ matricula.alumno }} — {{ matricula.ciclo.nombre }}</small>
     </div>
-    <a href="{% url 'lista_pagos' %}" class="btn btn-outline-secondary btn-sm">
-        <i class="fas fa-arrow-left me-1"></i> Volver
+    <a href="{% url 'matriculas' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-arrow-left me-1"></i> Volver a Matrículas
     </a>
 </div>
 
@@ -127,7 +127,8 @@
         <form method="POST" id="form-pago">
             {% csrf_token %}
             <div class="row g-3 align-items-end">
-                <div class="col-md-3">
+
+                <div class="col-md-2">
                     <label class="form-label fw-semibold small">Monto (S/.)</label>
                     <input type="number" name="monto" id="monto"
                            class="form-control"
@@ -136,98 +137,127 @@
                            oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'El monto es obligatorio' : 'Ingresa un monto mayor a 0')"
                            oninput="this.setCustomValidity('')">
                 </div>
-                <div class="col-md-3">
+
+                <div class="col-md-2">
                     <label class="form-label fw-semibold small">Método de pago</label>
                     <select name="metodo_pago" class="form-select" required
                         oninvalid="this.setCustomValidity('Selecciona un método de pago')"
                         oninput="this.setCustomValidity('')">
                         <option value="">Seleccione</option>
-                        <option value="efectivo" {% if metodo_prev == "efectivo" %}selected{% endif %}>Efectivo</option>
-                        <option value="yape" {% if metodo_prev == "yape" %}selected{% endif %}>Yape</option>
+                        <option value="efectivo"      {% if metodo_prev == "efectivo" %}selected{% endif %}>Efectivo</option>
+                        <option value="yape"          {% if metodo_prev == "yape" %}selected{% endif %}>Yape</option>
                         <option value="transferencia" {% if metodo_prev == "transferencia" %}selected{% endif %}>Transferencia</option>
                     </select>
                 </div>
-                <div class="col-md-4">
+
+                <div class="col-md-2">
                     <label class="form-label fw-semibold small">
-                        Apoderado
+                        Próximo pago
                         <span class="text-muted fw-normal">(opcional)</span>
                     </label>
-                    <input type="text" name="apoderado" class="form-control"
-                           placeholder="Nombre del responsable">
+                    <input type="date" name="proximo_pago" class="form-control"
+                           value="{{ matricula.proximo_pago|date:'Y-m-d' }}">
                 </div>
-                <div class="col-md-2">
+
+                {% if apoderado_nombre is not None %}
+                <div class="col-md-3">
+                    <label class="form-label fw-semibold small">Apoderado</label>
+                    <input type="text" name="apoderado" class="form-control"
+                           value="{{ apoderado_nombre }}"
+                           placeholder="Nombre del apoderado">
+                </div>
+                <div class="col-md-3">
+                {% else %}
+                <div class="col-md-6">
+                {% endif %}
                     <button type="submit" class="btn btn-success w-100">
                         <i class="fas fa-save me-1"></i> Registrar pago
                     </button>
                 </div>
+
             </div>
         </form>
     </div>
 </div>
-{% endif %}
-
-<!-- ── 4. HISTORIAL ──────────────────────────────────────────── -->
-<div class="card border-0" style="box-shadow:0 2px 10px rgba(0,0,0,.07);">
-    <div class="card-header border-0 fw-semibold py-2 px-4"
-         style="background:#f1f5f9;color:#334155;border-radius:calc(.375rem - 1px) calc(.375rem - 1px) 0 0;border-bottom:1px solid #e2e8f0;">
-        <i class="fas fa-history me-2 text-muted"></i> Historial de pagos
-    </div>
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead style="background:#f8fafc;">
-                    <tr>
-                        <th class="ps-4 py-3 text-muted fw-semibold" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Fecha</th>
-                        <th class="text-end py-3 text-muted fw-semibold" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Monto</th>
-                        <th class="py-3 text-muted fw-semibold" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Método</th>
-                        <th class="py-3 text-muted fw-semibold" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Cajero</th>
-                        <th class="py-3 text-muted fw-semibold" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Apoderado</th>
-                        <th class="text-center py-3 text-muted fw-semibold" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;">Estado</th>
-                        <th class="text-center py-3 text-muted fw-semibold" style="font-size:12px;text-transform:uppercase;letter-spacing:.5px;">PDF</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for p in pagos %}
-                    <tr>
-                        <td class="ps-4">{{ p.fecha_pago|date:"d/m/Y" }}</td>
-                        <td class="text-end fw-semibold">S/. {{ p.monto }}</td>
-                        <td>{{ p.get_metodo_pago_display }}</td>
-                        <td class="small text-muted">{{ p.registrado_por.user.username }}</td>
-                        <td class="small text-muted">{{ p.apoderado|default:"—" }}</td>
-                        <td class="text-center">
-                            {% if deuda <= 0 %}
-                            <span class="badge bg-success">Pagado</span>
-                            {% elif total_pagado > 0 %}
-                            <span class="badge bg-warning text-dark">Parcial</span>
-                            {% else %}
-                            <span class="badge bg-danger">Pendiente</span>
-                            {% endif %}
-                        </td>
-                        <td class="text-center">
-                            <a href="{% url 'boleta_pdf' p.id %}"
-                               class="btn btn-sm btn-outline-secondary"
-                               title="Descargar comprobante PDF">
-                                <i class="fas fa-file-pdf"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% empty %}
-                    <tr>
-                        <td colspan="7" class="text-center text-muted py-5">
-                            <i class="fas fa-receipt fa-2x d-block mb-2 opacity-25"></i>
-                            No hay pagos registrados aún
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+{% else %}
+<div class="card border-0 shadow-sm">
+    <div class="card-body text-center py-4">
+        <i class="fas fa-check-circle fa-2x text-success mb-2 d-block"></i>
+        <div class="fw-semibold" style="font-size:15px">Matrícula completamente pagada</div>
+        <div class="text-muted small mt-1">
+            El historial de pagos está disponible en
+            <a href="{% url 'lista_pagos' %}" class="text-decoration-none">Reportes Financieros</a>.
         </div>
     </div>
 </div>
+{% endif %}
 
 {% endblock %}
 
 {% block extra_js %}
+
+{% if total_pagado == 0 and deuda > 0 %}
+<script>
+(function () {
+    const CANCELAR_URL = "{% url 'cancelar_matricula_nueva' matricula.id %}";
+    const CSRF = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    let formSubmitting   = false;
+    let cancelledViaLink = false;
+
+    // ── Capa 1: interceptar TODOS los <a> de la página ──────
+    document.addEventListener('click', function (e) {
+        if (formSubmitting || cancelledViaLink) return;
+        const link = e.target.closest('a[href]');
+        if (!link) return;
+        const href = link.getAttribute('href');
+        if (!href || href.startsWith('javascript:') || href === '#') return;
+
+        e.preventDefault();
+        e.stopPropagation();
+
+        Swal.fire({
+            title: 'Pago inicial requerido',
+            html: 'Si salís sin registrar un pago, <strong>la matrícula se cancelará automáticamente</strong>.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#dc3545',
+            cancelButtonColor: '#16a34a',
+            confirmButtonText: 'Sí, cancelar matrícula',
+            cancelButtonText: 'Registrar pago',
+            reverseButtons: true,
+        }).then(function (result) {
+            if (!result.isConfirmed) return;
+            cancelledViaLink = true;
+            window.removeEventListener('beforeunload', handleBeforeUnload);
+            fetch(CANCELAR_URL, {
+                method: 'POST',
+                headers: { 'X-CSRFToken': CSRF },
+                body: new URLSearchParams({ csrfmiddlewaretoken: CSRF }),
+            }).finally(function () {
+                window.location.href = href;
+            });
+        });
+    }, true); // capture phase para interceptar antes que otros listeners
+
+    // ── Capa 2: beforeunload + sendBeacon ───────────────────
+    function handleBeforeUnload(e) {
+        if (formSubmitting || cancelledViaLink) return;
+        const data = new FormData();
+        data.append('csrfmiddlewaretoken', CSRF);
+        navigator.sendBeacon(CANCELAR_URL, data);
+        e.preventDefault();
+        e.returnValue = '';
+    }
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // Desactivar bloqueo cuando el formulario se envía
+    document.getElementById('form-pago').addEventListener('submit', function () {
+        formSubmitting = true;
+    });
+})();
+</script>
+{% endif %}
+
 {% if request.GET.ok %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {

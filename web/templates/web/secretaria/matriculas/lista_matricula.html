@@ -5,88 +5,22 @@
 
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
-        <h4 class="mb-0 fw-bold">Matrículas</h4>
-        <small class="text-muted">
-            <i class="fas fa-graduation-cap me-1"></i> Módulo Académico — Gestión de inscripciones
-        </small>
+        <h4 class="mb-0 fw-bold">Seguimiento de Matrículas</h4>
+        <small class="text-muted">Pagos pendientes y vencimientos activos</small>
     </div>
-    <div class="d-flex gap-2">
-        <a href="{% url 'exportar_excel' %}" class="btn btn-success btn-sm">
-            <i class="fas fa-file-excel me-1"></i> Exportar Excel
-        </a>
-        <a href="{% url 'nuevo_registro' %}" class="btn btn-primary">
-            <i class="fas fa-plus me-1"></i> Nueva Matrícula
-        </a>
-    </div>
+    <a href="{% url 'matriculas_historial' %}" class="btn btn-outline-secondary btn-sm">
+        <i class="fas fa-archive me-1"></i> Historial pagado
+        {% if historial_count %}
+            <span class="badge bg-secondary ms-1">{{ historial_count }}</span>
+        {% endif %}
+    </a>
 </div>
 
-<!-- CARDS ACADÉMICAS -->
-<div class="row g-3 mb-4">
-
-    <div class="col-md-3 col-sm-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="rounded-circle bg-primary bg-opacity-10 p-3">
-                    <i class="fas fa-book fa-lg text-primary"></i>
-                </div>
-                <div>
-                    <div class="fs-4 fw-bold">{{ total_matriculas }}</div>
-                    <small class="text-muted">Total Matrículas</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3 col-sm-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="rounded-circle bg-success bg-opacity-10 p-3">
-                    <i class="fas fa-check-circle fa-lg text-success"></i>
-                </div>
-                <div>
-                    <div class="fs-4 fw-bold">{{ activas }}</div>
-                    <small class="text-muted">Matrículas Activas</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3 col-sm-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="rounded-circle bg-secondary bg-opacity-10 p-3">
-                    <i class="fas fa-archive fa-lg text-secondary"></i>
-                </div>
-                <div>
-                    <div class="fs-4 fw-bold">{{ finalizadas }}</div>
-                    <small class="text-muted">Finalizadas</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="col-md-3 col-sm-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body d-flex align-items-center gap-3">
-                <div class="rounded-circle bg-warning bg-opacity-10 p-3">
-                    <i class="fas fa-clock fa-lg text-warning"></i>
-                </div>
-                <div>
-                    <div class="fs-4 fw-bold">{{ pendientes }}</div>
-                    <small class="text-muted">Pendientes</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-</div>
-
-<!-- TABLA -->
 <div class="card border-0 shadow-sm">
     <div class="card-body">
 
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="fw-semibold mb-0">Matrículas Registradas</h6>
+            <h6 class="fw-semibold mb-0">Matrículas con deuda pendiente</h6>
             <form method="GET" class="d-flex gap-2">
                 <input type="text" name="dni" class="form-control form-control-sm"
                        placeholder="Buscar por DNI" value="{{ request.GET.dni }}">
@@ -107,10 +41,11 @@
                     <tr>
                         <th>#</th>
                         <th>Alumno</th>
+                        <th>Registrado por</th>
                         <th>Ciclo</th>
-                        <th>Fecha Matrícula</th>
-                        <th>Estado</th>
-                        <th>Sede</th>
+                        <th>Fecha matrícula</th>
+                        <th>Próx. pago</th>
+                        <th>Estado pago</th>
                         <th>Acciones</th>
                     </tr>
                 </thead>
@@ -124,52 +59,77 @@
                             <small class="text-muted">DNI: {{ m.alumno.dni }}</small>
                         </td>
 
-                        <td>{{ m.ciclo.nombre }}</td>
+                        <td>
+                            <small class="text-muted">{{ m.registrado_por.user.username }}</small>
+                        </td>
+
+                        <td>
+                            <div>{{ m.ciclo.nombre }}</div>
+                            <small class="text-muted">Vence: {{ m.ciclo.fecha_fin|date:"d/m/Y" }}</small>
+                        </td>
 
                         <td>
                             <small>{{ m.fecha_matricula|date:"d/m/Y" }}</small>
                         </td>
 
                         <td>
-                            {% if m.estado_academico == 'activa' %}
-                                <span class="badge bg-success">Activa</span>
-                            {% elif m.estado_academico == 'finalizada' %}
-                                <span class="badge bg-secondary">Finalizada</span>
+                            {% if m.proximo_pago %}
+                                <small>{{ m.proximo_pago|date:"d/m/Y" }}</small>
                             {% else %}
-                                <span class="badge bg-warning text-dark">Pendiente</span>
+                                <small class="text-muted">—</small>
                             {% endif %}
                         </td>
 
                         <td>
-                            <small class="text-muted">{{ m.alumno.sede.nombre }}</small>
+                            {% if m.estado_pago == 'vencido' %}
+                                <span class="badge bg-danger">Vencido</span>
+                            {% elif m.estado_pago == 'parcial' %}
+                                <span class="badge bg-warning">Parcial</span>
+                            {% elif m.estado_pago == 'sin_pago' %}
+                                <span class="badge bg-danger" style="opacity:.75">Sin pago</span>
+                            {% else %}
+                                <span class="badge bg-success">Pagado</span>
+                            {% endif %}
                         </td>
 
                         <td>
-                            <div class="d-flex gap-1">
-                                <button type="button"
-                                        class="btn btn-sm btn-outline-primary btn-ver-matricula"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#modalVerMatricula"
-                                        data-alumno="{{ m.alumno }}"
-                                        data-dni="{{ m.alumno.dni }}"
-                                        data-ciclo="{{ m.ciclo.nombre }}"
-                                        data-fecha="{{ m.fecha_matricula|date:'d/m/Y' }}"
-                                        data-sede="{{ m.alumno.sede.nombre }}"
-                                        data-estado="{{ m.estado_academico }}">
-                                    <i class="fas fa-eye me-1"></i> Ver
-                                </button>
-                                <a href="{% url 'pagos' m.id %}" class="btn btn-sm btn-success">
-                                    <i class="fas fa-coins me-1"></i> Ir a pagos
+                            <div class="d-flex gap-1 align-items-center">
+
+                                <!-- Registrar / Ver pagos -->
+                                <a href="{% url 'pagos' m.id %}"
+                                   class="btn btn-sm {% if m.deuda_db > 0 %}btn-success{% else %}btn-outline-secondary{% endif %}"
+                                   data-bs-toggle="tooltip"
+                                   data-bs-title="{% if m.deuda_db > 0 %}Registrar pago{% else %}Ver historial{% endif %}">
+                                    <i class="fas {% if m.deuda_db > 0 %}fa-money-bill-wave{% else %}fa-eye{% endif %}"></i>
                                 </a>
+
+                                <!-- Contacto rápido -->
+                                <button type="button"
+                                        class="btn btn-sm btn-outline-secondary"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalContacto"
+                                        title="Contacto rápido"
+                                        data-nombre="{{ m.alumno.nombres }} {{ m.alumno.apellido_paterno }} {{ m.alumno.apellido_materno }}"
+                                        data-dni="{{ m.alumno.dni }}"
+                                        data-celular="{{ m.alumno.celular }}"
+                                        data-apo-celular="{{ m.alumno.apoderado.celular|default:'' }}"
+                                        data-ciclo="{{ m.ciclo.nombre }}"
+                                        data-deuda="{{ m.deuda_db }}"
+                                        data-total-pagado="{{ m.total_pagado_db }}"
+                                        data-estado="{{ m.estado_pago }}"
+                                        data-ultimo-pago="{% if m.ultimo_pago %}S/. {{ m.ultimo_pago.monto }} · {{ m.ultimo_pago.fecha_pago|date:'d/m/Y' }}{% endif %}">
+                                    <i class="fas fa-phone-alt"></i>
+                                </button>
+
                             </div>
                         </td>
 
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="7" class="text-center text-muted py-4">
-                            <i class="fas fa-inbox fa-2x d-block mb-2"></i>
-                            No hay matrículas registradas
+                        <td colspan="8" class="text-center text-muted py-5">
+                            <i class="fas fa-check-circle fa-2x d-block mb-2 text-success opacity-50"></i>
+                            No hay matrículas con deuda pendiente.
                         </td>
                     </tr>
                     {% endfor %}
@@ -177,7 +137,6 @@
             </table>
         </div>
 
-        <!-- PAGINACIÓN -->
         {% if matriculas.paginator.num_pages > 1 %}
         <div class="d-flex justify-content-center align-items-center gap-2 mt-3">
             {% if matriculas.has_previous %}
@@ -201,73 +160,132 @@
     </div>
 </div>
 
-<!-- MODAL VER MATRÍCULA (DETALLE ACADÉMICO) -->
-<div class="modal fade" id="modalVerMatricula" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+
+<!-- MODAL: CONTACTO RÁPIDO -->
+<div class="modal fade" id="modalContacto" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:420px">
         <div class="modal-content border-0 shadow">
-            <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title fw-bold">
-                    <i class="fas fa-graduation-cap text-primary me-2"></i>Detalle Académico
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body pt-2">
-                <div class="row g-3">
-                    <div class="col-12">
-                        <small class="text-muted d-block">Alumno</small>
-                        <div class="fw-semibold fs-6" id="modal-alumno"></div>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted d-block">DNI</small>
-                        <div id="modal-dni"></div>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted d-block">Sede</small>
-                        <div id="modal-sede"></div>
-                    </div>
-                    <div class="col-12">
-                        <small class="text-muted d-block">Ciclo</small>
-                        <div id="modal-ciclo"></div>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted d-block">Fecha Matrícula</small>
-                        <div id="modal-fecha"></div>
-                    </div>
-                    <div class="col-6">
-                        <small class="text-muted d-block">Estado Académico</small>
-                        <div id="modal-estado"></div>
+
+            <div class="modal-header border-0 pb-1 pt-3 px-4">
+                <div>
+                    <div class="fw-bold" id="mc-nombre" style="font-size:15px"></div>
+                    <div class="d-flex align-items-center gap-2 mt-1">
+                        <small class="text-muted" id="mc-dni"></small>
+                        <span id="mc-badge"></span>
                     </div>
                 </div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-footer border-0 pt-0">
-                <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">
-                    Cerrar
-                </button>
+
+            <div class="modal-body px-4 pt-2 pb-3">
+
+                <!-- Deuda -->
+                <div class="rounded-3 p-3 mb-3" style="background:#f8fafc;border:1px solid #f1f5f9">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Ciclo</span>
+                        <span class="fw-semibold small" id="mc-ciclo"></span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <span class="text-muted" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Deuda</span>
+                        <span class="fw-bold text-danger" id="mc-deuda"></span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Último pago</span>
+                        <span class="small text-muted" id="mc-ultimo-pago"></span>
+                    </div>
+                </div>
+
+                <!-- Celular alumno -->
+                <div class="mb-2">
+                    <div class="text-muted mb-1" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Alumno</div>
+                    <div class="d-flex align-items-center justify-content-between gap-2 p-2 rounded-3"
+                         style="background:#f1f5f9">
+                        <span class="fw-semibold" id="mc-celular" style="font-size:15px;letter-spacing:.5px"></span>
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                onclick="copiarNumero('mc-celular', this)"
+                                style="font-size:11px">
+                            <i class="fas fa-copy me-1"></i>Copiar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Celular apoderado -->
+                <div id="mc-apo-section" class="d-none">
+                    <div class="text-muted mb-1" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Apoderado</div>
+                    <div class="d-flex align-items-center justify-content-between gap-2 p-2 rounded-3"
+                         style="background:#f1f5f9">
+                        <span class="fw-semibold" id="mc-apo-celular" style="font-size:15px;letter-spacing:.5px"></span>
+                        <button type="button"
+                                class="btn btn-sm btn-outline-secondary py-0 px-2"
+                                onclick="copiarNumero('mc-apo-celular', this)"
+                                style="font-size:11px">
+                            <i class="fas fa-copy me-1"></i>Copiar
+                        </button>
+                    </div>
+                </div>
+
             </div>
+
         </div>
     </div>
 </div>
 
-<script>
-document.querySelectorAll('.btn-ver-matricula').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-        document.getElementById('modal-alumno').textContent = this.dataset.alumno;
-        document.getElementById('modal-dni').textContent = this.dataset.dni;
-        document.getElementById('modal-ciclo').textContent = this.dataset.ciclo;
-        document.getElementById('modal-fecha').textContent = this.dataset.fecha;
-        document.getElementById('modal-sede').textContent = this.dataset.sede;
+{% endblock %}
 
-        const estadoEl = document.getElementById('modal-estado');
-        const estado = this.dataset.estado;
-        if (estado === 'activa') {
-            estadoEl.innerHTML = '<span class="badge bg-success">Activa</span>';
-        } else if (estado === 'finalizada') {
-            estadoEl.innerHTML = '<span class="badge bg-secondary">Finalizada</span>';
-        } else {
-            estadoEl.innerHTML = '<span class="badge bg-warning text-dark">Pendiente</span>';
-        }
+{% block extra_js %}
+<script>
+// Llenar modal de contacto
+document.getElementById('modalContacto').addEventListener('show.bs.modal', function (e) {
+    const b = e.relatedTarget;
+
+    document.getElementById('mc-nombre').textContent       = b.dataset.nombre;
+    document.getElementById('mc-dni').textContent          = 'DNI: ' + b.dataset.dni;
+    document.getElementById('mc-ciclo').textContent        = b.dataset.ciclo;
+    document.getElementById('mc-deuda').textContent        = 'S/. ' + b.dataset.deuda;
+    document.getElementById('mc-ultimo-pago').textContent  = b.dataset.ultimoPago || 'Sin pagos';
+    document.getElementById('mc-celular').textContent      = b.dataset.celular;
+
+    // Badge estado pago
+    const badgeMap = {
+        vencido:  ['danger',    'Vencido'],
+        parcial:  ['warning',   'Parcial'],
+        sin_pago: ['danger',    'Sin pago'],
+        pagado:   ['success',   'Pagado'],
+    };
+    const [color, label] = badgeMap[b.dataset.estado] || ['secondary', b.dataset.estado];
+    document.getElementById('mc-badge').innerHTML =
+        `<span class="badge bg-${color}" style="font-size:11px">${label}</span>`;
+
+    // Apoderado
+    const apoSection = document.getElementById('mc-apo-section');
+    if (b.dataset.apoCelular) {
+        apoSection.classList.remove('d-none');
+        document.getElementById('mc-apo-celular').textContent = b.dataset.apoCelular;
+    } else {
+        apoSection.classList.add('d-none');
+    }
+});
+
+// Copiar número al portapapeles
+function copiarNumero(id, btn) {
+    const num = document.getElementById(id).textContent.trim();
+    navigator.clipboard.writeText(num).then(function () {
+        const original = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-check me-1"></i>Copiado';
+        btn.classList.replace('btn-outline-secondary', 'btn-outline-success');
+        setTimeout(function () {
+            btn.innerHTML = original;
+            btn.classList.replace('btn-outline-success', 'btn-outline-secondary');
+        }, 1800);
+    });
+}
+
+// Tooltips
+document.addEventListener('DOMContentLoaded', function () {
+    document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(function (el) {
+        new bootstrap.Tooltip(el, { trigger: 'hover' });
     });
 });
 </script>
-
 {% endblock %}

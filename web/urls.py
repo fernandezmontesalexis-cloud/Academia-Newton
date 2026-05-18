@@ -2,7 +2,7 @@ from django.urls import path
 from .views.auth_views import login_view, logout_view
 from .views.dashboard_views import dashboard
 from .views.alumnos_views import (
-    lista_alumnos, detalle_alumno, editar_alumno,
+    lista_alumnos, lista_alumnos_otros, detalle_alumno, editar_alumno,
     desactivar_alumno, reactivar_alumno, renovar_matricula,
 )
 from .views.registro_views import (
@@ -17,7 +17,7 @@ from .views.registro_views import (
     crear_colegio,
 )
 
-from .views.matriculas_views import matriculas, exportar_excel
+from .views.matriculas_views import matriculas, matriculas_historial
 from .views.pagos_views import pagos
 from .views.reportes_views import reportes_sedes, reporte_sede_detalle, exportar_reporte_excel
 from .views.finanzas_views import finanzas, historial_completo, exportar_finanzas_excel
@@ -39,8 +39,10 @@ from .views.admin_views import (
     eliminar_ciclo,
     configuracion,
 )
-from .views.pagos_views import lista_pagos
-from .views.pagos_views import boleta_pdf
+from .views.pagos_views import (
+    lista_pagos, reporte_ciclo, exportar_reportes, boleta_pdf,
+    cancelar_matricula_nueva,
+)
 from .views.registro_views import  nuevo_registro
 
 urlpatterns = [
@@ -51,6 +53,7 @@ urlpatterns = [
     path("dashboard/", dashboard, name="dashboard"),
     # SECRETARIA - ALUMNOS
     path("secretaria/alumnos/", lista_alumnos, name="lista_alumnos"),
+    path("secretaria/alumnos/otros/", lista_alumnos_otros, name="lista_alumnos_otros"),
     path("secretaria/alumnos/<int:alumno_id>/", detalle_alumno, name="detalle_alumno"),
     path("secretaria/alumnos/<int:alumno_id>/editar/", editar_alumno, name="editar_alumno"),
     path("secretaria/alumnos/<int:alumno_id>/renovar/", renovar_matricula, name="renovar_matricula"),
@@ -86,9 +89,12 @@ urlpatterns = [
     ),
     # MATRÍCULAS Y PAGOS
     path("secretaria/matriculas/", matriculas, name="matriculas"),
-    path("secretaria/matriculas/exportar/", exportar_excel, name="exportar_excel"),
+    path("secretaria/matriculas/historial/", matriculas_historial, name="matriculas_historial"),
     path("secretaria/pagos/<int:matricula_id>/", pagos, name="pagos"),
+    path("secretaria/pagos/<int:matricula_id>/cancelar/", cancelar_matricula_nueva, name="cancelar_matricula_nueva"),
     path("secretaria/pagos/", lista_pagos, name="lista_pagos"),
+    path("secretaria/pagos/ciclo/<int:ciclo_id>/", reporte_ciclo, name="reporte_ciclo"),
+    path("secretaria/pagos/exportar/", exportar_reportes, name="exportar_reportes"),
     path("pagos/boleta/<int:pago_id>/", boleta_pdf, name="boleta_pdf"),
     # REPORTES
     path("reportes/sedes/", reportes_sedes, name="reportes_sedes"),

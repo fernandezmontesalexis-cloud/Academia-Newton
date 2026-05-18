@@ -1,19 +1,16 @@
 from django.shortcuts import render, redirect, get_object_or_404
+
 from django.contrib import messages
-from django.db.models import Exists, OuterRef
+from django.db.models import Exists, OuterRef, Q, Case, When, IntegerField
 from web.permisos import permiso_requerido
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from datetime import date
 
-from ..models import Alumno, Matricula, Ciclo
+from ..models import Alumno, Matricula, Ciclo, DesactivacionLog
 
 
 def _matricula_activa_exists(alumno_pk, today):
-    """
-    Consulta directa a DB: ¿tiene el alumno una matrícula con ciclo vigente hoy?
-    Misma lógica de fecha que usa matriculas_views (ciclo__fecha_inicio__lte / fecha_fin__gte).
-    """
     return Matricula.objects.filter(
         alumno_id=alumno_pk,
         ciclo__fecha_inicio__lte=today,
@@ -22,9 +19,9 @@ def _matricula_activa_exists(alumno_pk, today):
 
 
 def _estado_academico_full(alumno, matriculas_list, today):
-    """
-    Para el detalle: usa DB para verificar ciclo activo + auto-inactivación.
-    """
+    if alumno.estado == 'bloqueado':
+        return 'bloqueado'
+
     if alumno.estado == 'inactivo':
         return 'inactivo'
 
@@ -46,56 +43,112 @@ def _estado_academico_full(alumno, matriculas_list, today):
     return 'sin_matricula'
 
 
+def _sq_activa(today):
+    return Matricula.objects.filter(
+        alumno=OuterRef('pk'),
+        ciclo__fecha_inicio__lte=today,
+        ciclo__fecha_fin__gte=today,
+    )
+
+
+def _base_qs(sede, today):
+    return (
+        Alumno.objects.filter(sede=sede)
+        .annotate(tiene_matricula_activa=Exists(_sq_activa(today)))
+        .select_related('distrito', 'sede', 'apoderado')
+        .prefetch_related('matricula_set__ciclo')
+    )
+
+
+def _set_ultimo_ciclo(alumno):
+    matriculas = sorted(
+        alumno.matricula_set.all(),
+        key=lambda m: m.fecha_matricula,
+        reverse=True,
+    )
+    alumno.ultimo_ciclo_nombre = matriculas[0].ciclo.nombre if matriculas else ''
+
+
 @login_required
 @permiso_requerido(['admin', 'secretaria'])
 def lista_alumnos(request):
     sede = request.user.perfil.sede
     today = date.today()
 
-    # Subquery DB: ciclo vigente hoy — misma condición que en matriculas_views
-    sq_activa = Matricula.objects.filter(
-        alumno=OuterRef('pk'),
-        ciclo__fecha_inicio__lte=today,
-        ciclo__fecha_fin__gte=today,
-    )
+    base = _base_qs(sede, today)
 
-    alumnos_qs = (
-        Alumno.objects.filter(sede=sede)
-        .annotate(tiene_matricula_activa=Exists(sq_activa))
-        .select_related('distrito', 'sede', 'apoderado')
-        .prefetch_related('matricula_set__ciclo')
+    # Solo matriculados activos
+    alumnos_qs = base.filter(estado='activo', tiene_matricula_activa=True)
+
+    dni = request.GET.get('dni')
+    if dni:
+        alumnos_qs = alumnos_qs.filter(dni__icontains=dni)
+
+    # Contador para "Otros estados" — incluye inactivos, bloqueados y sin matrícula
+    otros_count = base.filter(
+        Q(estado='inactivo') | Q(estado='bloqueado') |
+        Q(estado='activo', tiene_matricula_activa=False)
+    ).count()
+
+    paginator = Paginator(alumnos_qs.order_by('apellido_paterno', 'nombres'), 10)
+    alumnos = paginator.get_page(request.GET.get('page'))
+
+    for a in alumnos:
+        a.estado_academico = 'matriculado'
+        _set_ultimo_ciclo(a)
+
+    return render(request, 'web/secretaria/alumnos/lista_alumnos.html', {
+        'alumnos': alumnos,
+        'otros_count': otros_count,
+    })
+
+
+@login_required
+@permiso_requerido(['admin', 'secretaria'])
+def lista_alumnos_otros(request):
+    sede = request.user.perfil.sede
+    today = date.today()
+
+    base = _base_qs(sede, today)
+
+    # Orden: sin matrícula (0) → inactivo automático (1) → bloqueado (2)
+    alumnos_qs = base.filter(
+        Q(estado='inactivo') | Q(estado='bloqueado') |
+        Q(estado='activo', tiene_matricula_activa=False)
+    ).annotate(
+        orden=Case(
+            When(Q(estado='activo', tiene_matricula_activa=False), then=0),
+            When(estado='inactivo',  then=1),
+            When(estado='bloqueado', then=2),
+            default=3,
+            output_field=IntegerField(),
+        )
     )
 
     dni = request.GET.get('dni')
     if dni:
         alumnos_qs = alumnos_qs.filter(dni__icontains=dni)
 
-    paginator = Paginator(alumnos_qs, 10)
+    paginator = Paginator(
+        alumnos_qs.order_by('orden', 'apellido_paterno', 'nombres'), 10
+    )
     alumnos = paginator.get_page(request.GET.get('page'))
 
     for a in alumnos:
-        # Estado académico derivado de la anotación DB (fuente única de verdad)
-        if a.estado == 'inactivo':
+        if a.estado == 'bloqueado':
+            a.estado_academico = 'bloqueado'
+        elif a.estado == 'inactivo':
             a.estado_academico = 'inactivo'
-        elif a.tiene_matricula_activa:
-            a.estado_academico = 'matriculado'
         else:
             a.estado_academico = 'sin_matricula'
-
-        # Último ciclo para el modal de renovación
-        matriculas = sorted(
-            a.matricula_set.all(),
-            key=lambda m: m.fecha_matricula,
-            reverse=True,
-        )
-        a.ultimo_ciclo_nombre = matriculas[0].ciclo.nombre if matriculas else ''
+        _set_ultimo_ciclo(a)
 
     ciclos_disponibles = Ciclo.objects.filter(
         sede=sede,
         fecha_fin__gte=today,
     ).order_by('fecha_inicio')
 
-    return render(request, 'web/secretaria/alumnos/lista_alumnos.html', {
+    return render(request, 'web/secretaria/alumnos/lista_alumnos_otros.html', {
         'alumnos': alumnos,
         'ciclos_disponibles': ciclos_disponibles,
     })
@@ -107,9 +160,21 @@ def desactivar_alumno(request, alumno_id):
     if request.method != 'POST':
         return redirect('lista_alumnos')
     alumno = get_object_or_404(Alumno, id=alumno_id, sede=request.user.perfil.sede)
-    alumno.estado = 'inactivo'
+
+    motivo     = request.POST.get('motivo',     '').strip()
+    comentario = request.POST.get('comentario', '').strip()
+
+    if motivo:
+        DesactivacionLog.objects.create(
+            alumno=alumno,
+            motivo=motivo,
+            comentario=comentario,
+            registrado_por=request.user.perfil,
+        )
+
+    alumno.estado = 'bloqueado'
     alumno.save()
-    return redirect('lista_alumnos')
+    return redirect('lista_alumnos_otros')
 
 
 @login_required
@@ -118,9 +183,11 @@ def reactivar_alumno(request, alumno_id):
     if request.method != 'POST':
         return redirect('lista_alumnos')
     alumno = get_object_or_404(Alumno, id=alumno_id, sede=request.user.perfil.sede)
+    if alumno.estado == 'bloqueado':
+        return redirect('lista_alumnos_otros')
     alumno.estado = 'activo'
     alumno.save()
-    return redirect('lista_alumnos')
+    return redirect('lista_alumnos_otros')
 
 
 @login_required
@@ -190,10 +257,14 @@ def renovar_matricula(request, alumno_id):
 
     alumno = get_object_or_404(Alumno, id=alumno_id, sede=request.user.perfil.sede)
 
+    if alumno.estado == 'bloqueado':
+        messages.error(request, "El alumno se encuentra bloqueado y no puede matricularse.")
+        return redirect('lista_alumnos_otros')
+
     ciclo_id = request.POST.get('ciclo', '').strip()
     if not ciclo_id:
         messages.error(request, "Debe seleccionar un ciclo.")
-        return redirect('lista_alumnos')
+        return redirect('lista_alumnos_otros')
 
     ciclo = get_object_or_404(Ciclo, id=ciclo_id, sede=alumno.sede)
 
@@ -203,8 +274,8 @@ def renovar_matricula(request, alumno_id):
     alumno.email = request.POST.get('email', '').strip() or None
 
     if alumno.apoderado:
-        apo_nombre = request.POST.get('apo_nombre', '').strip()
-        apo_celular = request.POST.get('apo_celular', '').strip()
+        apo_nombre  = request.POST.get('apo_nombre',   '').strip()
+        apo_celular = request.POST.get('apo_celular',  '').strip()
         if apo_nombre:
             alumno.apoderado.nombre_completo = apo_nombre
         if apo_celular:
