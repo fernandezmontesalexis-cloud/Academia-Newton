@@ -1,93 +1,136 @@
 {% extends 'web/base/base.html' %}
 {% load static %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}">
+<link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}?v=2">
 {% endblock %}
 {% block content %}
-<div class="alumno-container">
 
-    <h1>Registro Académico</h1>
-    <p class="subtitle">Paso 2: Datos del apoderado</p>
-    <p class="text-muted" style="font-size:0.9rem;">
-        Todos los campos son opcionales. Si el alumno se matricula sin apoderado, puedes dejarlo en blanco.
-    </p>
+<div class="reg-wrapper">
 
-    <form method="POST" id="form-apoderado">
-        {% csrf_token %}
+    <!-- ── STEPPER ──────────────────────────────────────────────── -->
+    <div class="reg-stepper">
+        <div class="reg-step">
+            <div class="reg-step-dot done">✓</div>
+            <div class="reg-step-label done">Datos</div>
+        </div>
+        <div class="reg-step-line done"></div>
+        <div class="reg-step">
+            <div class="reg-step-dot active">2</div>
+            <div class="reg-step-label active">Apoderado</div>
+        </div>
+        <div class="reg-step-line pending"></div>
+        <div class="reg-step">
+            <div class="reg-step-dot pending">3</div>
+            <div class="reg-step-label pending">Formación</div>
+        </div>
+        <div class="reg-step-line pending"></div>
+        <div class="reg-step">
+            <div class="reg-step-dot pending">4</div>
+            <div class="reg-step-label pending">Adicional</div>
+        </div>
+    </div>
 
-        <div class="form-grid">
+    <!-- ── CARD ─────────────────────────────────────────────────── -->
+    <div class="reg-card">
 
-            <div class="form-group">
-                <label>Nombre Completo</label>
-                <input type="text" name="nombre_apoderado" value="{{ apoderado.nombre_apoderado }}"
-                    placeholder="Nombre del apoderado"
-                    oninput="this.setCustomValidity('')">
-            </div>
-
-            <div class="form-group">
-                <label>DNI</label>
-                <input type="text" name="dni_apoderado" value="{{ apoderado.dni_apoderado }}"
-                    maxlength="8" inputmode="numeric" pattern="[0-9]{8}"
-                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 8); this.setCustomValidity('');"
-                    oninvalid="if(this.value) this.setCustomValidity('El DNI debe tener exactamente 8 dígitos')"
-                    placeholder="8 dígitos (opcional)">
-            </div>
-
-            <div class="form-group">
-                <label>Celular</label>
-                <input type="text" name="celular_apoderado" value="{{ apoderado.celular_apoderado }}"
-                    maxlength="9" inputmode="numeric" pattern="9[0-9]{8}"
-                    oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9); this.setCustomValidity('');"
-                    oninvalid="if(this.value) this.setCustomValidity('El celular debe tener 9 dígitos e iniciar con 9')"
-                    placeholder="9XXXXXXXX (opcional)">
-            </div>
-
-            <div class="form-group">
-                <label>Dirección</label>
-                <input type="text" name="direccion_apoderado" value="{{ apoderado.direccion_apoderado }}"
-                    placeholder="Dirección (opcional)">
-            </div>
-
+        <div class="reg-card-head">
+            <h5>Datos del Apoderado</h5>
+            <p>Información de la persona responsable del alumno.</p>
         </div>
 
-        <div class="botones-form">
-            <a href="{% url 'registrar_alumno' %}" class="btn btn-outline-dark">
-                ← Atrás
-            </a>
-            <button type="submit" class="btn btn-outline-primary">
-                Siguiente →
-            </button>
-            <a href="{% url 'cancelar_registro' %}" class="btn btn-outline-secondary"
-                onclick="confirmarCancelacion(event, this.href)">
-                Cancelar
-            </a>
+        <div class="reg-card-body">
+
+            <div class="reg-note">
+                <i class="fas fa-info-circle"></i>
+                Todos los campos son opcionales. Si el alumno se matricula sin apoderado, puedes continuar sin llenarlos.
+                Si ingresas algún dato, se validarán correctamente.
+            </div>
+
+            <form method="POST" id="form-apoderado">
+                {% csrf_token %}
+
+                <div class="reg-section">
+                    <div class="reg-section-title">Información del apoderado</div>
+                    <div class="reg-grid-2">
+
+                        <div class="reg-field reg-span-2">
+                            <label>Nombre Completo</label>
+                            <input type="text" name="nombre_apoderado"
+                                value="{{ apoderado.nombre_apoderado }}"
+                                placeholder="Nombre completo del apoderado"
+                                oninput="this.setCustomValidity('')">
+                        </div>
+
+                        <div class="reg-field">
+                            <label>DNI</label>
+                            <input type="text" name="dni_apoderado"
+                                value="{{ apoderado.dni_apoderado }}"
+                                maxlength="8" inputmode="numeric" pattern="[0-9]{8}"
+                                oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,8); this.setCustomValidity('');"
+                                oninvalid="if(this.value) this.setCustomValidity('El DNI debe tener exactamente 8 dígitos')"
+                                placeholder="8 dígitos (opcional)">
+                        </div>
+
+                        <div class="reg-field">
+                            <label>Celular</label>
+                            <input type="text" name="celular_apoderado"
+                                value="{{ apoderado.celular_apoderado }}"
+                                maxlength="9" inputmode="numeric" pattern="9[0-9]{8}"
+                                oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,9); this.setCustomValidity('');"
+                                oninvalid="if(this.value) this.setCustomValidity('El celular debe tener 9 dígitos e iniciar con 9')"
+                                placeholder="9XXXXXXXX (opcional)">
+                        </div>
+
+                        <div class="reg-field reg-span-2">
+                            <label>Dirección</label>
+                            <input type="text" name="direccion_apoderado"
+                                value="{{ apoderado.direccion_apoderado }}"
+                                placeholder="Dirección del apoderado (opcional)">
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="reg-actions">
+                    <a href="{% url 'registrar_alumno' %}" class="reg-btn reg-btn-back">
+                        <i class="fas fa-arrow-left"></i> Atrás
+                    </a>
+                    <a href="{% url 'cancelar_registro' %}" class="reg-btn reg-btn-cancel"
+                        onclick="confirmarCancelacion(event, this.href)">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="reg-btn reg-btn-primary">
+                        Siguiente <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+            </form>
         </div>
-
-    </form>
-
-    {% if field_errors %}
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            function _marcarError(selector, msg) {
-                var el = document.querySelector(selector);
-                if (el && msg) { el.setCustomValidity(msg); return el; }
-                return null;
-            }
-            var primero = null;
-            {% if field_errors.nombre_apoderado %}
-            primero = primero || _marcarError('[name="nombre_apoderado"]', "{{ field_errors.nombre_apoderado|escapejs }}");
-            {% endif %}
-            {% if field_errors.dni_apoderado %}
-            primero = primero || _marcarError('[name="dni_apoderado"]', "{{ field_errors.dni_apoderado|escapejs }}");
-            {% endif %}
-            {% if field_errors.celular_apoderado %}
-            primero = primero || _marcarError('[name="celular_apoderado"]', "{{ field_errors.celular_apoderado|escapejs }}");
-            {% endif %}
-            if (primero) setTimeout(function () { primero.reportValidity(); }, 350);
-        });
-    </script>
-    {% endif %}
+    </div>
 
 </div>
+
+{% if field_errors %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    function _err(selector, msg) {
+        var el = document.querySelector(selector);
+        if (el && msg) { el.setCustomValidity(msg); return el; }
+        return null;
+    }
+    var primero = null;
+    {% if field_errors.nombre_apoderado %}
+    primero = primero || _err('[name="nombre_apoderado"]', "{{ field_errors.nombre_apoderado|escapejs }}");
+    {% endif %}
+    {% if field_errors.dni_apoderado %}
+    primero = primero || _err('[name="dni_apoderado"]', "{{ field_errors.dni_apoderado|escapejs }}");
+    {% endif %}
+    {% if field_errors.celular_apoderado %}
+    primero = primero || _err('[name="celular_apoderado"]', "{{ field_errors.celular_apoderado|escapejs }}");
+    {% endif %}
+    if (primero) setTimeout(() => primero.reportValidity(), 350);
+});
+</script>
+{% endif %}
 
 {% endblock %}

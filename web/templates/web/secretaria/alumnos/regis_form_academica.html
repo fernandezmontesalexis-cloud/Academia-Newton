@@ -1,217 +1,303 @@
 {% extends 'web/base/base.html' %}
 {% load static %}
-
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}">
+<link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}?v=2">
 {% endblock %}
 {% block content %}
-<div class="alumno-container">
 
-    <h2>Registro Académico</h2>
-    <p>Paso 3: Formación Académica</p>
-    <p>I.E en donde realizó sus estudios</p>
+<div class="reg-wrapper">
 
-    <form method="POST" id="form-academica">
-        {% csrf_token %}
+    <!-- ── STEPPER ──────────────────────────────────────────────── -->
+    <div class="reg-stepper">
+        <div class="reg-step">
+            <div class="reg-step-dot done">✓</div>
+            <div class="reg-step-label done">Datos</div>
+        </div>
+        <div class="reg-step-line done"></div>
+        <div class="reg-step">
+            <div class="reg-step-dot done">✓</div>
+            <div class="reg-step-label done">Apoderado</div>
+        </div>
+        <div class="reg-step-line done"></div>
+        <div class="reg-step">
+            <div class="reg-step-dot active">3</div>
+            <div class="reg-step-label active">Formación</div>
+        </div>
+        <div class="reg-step-line pending"></div>
+        <div class="reg-step">
+            <div class="reg-step-dot pending">4</div>
+            <div class="reg-step-label pending">Adicional</div>
+        </div>
+    </div>
 
-        <div class="row">
-            <div class="col-md-8">
-                <label>Institución *</label>
+    <!-- ── CARD ─────────────────────────────────────────────────── -->
+    <div class="reg-card">
 
-                <!-- INPUT VISIBLE -->
-                <input type="text" id="colegio" placeholder="Buscar colegio..."
-                    class="form-control" autocomplete="off"
-                    value="{{ formacion.colegio_nombre }}">
+        <div class="reg-card-head">
+            <h5>Formación Académica</h5>
+            <p>Institución educativa donde el alumno realizó sus estudios.</p>
+        </div>
 
-                <!-- ID OCULTO — requerido para validar -->
-                <input type="hidden" name="colegio_id" id="colegio_id"
-                    value="{{ formacion.colegio_id }}">
+        <div class="reg-card-body">
+            <form method="POST" id="form-academica">
+                {% csrf_token %}
 
-                <!-- RESULTADOS DE BÚSQUEDA -->
-                <div id="resultados"
-                    style="background:white; border:1px solid #ccc; border-top:none; max-height:200px; overflow-y:auto;">
-                </div>
+                <div class="reg-section">
+                    <div class="reg-section-title">Institución educativa</div>
 
-                <!-- BOTÓN AGREGAR -->
-                <button type="button" class="btn btn-sm btn-primary mt-2" onclick="mostrarAgregar()">
-                    + Agregar colegio
-                </button>
+                    <!-- Buscador de colegio -->
+                    <div class="reg-field">
+                        <label>Colegio o institución *</label>
+                        <div class="reg-search-wrapper">
+                            <div class="reg-search-input-wrapper">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="colegio"
+                                    class="reg-field input"
+                                    style="height:38px;padding:0 11px 0 32px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13.5px;width:100%;outline:none;transition:border-color .15s,box-shadow .15s;font-family:inherit;"
+                                    placeholder="Buscar colegio por nombre..."
+                                    autocomplete="off"
+                                    value="{{ formacion.colegio_nombre }}">
+                            </div>
+                            <input type="hidden" name="colegio_id" id="colegio_id"
+                                value="{{ formacion.colegio_id }}">
+                            <div id="resultados" class="reg-search-results" style="display:none;"></div>
+                        </div>
 
-                <!-- FORM NUEVO COLEGIO -->
-                <div id="nuevoColegio"
-                    style="display:none; margin-top:10px; padding:10px; border:1px solid #ccc; border-radius:4px;">
-
-                    <input type="text" id="nuevo_nombre" placeholder="Nombre del colegio *"
-                        class="form-control mb-2">
-
-                    <select id="tipo_ie_nuevo" class="form-control mb-2">
-                        <option value="">Tipo de institución *</option>
-                        <option value="Nacional">Nacional</option>
-                        <option value="Particular">Particular</option>
-                    </select>
-
-                    <select id="dep_ie" class="form-control mb-2">
-                        <option value="">Departamento *</option>
-                        {% for d in departamentos %}
-                        <option value="{{ d.id }}">{{ d.nombre }}</option>
-                        {% endfor %}
-                    </select>
-
-                    <select id="prov_ie" class="form-control mb-2">
-                        <option value="">Provincia *</option>
-                    </select>
-
-                    <select id="dist_ie" class="form-control mb-2">
-                        <option value="">Distrito *</option>
-                    </select>
-
-                    <div class="d-flex gap-2">
-                        <button type="button" class="btn btn-success btn-sm" onclick="crearColegio()">
-                            Guardar
-                        </button>
-                        <button type="button" class="btn btn-secondary btn-sm" onclick="ocultarAgregar()">
-                            Cancelar
+                        <!-- Botón agregar -->
+                        <button type="button" class="reg-btn-add" onclick="mostrarAgregar()">
+                            <i class="fas fa-plus"></i> Agregar colegio nuevo
                         </button>
                     </div>
 
+                    <!-- Expand: crear nuevo colegio -->
+                    <div class="reg-expand" id="nuevoColegio">
+                        <div class="reg-expand-inner">
+                            <div class="reg-expand-title">
+                                <i class="fas fa-school" style="color:#2563eb;"></i>
+                                Registrar nuevo colegio
+                            </div>
+
+                            <div class="reg-grid-2" style="margin-bottom:12px;">
+                                <div class="reg-field reg-span-2">
+                                    <label>Nombre del colegio *</label>
+                                    <input type="text" id="nuevo_nombre"
+                                        placeholder="Nombre completo del colegio"
+                                        style="height:38px;padding:0 11px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13.5px;width:100%;outline:none;font-family:inherit;">
+                                </div>
+
+                                <div class="reg-field">
+                                    <label>Tipo de institución *</label>
+                                    <select id="tipo_ie_nuevo"
+                                        style="height:38px;padding:0 11px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13.5px;width:100%;outline:none;font-family:inherit;appearance:none;">
+                                        <option value="">Seleccione tipo</option>
+                                        <option value="Nacional">Nacional</option>
+                                        <option value="Particular">Particular</option>
+                                    </select>
+                                </div>
+
+                                <div class="reg-field">
+                                    <label>Departamento *</label>
+                                    <select id="dep_ie"
+                                        style="height:38px;padding:0 11px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13.5px;width:100%;outline:none;font-family:inherit;appearance:none;">
+                                        <option value="">Seleccione</option>
+                                        {% for d in departamentos %}
+                                        <option value="{{ d.id }}">{{ d.nombre }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+
+                                <div class="reg-field">
+                                    <label>Provincia *</label>
+                                    <select id="prov_ie"
+                                        style="height:38px;padding:0 11px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13.5px;width:100%;outline:none;font-family:inherit;appearance:none;">
+                                        <option value="">Seleccione departamento</option>
+                                    </select>
+                                </div>
+
+                                <div class="reg-field">
+                                    <label>Distrito *</label>
+                                    <select id="dist_ie"
+                                        style="height:38px;padding:0 11px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13.5px;width:100%;outline:none;font-family:inherit;appearance:none;">
+                                        <option value="">Seleccione provincia</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div style="display:flex;gap:8px;">
+                                <button type="button" class="reg-btn-save-sm" onclick="crearColegio()">
+                                    <i class="fas fa-check"></i> Guardar colegio
+                                </button>
+                                <button type="button" class="reg-btn-cancel-sm" onclick="ocultarAgregar()">
+                                    Cancelar
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
+
+                <div class="reg-actions">
+                    <a href="{% url 'registrar_apoderado' %}" class="reg-btn reg-btn-back">
+                        <i class="fas fa-arrow-left"></i> Atrás
+                    </a>
+                    <a href="{% url 'cancelar_registro' %}" class="reg-btn reg-btn-cancel"
+                        onclick="confirmarCancelacion(event, this.href)">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="reg-btn reg-btn-primary">
+                        Siguiente <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+            </form>
         </div>
+    </div>
 
-        <br>
-
-        <div class="botones-form">
-            <a href="{% url 'registrar_apoderado' %}" class="btn btn-outline-dark">
-                ← Atrás
-            </a>
-            <button type="submit" class="btn btn-outline-primary">
-                Siguiente →
-            </button>
-            <a href="{% url 'cancelar_registro' %}"
-               class="btn btn-outline-secondary"
-               onclick="confirmarCancelacion(event, this.href)">
-                Cancelar
-            </a>
-        </div>
-
-    </form>
 </div>
 
 <script>
-    // ── Validar colegio antes de enviar (tooltip nativo) ──────────────────
+    // ── Validar colegio antes de enviar ───────────────────────────
     document.getElementById("form-academica").addEventListener("submit", function (e) {
         const input = document.getElementById("colegio");
-        const colegioId = document.getElementById("colegio_id").value;
-        if (!colegioId) {
+        if (!document.getElementById("colegio_id").value) {
             e.preventDefault();
-            input.setCustomValidity("Debes seleccionar un colegio de la lista o crear uno nuevo con '+ Agregar colegio'");
+            input.setCustomValidity("Debes seleccionar un colegio de la lista o crear uno nuevo");
             input.reportValidity();
         }
     });
 
-    // ── Error de backend: mostrar tooltip nativo ──────────────────────────
+    // ── Error de backend ──────────────────────────────────────────
     {% if field_errors.colegio %}
     document.addEventListener("DOMContentLoaded", function () {
         var input = document.getElementById("colegio");
         if (input) {
             input.setCustomValidity("{{ field_errors.colegio|escapejs }}");
-            setTimeout(function () { input.reportValidity(); }, 350);
+            setTimeout(() => input.reportValidity(), 350);
         }
     });
     {% endif %}
 
-    // ── Búsqueda de colegios ──────────────────────────────────────────────
-    document.getElementById("colegio").addEventListener("keyup", function () {
+    // ── Focus / blur del buscador ─────────────────────────────────
+    const colegioInput = document.getElementById("colegio");
+    colegioInput.style.setProperty('--focus-color', '#2563eb');
+    colegioInput.addEventListener("focus", function() {
+        this.style.borderColor = '#2563eb';
+        this.style.boxShadow = '0 0 0 3px rgba(37,99,235,.1)';
+    });
+    colegioInput.addEventListener("blur", function() {
+        this.style.borderColor = '#e2e8f0';
+        this.style.boxShadow = '';
+    });
+
+    // ── Búsqueda de colegios ──────────────────────────────────────
+    colegioInput.addEventListener("keyup", function () {
         const query = this.value.trim();
         this.setCustomValidity('');
+        const resultados = document.getElementById("resultados");
+
         if (!query) {
             document.getElementById("colegio_id").value = "";
-            document.getElementById("resultados").innerHTML = "";
+            resultados.style.display = "none";
+            resultados.innerHTML = "";
             return;
         }
         if (document.getElementById("colegio_id").value) {
             document.getElementById("colegio_id").value = "";
         }
+
         fetch(`/buscar-colegios/?q=${encodeURIComponent(query)}`)
-            .then(res => res.json())
+            .then(r => r.json())
             .then(data => {
-                const resultados = document.getElementById("resultados");
                 resultados.innerHTML = "";
-                data.forEach(c => {
-                    const div = document.createElement("div");
-                    div.style.cssText = "cursor:pointer; padding:8px; border-bottom:1px solid #eee;";
-                    div.textContent = c.nombre;
-                    div.addEventListener("mouseenter", function () { this.style.background = "#f0f0f0"; });
-                    div.addEventListener("mouseleave", function () { this.style.background = ""; });
-                    div.addEventListener("click", function () { seleccionar(c.id, c.nombre); });
-                    resultados.appendChild(div);
-                });
+                if (data.length === 0) {
+                    resultados.innerHTML = '<div class="reg-search-item" style="color:#94a3b8;cursor:default;">Sin resultados — usa "+ Agregar colegio nuevo"</div>';
+                } else {
+                    data.forEach(c => {
+                        const div = document.createElement("div");
+                        div.className = "reg-search-item";
+                        div.textContent = c.nombre;
+                        div.addEventListener("click", () => seleccionar(c.id, c.nombre));
+                        resultados.appendChild(div);
+                    });
+                }
+                resultados.style.display = "block";
             });
     });
 
+    document.addEventListener("click", function (e) {
+        if (!e.target.closest(".reg-search-wrapper")) {
+            document.getElementById("resultados").style.display = "none";
+        }
+    });
+
     function seleccionar(id, nombre) {
-        const input = document.getElementById("colegio");
-        input.value = nombre;
-        input.setCustomValidity('');
+        colegioInput.value = nombre;
+        colegioInput.setCustomValidity('');
         document.getElementById("colegio_id").value = id;
-        document.getElementById("resultados").innerHTML = "";
+        document.getElementById("resultados").style.display = "none";
     }
 
+    // ── Mostrar / ocultar expand ──────────────────────────────────
     function mostrarAgregar() {
-        document.getElementById("nuevoColegio").style.display = "block";
+        document.getElementById("nuevoColegio").classList.add("open");
         document.getElementById("nuevo_nombre").focus();
     }
 
     function ocultarAgregar() {
-        document.getElementById("nuevoColegio").style.display = "none";
+        document.getElementById("nuevoColegio").classList.remove("open");
         document.getElementById("nuevo_nombre").value = "";
         document.getElementById("tipo_ie_nuevo").value = "";
         document.getElementById("dep_ie").value = "";
-        document.getElementById("prov_ie").innerHTML = '<option value="">Provincia *</option>';
-        document.getElementById("dist_ie").innerHTML = '<option value="">Distrito *</option>';
+        document.getElementById("prov_ie").innerHTML = '<option value="">Seleccione departamento</option>';
+        document.getElementById("dist_ie").innerHTML = '<option value="">Seleccione provincia</option>';
     }
 
+    // ── Cascada nueva IE ──────────────────────────────────────────
     document.getElementById("dep_ie").addEventListener("change", function () {
         const prov = document.getElementById("prov_ie");
         const dist = document.getElementById("dist_ie");
-        prov.innerHTML = '<option value="">Provincia *</option>';
-        dist.innerHTML = '<option value="">Distrito *</option>';
+        prov.innerHTML = '<option value="">Seleccione departamento</option>';
+        dist.innerHTML = '<option value="">Seleccione provincia</option>';
         if (!this.value) return;
         fetch(`/get-provincias/${this.value}/`).then(r => r.json()).then(data => {
             data.forEach(p => {
-                const opt = document.createElement("option");
-                opt.value = p.id; opt.textContent = p.nombre;
-                prov.appendChild(opt);
+                const o = document.createElement("option");
+                o.value = p.id; o.textContent = p.nombre;
+                prov.appendChild(o);
             });
         });
     });
 
     document.getElementById("prov_ie").addEventListener("change", function () {
         const dist = document.getElementById("dist_ie");
-        dist.innerHTML = '<option value="">Distrito *</option>';
+        dist.innerHTML = '<option value="">Seleccione provincia</option>';
         if (!this.value) return;
         fetch(`/get-distritos/${this.value}/`).then(r => r.json()).then(data => {
             data.forEach(d => {
-                const opt = document.createElement("option");
-                opt.value = d.id; opt.textContent = d.nombre;
-                dist.appendChild(opt);
+                const o = document.createElement("option");
+                o.value = d.id; o.textContent = d.nombre;
+                dist.appendChild(o);
             });
         });
     });
 
+    // ── Crear colegio ─────────────────────────────────────────────
     function crearColegio() {
-        const nombre = document.getElementById("nuevo_nombre").value.trim();
-        const distrito = document.getElementById("dist_ie").value;
-        const tipoIe = document.getElementById("tipo_ie_nuevo").value;
+        const nombre  = document.getElementById("nuevo_nombre").value.trim();
+        const tipoIe  = document.getElementById("tipo_ie_nuevo").value;
+        const depId   = document.getElementById("dep_ie").value;
+        const provId  = document.getElementById("prov_ie").value;
+        const distId  = document.getElementById("dist_ie").value;
+
         if (!nombre) { alert("El nombre del colegio es obligatorio"); return; }
-        if (!tipoIe) { alert("Debes seleccionar el tipo de institución (Nacional o Particular)"); return; }
-        if (!document.getElementById("dep_ie").value) { alert("Debes seleccionar el departamento"); return; }
-        if (!document.getElementById("prov_ie").value) { alert("Debes seleccionar la provincia"); return; }
-        if (!distrito) { alert("Debes seleccionar el distrito"); return; }
+        if (!tipoIe) { alert("Debes seleccionar el tipo de institución"); return; }
+        if (!depId)  { alert("Debes seleccionar el departamento"); return; }
+        if (!provId) { alert("Debes seleccionar la provincia"); return; }
+        if (!distId) { alert("Debes seleccionar el distrito"); return; }
+
         fetch("/crear-colegio/", {
             method: "POST",
             headers: { "Content-Type": "application/json", "X-CSRFToken": "{{ csrf_token }}" },
-            body: JSON.stringify({ nombre, distrito, tipo_ie: tipoIe })
+            body: JSON.stringify({ nombre, distrito: distId, tipo_ie: tipoIe })
         })
         .then(r => { if (!r.ok) return r.json().then(d => { throw new Error(d.error || "Error"); }); return r.json(); })
         .then(data => { seleccionar(data.id, data.nombre); ocultarAgregar(); })

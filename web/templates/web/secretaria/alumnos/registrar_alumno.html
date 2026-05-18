@@ -1,220 +1,261 @@
 {% extends 'web/base/base.html' %}
 {% load static %}
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}?v=2">
+{% endblock %}
 {% block content %}
-<link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}">
-<div class="alumno-container">
 
-    <h1>Registro Académico</h1>
-    <p class="subtitle">Paso 1: Datos del Alumno</p>
+<div class="reg-wrapper">
 
-    <form method="POST" id="form-alumno">
-        {% csrf_token %}
+    <!-- ── STEPPER ──────────────────────────────────────────────── -->
+    <div class="reg-stepper">
+        <div class="reg-step">
+            <div class="reg-step-dot active">1</div>
+            <div class="reg-step-label active">Datos</div>
+        </div>
+        <div class="reg-step-line pending"></div>
+        <div class="reg-step">
+            <div class="reg-step-dot pending">2</div>
+            <div class="reg-step-label pending">Apoderado</div>
+        </div>
+        <div class="reg-step-line pending"></div>
+        <div class="reg-step">
+            <div class="reg-step-dot pending">3</div>
+            <div class="reg-step-label pending">Formación</div>
+        </div>
+        <div class="reg-step-line pending"></div>
+        <div class="reg-step">
+            <div class="reg-step-dot pending">4</div>
+            <div class="reg-step-label pending">Adicional</div>
+        </div>
+    </div>
 
-        <div class="form-section">
-            <div class="form-grid">
+    <!-- ── CARD ─────────────────────────────────────────────────── -->
+    <div class="reg-card">
 
-                <div class="form-group">
-                    <label>Apellido Paterno *</label>
-                    <input type="text" name="apellido_paterno" required
-                        value="{{ alumno.apellido_paterno }}"
-                        oninvalid="this.setCustomValidity('El apellido paterno es obligatorio')"
-                        oninput="this.setCustomValidity('')">
-                </div>
-
-                <div class="form-group">
-                    <label>Apellido Materno *</label>
-                    <input type="text" name="apellido_materno" required
-                        value="{{ alumno.apellido_materno }}"
-                        oninvalid="this.setCustomValidity('El apellido materno es obligatorio')"
-                        oninput="this.setCustomValidity('')">
-                </div>
-
-                <div class="form-group">
-                    <label>Nombres *</label>
-                    <input type="text" name="nombres" required
-                        value="{{ alumno.nombres }}"
-                        oninvalid="this.setCustomValidity('Los nombres son obligatorios')"
-                        oninput="this.setCustomValidity('')">
-                </div>
-
-                <div class="form-group">
-                    <label>DNI *</label>
-                    <input type="text" name="dni" value="{{ alumno.dni }}"
-                        required maxlength="8" inputmode="numeric" pattern="\d{8}"
-                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 8); this.setCustomValidity('');"
-                        oninvalid="this.setCustomValidity(this.value ? 'El DNI debe tener exactamente 8 dígitos' : 'El DNI es obligatorio')"
-                        placeholder="8 dígitos">
-                </div>
-
-                <div class="form-group">
-                    <label>Celular</label>
-                    <input type="text" name="celular" value="{{ alumno.celular }}"
-                        maxlength="9" inputmode="numeric" pattern="9[0-9]{8}"
-                        oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0, 9); this.setCustomValidity('');"
-                        oninvalid="if(this.value) this.setCustomValidity('El celular debe tener 9 dígitos e iniciar con 9')"
-                        placeholder="9XXXXXXXX">
-                </div>
-
-                <div class="form-group">
-                    <label>Fecha de Nacimiento *</label>
-                    <input type="date" name="fecha_nacimiento"
-                        value="{{ alumno.fecha_nacimiento }}"
-                        required
-                        min="{{ fecha_min_iso }}" max="{{ fecha_max_iso }}"
-                        oninvalid="
-                            if (this.validity.valueMissing) {
-                                this.setCustomValidity('La fecha de nacimiento es obligatoria');
-                            } else if (this.validity.rangeOverflow) {
-                                this.setCustomValidity('El alumno debe tener al menos 12 años');
-                            } else if (this.validity.rangeUnderflow) {
-                                this.setCustomValidity('Edad no válida (máximo 60 años)');
-                            } else {
-                                this.setCustomValidity('');
-                            }
-                        "
-                        oninput="this.setCustomValidity('')">
-                </div>
-
-                <div class="form-group">
-                    <label>Dirección</label>
-                    <input type="text" name="direccion" value="{{ alumno.direccion }}">
-                </div>
-
-                <div class="form-group">
-                    <label>Departamento *</label>
-                    <select id="departamento" name="departamento" class="form-control" required
-                        oninvalid="this.setCustomValidity('Debes seleccionar un departamento')"
-                        oninput="this.setCustomValidity('')">
-                        <option value="">Seleccione</option>
-                        {% for d in departamentos %}
-                        <option value="{{ d.id }}" {% if d.id == departamento_seleccionado %}selected{% endif %}>
-                            {{ d.nombre }}
-                        </option>
-                        {% endfor %}
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Provincia *</label>
-                    <select id="provincia" name="provincia" class="form-control" required
-                        oninvalid="this.setCustomValidity('Debes seleccionar una provincia')"
-                        oninput="this.setCustomValidity('')">
-                        <option value="">Seleccione un departamento</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Distrito *</label>
-                    <select id="distrito" name="distrito" class="form-control" required
-                        oninvalid="this.setCustomValidity('Debes seleccionar un distrito')"
-                        oninput="this.setCustomValidity('')">
-                        <option value="">Seleccione una provincia</option>
-                    </select>
-                </div>
-
-                <div class="form-group">
-                    <label>Correo Electrónico</label>
-                    <input type="email" name="email" value="{{ alumno.email }}"
-                        placeholder="correo@ejemplo.com">
-                </div>
-
-            </div>
+        <div class="reg-card-head">
+            <h5>Registro Académico</h5>
+            <p>Completa los datos personales del alumno para continuar.</p>
         </div>
 
-        <div class="d-flex gap-2 justify-content-end mt-4">
-            <button type="submit" class="btn btn-outline-primary">
-                Siguiente →
-            </button>
-            <a href="{% url 'cancelar_registro' %}" class="btn btn-outline-secondary"
-                onclick="confirmarCancelacion(event, this.href)">
-                Cancelar
-            </a>
+        <div class="reg-card-body">
+            <form method="POST" id="form-alumno">
+                {% csrf_token %}
+
+                <!-- Información personal -->
+                <div class="reg-section">
+                    <div class="reg-section-title">Información personal</div>
+                    <div class="reg-grid-2">
+
+                        <div class="reg-field">
+                            <label>Apellido Paterno *</label>
+                            <input type="text" name="apellido_paterno" required
+                                value="{{ alumno.apellido_paterno }}"
+                                oninvalid="this.setCustomValidity('El apellido paterno es obligatorio')"
+                                oninput="this.setCustomValidity('')"
+                                placeholder="Apellido paterno">
+                        </div>
+
+                        <div class="reg-field">
+                            <label>Apellido Materno *</label>
+                            <input type="text" name="apellido_materno" required
+                                value="{{ alumno.apellido_materno }}"
+                                oninvalid="this.setCustomValidity('El apellido materno es obligatorio')"
+                                oninput="this.setCustomValidity('')"
+                                placeholder="Apellido materno">
+                        </div>
+
+                        <div class="reg-field reg-span-2">
+                            <label>Nombres *</label>
+                            <input type="text" name="nombres" required
+                                value="{{ alumno.nombres }}"
+                                oninvalid="this.setCustomValidity('Los nombres son obligatorios')"
+                                oninput="this.setCustomValidity('')"
+                                placeholder="Nombres completos">
+                        </div>
+
+                        <div class="reg-field">
+                            <label>DNI *</label>
+                            <input type="text" name="dni" value="{{ alumno.dni }}"
+                                required maxlength="8" inputmode="numeric" pattern="\d{8}"
+                                oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,8); this.setCustomValidity('');"
+                                oninvalid="this.setCustomValidity(this.value ? 'El DNI debe tener exactamente 8 dígitos' : 'El DNI es obligatorio')"
+                                placeholder="8 dígitos">
+                        </div>
+
+                        <div class="reg-field">
+                            <label>Fecha de Nacimiento *</label>
+                            <input type="date" name="fecha_nacimiento"
+                                value="{{ alumno.fecha_nacimiento }}"
+                                required min="{{ fecha_min_iso }}" max="{{ fecha_max_iso }}"
+                                oninvalid="
+                                    if(this.validity.valueMissing) this.setCustomValidity('La fecha de nacimiento es obligatoria');
+                                    else if(this.validity.rangeOverflow) this.setCustomValidity('El alumno debe tener al menos 12 años');
+                                    else if(this.validity.rangeUnderflow) this.setCustomValidity('Edad no válida (máximo 60 años)');
+                                    else this.setCustomValidity('');
+                                "
+                                oninput="this.setCustomValidity('')">
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Contacto -->
+                <div class="reg-section">
+                    <div class="reg-section-title">Contacto</div>
+                    <div class="reg-grid-2">
+
+                        <div class="reg-field">
+                            <label>Celular</label>
+                            <input type="text" name="celular" value="{{ alumno.celular }}"
+                                maxlength="9" inputmode="numeric" pattern="9[0-9]{8}"
+                                oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,9); this.setCustomValidity('');"
+                                oninvalid="if(this.value) this.setCustomValidity('El celular debe tener 9 dígitos e iniciar con 9')"
+                                placeholder="9XXXXXXXX">
+                        </div>
+
+                        <div class="reg-field">
+                            <label>Correo Electrónico</label>
+                            <input type="email" name="email" value="{{ alumno.email }}"
+                                placeholder="correo@ejemplo.com">
+                        </div>
+
+                        <div class="reg-field reg-span-2">
+                            <label>Dirección</label>
+                            <input type="text" name="direccion" value="{{ alumno.direccion }}"
+                                placeholder="Dirección del alumno">
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Ubicación -->
+                <div class="reg-section">
+                    <div class="reg-section-title">Ubicación</div>
+                    <div class="reg-grid-3">
+
+                        <div class="reg-field">
+                            <label>Departamento *</label>
+                            <select id="departamento" name="departamento" required
+                                oninvalid="this.setCustomValidity('Debes seleccionar un departamento')"
+                                oninput="this.setCustomValidity('')">
+                                <option value="">Seleccione</option>
+                                {% for d in departamentos %}
+                                <option value="{{ d.id }}" {% if d.id == departamento_seleccionado %}selected{% endif %}>
+                                    {{ d.nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+
+                        <div class="reg-field">
+                            <label>Provincia *</label>
+                            <select id="provincia" name="provincia" required
+                                oninvalid="this.setCustomValidity('Debes seleccionar una provincia')"
+                                oninput="this.setCustomValidity('')">
+                                <option value="">Seleccione departamento</option>
+                            </select>
+                        </div>
+
+                        <div class="reg-field">
+                            <label>Distrito *</label>
+                            <select id="distrito" name="distrito" required
+                                oninvalid="this.setCustomValidity('Debes seleccionar un distrito')"
+                                oninput="this.setCustomValidity('')">
+                                <option value="">Seleccione provincia</option>
+                            </select>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Acciones -->
+                <div class="reg-actions">
+                    <a href="{% url 'cancelar_registro' %}" class="reg-btn reg-btn-cancel"
+                        onclick="confirmarCancelacion(event, this.href)">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="reg-btn reg-btn-primary">
+                        Siguiente <i class="fas fa-arrow-right"></i>
+                    </button>
+                </div>
+
+            </form>
         </div>
-
-    </form>
-
-    <script>
-        document.addEventListener("DOMContentLoaded", async function () {
-
-            const departamento = document.getElementById("departamento");
-            const provincia = document.getElementById("provincia");
-            const distrito = document.getElementById("distrito");
-
-            const provinciaSeleccionada = "{{ alumno.provincia }}";
-            const distritoSeleccionado = "{{ alumno.distrito }}";
-
-            async function cargarProvincias(departamentoId, selectedProvincia) {
-                provincia.innerHTML = '<option value="">Seleccione una provincia</option>';
-                distrito.innerHTML = '<option value="">Seleccione un distrito</option>';
-                if (!departamentoId) return;
-                const data = await fetch(`/get-provincias/${departamentoId}/`).then(r => r.json());
-                data.forEach(p => {
-                    const opt = document.createElement("option");
-                    opt.value = p.id;
-                    opt.textContent = p.nombre;
-                    if (String(p.id) === String(selectedProvincia)) opt.selected = true;
-                    provincia.appendChild(opt);
-                });
-                if (selectedProvincia) {
-                    await cargarDistritos(selectedProvincia, distritoSeleccionado);
-                }
-                // Limpiar validez de provincia/distrito tras carga AJAX
-                provincia.setCustomValidity('');
-                distrito.setCustomValidity('');
-            }
-
-            async function cargarDistritos(provinciaId, selectedDistrito) {
-                distrito.innerHTML = '<option value="">Seleccione un distrito</option>';
-                if (!provinciaId) return;
-                const data = await fetch(`/get-distritos/${provinciaId}/`).then(r => r.json());
-                data.forEach(d => {
-                    const opt = document.createElement("option");
-                    opt.value = d.id;
-                    opt.textContent = d.nombre;
-                    if (String(d.id) === String(selectedDistrito)) opt.selected = true;
-                    distrito.appendChild(opt);
-                });
-                // Limpiar validez de distrito tras carga AJAX
-                distrito.setCustomValidity('');
-            }
-
-            departamento.addEventListener("change", function () {
-                this.setCustomValidity('');
-                cargarProvincias(this.value, null);
-            });
-
-            provincia.addEventListener("change", function () {
-                this.setCustomValidity('');
-                cargarDistritos(this.value, null);
-            });
-
-            if (departamento.value) {
-                await cargarProvincias(departamento.value, provinciaSeleccionada);
-            }
-
-            // ── Errores de backend: mostrar tooltip nativo ────────────────
-            {% if field_errors %}
-            function _marcarError(selector, msg) {
-                var el = document.querySelector(selector);
-                if (el && msg) { el.setCustomValidity(msg); return el; }
-                return null;
-            }
-            var primero = null;
-            {% if field_errors.dni %}
-            primero = primero || _marcarError('[name="dni"]', "{{ field_errors.dni|escapejs }}");
-            {% endif %}
-            {% if field_errors.celular %}
-            primero = primero || _marcarError('[name="celular"]', "{{ field_errors.celular|escapejs }}");
-            {% endif %}
-            {% if field_errors.fecha_nacimiento %}
-            primero = primero || _marcarError('[name="fecha_nacimiento"]', "{{ field_errors.fecha_nacimiento|escapejs }}");
-            {% endif %}
-            if (primero) setTimeout(function () { primero.reportValidity(); }, 350);
-            {% endif %}
-
-        });
-    </script>
+    </div>
 
 </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", async function () {
+
+    const departamento = document.getElementById("departamento");
+    const provincia    = document.getElementById("provincia");
+    const distrito     = document.getElementById("distrito");
+
+    const provinciaSeleccionada = "{{ alumno.provincia }}";
+    const distritoSeleccionado  = "{{ alumno.distrito }}";
+
+    async function cargarProvincias(depId, selProv) {
+        provincia.innerHTML = '<option value="">Seleccione departamento</option>';
+        distrito.innerHTML  = '<option value="">Seleccione provincia</option>';
+        if (!depId) return;
+        const data = await fetch(`/get-provincias/${depId}/`).then(r => r.json());
+        data.forEach(p => {
+            const o = document.createElement("option");
+            o.value = p.id; o.textContent = p.nombre;
+            if (String(p.id) === String(selProv)) o.selected = true;
+            provincia.appendChild(o);
+        });
+        provincia.setCustomValidity('');
+        if (selProv) await cargarDistritos(selProv, distritoSeleccionado);
+    }
+
+    async function cargarDistritos(provId, selDist) {
+        distrito.innerHTML = '<option value="">Seleccione provincia</option>';
+        if (!provId) return;
+        const data = await fetch(`/get-distritos/${provId}/`).then(r => r.json());
+        data.forEach(d => {
+            const o = document.createElement("option");
+            o.value = d.id; o.textContent = d.nombre;
+            if (String(d.id) === String(selDist)) o.selected = true;
+            distrito.appendChild(o);
+        });
+        distrito.setCustomValidity('');
+    }
+
+    departamento.addEventListener("change", function () {
+        this.setCustomValidity('');
+        cargarProvincias(this.value, null);
+    });
+    provincia.addEventListener("change", function () {
+        this.setCustomValidity('');
+        cargarDistritos(this.value, null);
+    });
+
+    if (departamento.value) await cargarProvincias(departamento.value, provinciaSeleccionada);
+
+    // ── Errores de backend — tooltip nativo ──────────────────────
+    {% if field_errors %}
+    function _err(selector, msg) {
+        var el = document.querySelector(selector);
+        if (el && msg) { el.setCustomValidity(msg); return el; }
+        return null;
+    }
+    var primero = null;
+    {% if field_errors.dni %}
+    primero = primero || _err('[name="dni"]', "{{ field_errors.dni|escapejs }}");
+    {% endif %}
+    {% if field_errors.celular %}
+    primero = primero || _err('[name="celular"]', "{{ field_errors.celular|escapejs }}");
+    {% endif %}
+    {% if field_errors.fecha_nacimiento %}
+    primero = primero || _err('[name="fecha_nacimiento"]', "{{ field_errors.fecha_nacimiento|escapejs }}");
+    {% endif %}
+    if (primero) setTimeout(() => primero.reportValidity(), 350);
+    {% endif %}
+
+});
+</script>
 
 {% endblock %}
