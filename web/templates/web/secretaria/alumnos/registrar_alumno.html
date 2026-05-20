@@ -79,7 +79,7 @@
                             <input type="text" name="dni" value="{{ alumno.dni }}"
                                 required maxlength="8" inputmode="numeric" pattern="\d{8}"
                                 oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,8); this.setCustomValidity('');"
-                                oninvalid="this.setCustomValidity(this.value ? 'El DNI debe tener exactamente 8 dígitos' : 'El DNI es obligatorio')"
+                                oninvalid="if(!this.validity.customError) this.setCustomValidity(this.value ? 'El DNI debe tener exactamente 8 dígitos.' : 'Debe ingresar un DNI.');"
                                 placeholder="8 dígitos">
                         </div>
 
@@ -110,14 +110,15 @@
                             <input type="text" name="celular" value="{{ alumno.celular }}"
                                 maxlength="9" inputmode="numeric" pattern="9[0-9]{8}"
                                 oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,9); this.setCustomValidity('');"
-                                oninvalid="if(this.value) this.setCustomValidity('El celular debe tener 9 dígitos e iniciar con 9')"
+                                oninvalid="if(this.value) this.setCustomValidity('El celular debe tener 9 dígitos e iniciar con 9');"
                                 placeholder="9XXXXXXXX">
                         </div>
 
                         <div class="reg-field">
                             <label>Correo Electrónico</label>
-                            <input type="email" name="email" value="{{ alumno.email }}"
-                                placeholder="correo@ejemplo.com">
+                            <input type="text" name="email" id="email_input" value="{{ alumno.email }}"
+                                placeholder="correo@ejemplo.com"
+                                oninput="this.setCustomValidity('');">
                         </div>
 
                         <div class="reg-field reg-span-2">
@@ -245,6 +246,9 @@ document.addEventListener("DOMContentLoaded", async function () {
     var primero = null;
     {% if field_errors.dni %}
     primero = primero || _err('[name="dni"]', "{{ field_errors.dni|escapejs }}");
+    {% endif %}
+    {% if field_errors.email %}
+    primero = primero || _err('[name="email"]', "{{ field_errors.email|escapejs }}");
     {% endif %}
     {% if field_errors.celular %}
     primero = primero || _err('[name="celular"]', "{{ field_errors.celular|escapejs }}");

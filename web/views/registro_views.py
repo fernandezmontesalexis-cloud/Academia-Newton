@@ -23,6 +23,7 @@ from ..utils import (
     normalizar_texto,
     validar_dni,
     validar_celular,
+    validar_email,
 )
 
 
@@ -60,11 +61,21 @@ def registrar_alumno(request):
 
         # ── DNI ──────────────────────────────────────────────────────────
         if not dni:
-            field_errors['dni'] = "El DNI es obligatorio"
-        elif not validar_dni(dni):
-            field_errors['dni'] = "El DNI debe tener exactamente 8 dígitos numéricos"
-        elif Alumno.objects.filter(dni=dni).exists():
-            field_errors['dni'] = "Este DNI ya está registrado en el sistema"
+            field_errors['dni'] = "Debe ingresar un DNI."
+        elif len(dni) != 8 or not dni.isdigit():
+            field_errors['dni'] = "El DNI debe tener exactamente 8 dígitos."
+        else:
+            alumno_existente = Alumno.objects.filter(dni=dni).first()
+            if alumno_existente:
+                if alumno_existente.estado in ('bloqueado', 'inactivo'):
+                    field_errors['dni'] = "Este alumno mantiene deuda pendiente y no puede matricularse nuevamente."
+                else:
+                    field_errors['dni'] = "Ya existe un alumno registrado con este DNI."
+
+        # ── Email ─────────────────────────────────────────────────────────
+        email_error = validar_email(email)
+        if email_error:
+            field_errors['email'] = email_error
 
         # ── Celular ───────────────────────────────────────────────────────
         if celular and not validar_celular(celular):
@@ -269,22 +280,24 @@ def regis_form_adicional(request):
 
     today = date.today()
 
-    # Solo ciclos activos usando la función centralizada
-    ciclos_activos = [
-        c for c in Ciclo.objects.filter(sede=request.user.perfil.sede)
-        if estado_ciclo_hoy(c, today) == 'activa'
-    ]
+    # Ciclos activos y próximos (pendiente = aún no comenzó)
+    ciclos_disponibles = []
+    for c in Ciclo.objects.filter(sede=request.user.perfil.sede).order_by('fecha_inicio'):
+        estado = estado_ciclo_hoy(c, today)
+        if estado in ('activa', 'pendiente'):
+            c.estado_ciclo = estado
+            ciclos_disponibles.append(c)
 
     if request.method == "POST":
 
         estudio_previo = request.POST.get("estudio_previo", "no")
         tipo_estudio = request.POST.get("tipo_estudio", "")
         academia_anterior = (
-            normalizar_texto(request.POST.get("academia_anterior", ""))
+            normalizar_nombre(request.POST.get("academia_anterior", ""))
             if estudio_previo == "si" else ""
         )
-        carrera_interes = normalizar_texto(request.POST.get("carrera_interes", ""))
-        segunda_carrera = normalizar_texto(request.POST.get("segunda_carrera", ""))
+        carrera_interes = normalizar_nombre(request.POST.get("carrera_interes", ""))
+        segunda_carrera = normalizar_nombre(request.POST.get("segunda_carrera", ""))
         ciclo_id = request.POST.get("ciclo", "").strip()
 
         # ── Validaciones ANTES de crear nada ─────────────────────────────
@@ -295,12 +308,12 @@ def regis_form_adicional(request):
 
         ciclo = None
         if not ciclo_id:
-            field_errors['ciclo'] = "Debes seleccionar un ciclo activo"
+            field_errors['ciclo'] = "Debes seleccionar un ciclo"
         else:
             try:
                 ciclo = Ciclo.objects.get(id=int(ciclo_id))
-                if estado_ciclo_hoy(ciclo, today) != 'activa':
-                    field_errors['ciclo'] = "El ciclo seleccionado no está activo"
+                if estado_ciclo_hoy(ciclo, today) not in ('activa', 'pendiente'):
+                    field_errors['ciclo'] = "El ciclo seleccionado no está disponible"
             except (Ciclo.DoesNotExist, ValueError):
                 field_errors['ciclo'] = "Ciclo inválido"
 
@@ -310,7 +323,7 @@ def regis_form_adicional(request):
                 "web/secretaria/alumnos/regis_form_adicional.html",
                 {
                     "formacion_adicional": request.POST,
-                    "ciclos": ciclos_activos,
+                    "ciclos": ciclos_disponibles,
                     "ciclo_seleccionado": (
                         int(ciclo_id) if ciclo_id and ciclo_id.isdigit() else None
                     ),
@@ -415,7 +428,7 @@ def regis_form_adicional(request):
         "web/secretaria/alumnos/regis_form_adicional.html",
         {
             "formacion_adicional": formacion_adicional,
-            "ciclos": ciclos_activos,
+            "ciclos": ciclos_disponibles,
             "ciclo_seleccionado": (
                 int(formacion_adicional.get("ciclo"))
                 if formacion_adicional.get("ciclo")
@@ -464,7 +477,7 @@ def crear_colegio(request):
     if request.method == "POST":
         data = json.loads(request.body)
 
-        nombre = normalizar_texto(data.get("nombre", ""))
+        nombre = normalizar_nombre(data.get("nombre", ""))
         distrito_id = data.get("distrito")
         tipo_ie = (data.get("tipo_ie") or "").strip()
 
@@ -486,6 +499,9 @@ def crear_colegio(request):
 
         if not Distrito.objects.filter(id=distrito_id).exists():
             return JsonResponse({"error": "El distrito seleccionado no existe"}, status=400)
+
+        if InstitucionEducativa.objects.filter(nombre__iexact=nombre).exists():
+            return JsonResponse({"error": "Este colegio ya se encuentra registrado."}, status=400)
 
         colegio = InstitucionEducativa.objects.create(
             nombre=nombre,

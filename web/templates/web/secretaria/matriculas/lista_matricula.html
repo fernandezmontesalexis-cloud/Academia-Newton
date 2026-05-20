@@ -287,5 +287,18 @@ document.addEventListener('DOMContentLoaded', function () {
         new bootstrap.Tooltip(el, { trigger: 'hover' });
     });
 });
+
+{% if request.GET.cancelada %}
+document.addEventListener('DOMContentLoaded', function () {
+    Swal.fire({
+        icon: 'warning',
+        title: 'Matrícula cancelada',
+        html: '<p style="margin-bottom:8px">La matrícula fue <strong>cancelada automáticamente</strong> porque se salió de la página de pago sin registrar ningún monto.</p>'
+            + '<p style="color:#6b7280;font-size:13px;">Para continuar, registra nuevamente al alumno y completa el pago en el mismo flujo.</p>',
+        confirmButtonText: 'Entendido',
+        confirmButtonColor: '#0d6efd',
+    });
+});
+{% endif %}
 </script>
 {% endblock %}

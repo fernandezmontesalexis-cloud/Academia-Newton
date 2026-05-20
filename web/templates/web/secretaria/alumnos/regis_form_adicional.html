@@ -62,26 +62,15 @@
                         </div>
                     </div>
 
-                    <!-- Campos que aparecen si "Sí" -->
+                    <!-- Campo que aparece si "Sí" -->
                     <div class="reg-fade" id="seccion_academia">
-                        <div class="reg-grid-2">
-                            <div class="reg-field">
-                                <label>Academia anterior *</label>
-                                <input type="text" name="academia_anterior" id="academia_anterior"
-                                    value="{{ formacion_adicional.academia_anterior }}"
-                                    placeholder="Nombre de la academia"
-                                    oninput="this.setCustomValidity('')"
-                                    oninvalid="this.setCustomValidity('Debes ingresar el nombre de la academia anterior')">
-                            </div>
-                            <div class="reg-field">
-                                <label>Tipo de estudio</label>
-                                <select name="tipo_estudio">
-                                    <option value="">Seleccione</option>
-                                    <option value="anual"     {% if formacion_adicional.tipo_estudio == "anual"     %}selected{% endif %}>Anual</option>
-                                    <option value="semestral" {% if formacion_adicional.tipo_estudio == "semestral" %}selected{% endif %}>Semestral</option>
-                                    <option value="otros"     {% if formacion_adicional.tipo_estudio == "otros"     %}selected{% endif %}>Otros</option>
-                                </select>
-                            </div>
+                        <div class="reg-field">
+                            <label>Academia anterior *</label>
+                            <input type="text" name="academia_anterior" id="academia_anterior"
+                                value="{{ formacion_adicional.academia_anterior }}"
+                                placeholder="Nombre de la academia"
+                                oninput="this.setCustomValidity('')"
+                                oninvalid="this.setCustomValidity('Debes ingresar el nombre de la academia anterior')">
                         </div>
                     </div>
                 </div>
@@ -116,25 +105,39 @@
                     <div class="reg-grid-2">
 
                         <div class="reg-field">
-                            <label>Ciclo activo *</label>
+                            <label>Ciclo *</label>
                             <select name="ciclo" id="ciclo_select" required
-                                oninvalid="this.setCustomValidity('Debes seleccionar un ciclo activo')"
+                                oninvalid="this.setCustomValidity('Debes seleccionar un ciclo')"
                                 oninput="this.setCustomValidity('')">
                                 <option value="">Seleccione un ciclo</option>
                                 {% for ciclo in ciclos %}
                                 <option value="{{ ciclo.id }}" {% if ciclo.id == ciclo_seleccionado %}selected{% endif %}>
-                                    {{ ciclo.nombre }} — S/ {{ ciclo.precio }}
+                                    {% if ciclo.estado_ciclo == 'pendiente' %}
+                                        {{ ciclo.nombre }} — S/ {{ ciclo.precio }} — Próximo (inicia {{ ciclo.fecha_inicio|date:"d/m/Y" }})
+                                    {% else %}
+                                        {{ ciclo.nombre }} — S/ {{ ciclo.precio }}
+                                    {% endif %}
                                 </option>
                                 {% endfor %}
                                 {% if not ciclos %}
-                                <option value="" disabled>Sin ciclos activos disponibles</option>
+                                <option value="" disabled>Sin ciclos disponibles</option>
                                 {% endif %}
                             </select>
                             {% if not ciclos %}
                             <small style="font-size:12px;color:#94a3b8;margin-top:4px;">
-                                No hay ciclos activos. Contacta al administrador.
+                                No hay ciclos activos ni próximos. Contacta al administrador.
                             </small>
                             {% endif %}
+                        </div>
+
+                        <div class="reg-field">
+                            <label>Tipo de estudio</label>
+                            <select name="tipo_estudio">
+                                <option value="">Seleccione</option>
+                                <option value="anual"     {% if formacion_adicional.tipo_estudio == "anual"     %}selected{% endif %}>Anual</option>
+                                <option value="semestral" {% if formacion_adicional.tipo_estudio == "semestral" %}selected{% endif %}>Semestral</option>
+                                <option value="otros"     {% if formacion_adicional.tipo_estudio == "otros"     %}selected{% endif %}>Otros</option>
+                            </select>
                         </div>
 
                     </div>

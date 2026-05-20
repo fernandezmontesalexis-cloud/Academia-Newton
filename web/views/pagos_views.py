@@ -31,10 +31,12 @@ from reportlab.lib.colors import HexColor
 @login_required
 @permiso_requerido(['admin', 'secretaria'])
 def pagos(request, matricula_id):
-    matricula = get_object_or_404(
-        Matricula.objects.select_related('alumno__apoderado', 'alumno__sede', 'ciclo'),
-        id=matricula_id,
-    )
+    try:
+        matricula = Matricula.objects.select_related(
+            'alumno__apoderado', 'alumno__sede', 'ciclo'
+        ).get(id=matricula_id)
+    except Matricula.DoesNotExist:
+        return redirect('matriculas' + '?cancelada=1')
 
     if matricula.alumno.sede != request.user.perfil.sede:
         messages.error(request, "No tienes acceso a esta matrícula")
@@ -43,36 +45,42 @@ def pagos(request, matricula_id):
     apoderado = matricula.alumno.apoderado
     apoderado_nombre = apoderado.nombre_completo if apoderado else None
 
-    def _contexto(error_monto=None, error_metodo=None, monto_prev="", metodo_prev=""):
+    def _contexto(error_monto=None, error_metodo=None, error_proximo=None,
+                  monto_prev="", metodo_prev="", proximo_prev=""):
         total_pagado = Pago.objects.filter(matricula=matricula).aggregate(
             Sum('monto')
-        )['monto__sum'] or 0
+        )['monto__sum'] or Decimal('0')
         total_ciclo = matricula.ciclo.precio
         deuda = total_ciclo - total_pagado
         return {
-            'matricula':       matricula,
-            'total_pagado':    total_pagado,
-            'total_ciclo':     total_ciclo,
-            'deuda':           deuda,
-            'apoderado_nombre':apoderado_nombre,
-            'error_monto':     error_monto,
-            'error_metodo':    error_metodo,
-            'monto_prev':      monto_prev,
-            'metodo_prev':     metodo_prev,
+            'matricula':        matricula,
+            'total_pagado':     total_pagado,
+            'total_ciclo':      total_ciclo,
+            'deuda':            deuda,
+            'apoderado_nombre': apoderado_nombre,
+            'error_monto':      error_monto,
+            'error_metodo':     error_metodo,
+            'error_proximo':    error_proximo,
+            'monto_prev':       monto_prev,
+            'metodo_prev':      metodo_prev,
+            'proximo_prev':     proximo_prev,
         }
 
     if request.method == 'POST':
-        monto_raw  = request.POST.get('monto',       '').strip()
-        metodo     = request.POST.get('metodo_pago', '').strip()
-        apo_value  = request.POST.get('apoderado',   '').strip()
+        monto_raw        = request.POST.get('monto',        '').strip()
+        metodo           = request.POST.get('metodo_pago',  '').strip()
+        apo_value        = request.POST.get('apoderado',    '').strip()
+        proximo_pago_raw = request.POST.get('proximo_pago', '').strip()
 
         total_pagado = Pago.objects.filter(matricula=matricula).aggregate(
             Sum('monto')
-        )['monto__sum'] or 0
+        )['monto__sum'] or Decimal('0')
         total_ciclo = matricula.ciclo.precio
+        deuda_restante = total_ciclo - total_pagado
 
-        error_monto = None
-        error_metodo = None
+        error_monto   = None
+        error_metodo  = None
+        error_proximo = None
 
         try:
             monto = Decimal(monto_raw)
@@ -83,17 +91,26 @@ def pagos(request, matricula_id):
         if monto is not None:
             if monto <= 0:
                 error_monto = "El monto debe ser mayor a 0"
+            elif monto % Decimal('0.50') != 0:
+                error_monto = "El monto debe ser en soles enteros o medios (ej. S/. 50.00 o S/. 50.50)"
             elif total_pagado + monto > total_ciclo:
-                error_monto = f"El monto excede la deuda restante (S/. {total_ciclo - total_pagado:.2f})"
+                deuda_fmt = f"{deuda_restante:.2f}"
+                error_monto = f"El monto excede la deuda restante (S/. {deuda_fmt})"
 
         if not metodo:
             error_metodo = "Debes seleccionar un método de pago"
 
-        if error_monto or error_metodo:
+        # Próximo pago obligatorio si el pago es parcial
+        if monto is not None and error_monto is None:
+            if monto < deuda_restante and not proximo_pago_raw:
+                error_proximo = "Debe registrar una fecha de próximo pago para pagos parciales."
+
+        if error_monto or error_metodo or error_proximo:
             return render(
                 request, 'web/secretaria/pagos/pagos.html',
                 _contexto(error_monto=error_monto, error_metodo=error_metodo,
-                          monto_prev=monto_raw, metodo_prev=metodo),
+                          error_proximo=error_proximo, monto_prev=monto_raw,
+                          metodo_prev=metodo, proximo_prev=proximo_pago_raw),
             )
 
         Pago.objects.create(
@@ -105,8 +122,6 @@ def pagos(request, matricula_id):
             apoderado=apo_value,
         )
 
-        # Guardar próximo pago si fue ingresado
-        proximo_pago_raw = request.POST.get('proximo_pago', '').strip()
         if proximo_pago_raw:
             try:
                 matricula.proximo_pago = datetime.strptime(proximo_pago_raw, '%Y-%m-%d').date()
@@ -117,7 +132,7 @@ def pagos(request, matricula_id):
 
         total_actual = Pago.objects.filter(matricula=matricula).aggregate(
             Sum('monto')
-        )['monto__sum'] or 0
+        )['monto__sum'] or Decimal('0')
         matricula.estado = 'pagado' if total_actual >= total_ciclo else 'pendiente'
         matricula.save()
 

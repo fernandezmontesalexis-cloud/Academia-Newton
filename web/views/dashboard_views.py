@@ -18,22 +18,26 @@ def dashboard(request):
         mes_inicio = hoy.replace(day=1)
 
         total_alumnos = Alumno.objects.filter(estado='activo').count()
-        matriculas_activas = Matricula.objects.filter(estado='pendiente').count()
+        matriculas_activas = Matricula.objects.filter(
+            alumno__estado='activo', estado='pendiente'
+        ).count()
         ingresos_mes = (
             Pago.objects.filter(fecha_pago__gte=mes_inicio)
             .aggregate(total=Sum('monto'))['total'] or 0
         )
         deuda_total = sum(
-            m.deuda() for m in Matricula.objects.filter(estado='pendiente')
+            m.deuda() for m in Matricula.objects.filter(
+                alumno__estado='activo', estado='pendiente'
+            )
         )
         ingresos_hoy = (
             Pago.objects.filter(fecha_pago=hoy)
             .aggregate(total=Sum('monto'))['total'] or 0
         )
         alumnos_con_deuda = (
-            Alumno.objects.filter(matricula__estado='pendiente')
-            .distinct()
-            .count()
+            Alumno.objects.filter(
+                estado='activo', matricula__estado='pendiente'
+            ).distinct().count()
         )
         actividad_reciente = list(
             Pago.objects.select_related('matricula__alumno')
@@ -56,7 +60,7 @@ def dashboard(request):
 
         total_alumnos = Alumno.objects.filter(sede=sede, estado='activo').count()
         matriculas_pendientes = Matricula.objects.filter(
-            alumno__sede=sede, estado='pendiente'
+            alumno__sede=sede, alumno__estado='activo', estado='pendiente'
         ).count()
         pagos_hoy = (
             Pago.objects.filter(fecha_pago=hoy, matricula__alumno__sede=sede)

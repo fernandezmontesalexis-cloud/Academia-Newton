@@ -46,7 +46,7 @@
         <div class="card-body py-2 px-3 d-flex align-items-center gap-2">
             <i class="fas fa-coins text-success" style="font-size:14px;flex-shrink:0"></i>
             <div>
-                <div class="fw-bold" style="font-size:15px">S/. {{ pagos_hoy }}</div>
+                <div class="fw-bold" style="font-size:15px">S/. {{ pagos_hoy|floatformat:2 }}</div>
                 <div class="text-muted" style="font-size:11px">Cobrado hoy</div>
             </div>
         </div>
@@ -56,7 +56,7 @@
         <div class="card-body py-2 px-3 d-flex align-items-center gap-2">
             <i class="fas fa-check-circle text-primary" style="font-size:14px;flex-shrink:0"></i>
             <div>
-                <div class="fw-bold" style="font-size:15px">S/. {{ total_recaudado }}</div>
+                <div class="fw-bold" style="font-size:15px">S/. {{ total_recaudado|floatformat:2 }}</div>
                 <div class="text-muted" style="font-size:11px">Total recaudado</div>
             </div>
         </div>
@@ -66,7 +66,7 @@
         <div class="card-body py-2 px-3 d-flex align-items-center gap-2">
             <i class="fas fa-exclamation-circle text-danger" style="font-size:14px;flex-shrink:0"></i>
             <div>
-                <div class="fw-bold" style="font-size:15px">S/. {{ total_deuda }}</div>
+                <div class="fw-bold" style="font-size:15px">S/. {{ total_deuda|floatformat:2 }}</div>
                 <div class="text-muted" style="font-size:11px">Deuda del ciclo</div>
             </div>
         </div>
@@ -135,15 +135,15 @@
                             <small class="text-muted">DNI: {{ m.alumno.dni }}</small>
                         </td>
 
-                        <td class="text-end">S/. {{ m.ciclo.precio }}</td>
+                        <td class="text-end">S/. {{ m.ciclo.precio|floatformat:2 }}</td>
 
                         <td class="text-end">
-                            <span class="fw-semibold text-success">S/. {{ m.total_pagado_db }}</span>
+                            <span class="fw-semibold text-success">S/. {{ m.total_pagado_db|floatformat:2 }}</span>
                         </td>
 
                         <td class="text-end">
                             {% if m.deuda_db > 0 %}
-                                <span class="fw-bold text-danger">S/. {{ m.deuda_db }}</span>
+                                <span class="fw-bold text-danger">S/. {{ m.deuda_db|floatformat:2 }}</span>
                             {% else %}
                                 <span class="text-success"><i class="fas fa-check"></i> 0</span>
                             {% endif %}
@@ -177,9 +177,9 @@
                                     title="Ver historial de pagos"
                                     data-alumno="{{ m.alumno }}"
                                     data-ciclo="{{ m.ciclo.nombre }}"
-                                    data-total="{{ m.ciclo.precio }}"
-                                    data-pagado="{{ m.total_pagado_db }}"
-                                    data-deuda="{{ m.deuda_db }}"
+                                    data-total="{{ m.ciclo.precio|floatformat:2 }}"
+                                    data-pagado="{{ m.total_pagado_db|floatformat:2 }}"
+                                    data-deuda="{{ m.deuda_db|floatformat:2 }}"
                                     data-estado="{{ m.estado_pago }}"
                                     data-pagos="{{ m.pagos_json }}">
                                 <i class="fas fa-history me-1"></i>Historial

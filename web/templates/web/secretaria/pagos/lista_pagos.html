@@ -46,12 +46,12 @@
                     </div>
                     <div class="col-6">
                         <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Recaudado</div>
-                        <div class="fw-bold text-success" style="font-size:17px">S/. {{ item.total_recaudado }}</div>
+                        <div class="fw-bold text-success" style="font-size:17px">S/. {{ item.total_recaudado|floatformat:2 }}</div>
                     </div>
                     <div class="col-6">
                         <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Deuda</div>
                         <div class="fw-bold {% if item.total_deuda > 0 %}text-danger{% else %}text-success{% endif %}" style="font-size:17px">
-                            S/. {{ item.total_deuda }}
+                            S/. {{ item.total_deuda|floatformat:2 }}
                         </div>
                     </div>
                     <div class="col-6">
@@ -78,7 +78,7 @@
                         </div>
                     </div>
                     <div class="text-muted mt-1" style="font-size:11px">
-                        S/. {{ item.total_recaudado }} de S/. {{ item.total_esperado }}
+                        S/. {{ item.total_recaudado|floatformat:2 }} de S/. {{ item.total_esperado|floatformat:2 }}
                     </div>
                 </div>
 

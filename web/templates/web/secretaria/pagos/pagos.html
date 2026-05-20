@@ -1,5 +1,13 @@
 {% extends 'web/base/base.html' %}
 
+{% block extra_css %}
+<style>
+    #monto::-webkit-inner-spin-button,
+    #monto::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+    #monto { -moz-appearance: textfield; }
+</style>
+{% endblock %}
+
 {% block content %}
 
 <!-- ── HEADER ─────────────────────────────────────────────────── -->
@@ -23,7 +31,7 @@
                 <div class="text-muted mb-1" style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;">
                     Total del ciclo
                 </div>
-                <div class="fw-bold fs-5">S/. {{ total_ciclo }}</div>
+                <div class="fw-bold fs-5">S/. {{ total_ciclo|floatformat:2 }}</div>
             </div>
         </div>
     </div>
@@ -35,7 +43,7 @@
                 <div class="text-muted mb-1" style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;">
                     Total pagado
                 </div>
-                <div class="fw-bold fs-5 text-primary">S/. {{ total_pagado }}</div>
+                <div class="fw-bold fs-5 text-primary">S/. {{ total_pagado|floatformat:2 }}</div>
             </div>
         </div>
     </div>
@@ -48,7 +56,7 @@
                 <div class="text-muted mb-1" style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;">
                     Deuda pendiente
                 </div>
-                <div class="fw-bold fs-5 text-danger">S/. {{ deuda }}</div>
+                <div class="fw-bold fs-5 text-danger">S/. {{ deuda|floatformat:2 }}</div>
             </div>
         </div>
         {% else %}
@@ -132,9 +140,9 @@
                     <label class="form-label fw-semibold small">Monto (S/.)</label>
                     <input type="number" name="monto" id="monto"
                            class="form-control"
-                           step="0.01" min="0.01" required placeholder="0.00"
+                           step="0.5" min="0.5" required placeholder="0.00"
                            value="{{ monto_prev }}"
-                           oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'El monto es obligatorio' : 'Ingresa un monto mayor a 0')"
+                           oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'El monto es obligatorio' : this.validity.stepMismatch ? 'El monto debe ser en soles enteros o medios (ej. S/. 50.00 o S/. 50.50)' : 'El monto debe ser mayor a 0')"
                            oninput="this.setCustomValidity('')">
                 </div>
 
@@ -151,12 +159,16 @@
                 </div>
 
                 <div class="col-md-2">
-                    <label class="form-label fw-semibold small">
+                    <label class="form-label fw-semibold small" id="proximo_pago_label">
                         Próximo pago
-                        <span class="text-muted fw-normal">(opcional)</span>
+                        <span class="text-muted fw-normal" id="proximo_pago_hint">(opcional)</span>
                     </label>
-                    <input type="date" name="proximo_pago" class="form-control"
-                           value="{{ matricula.proximo_pago|date:'Y-m-d' }}">
+                    <input type="date" name="proximo_pago" id="proximo_pago"
+                           class="form-control{% if error_proximo %} is-invalid{% endif %}"
+                           value="{{ proximo_prev|default:matricula.proximo_pago|date:'Y-m-d' }}">
+                    {% if error_proximo %}
+                    <div class="invalid-feedback">{{ error_proximo }}</div>
+                    {% endif %}
                 </div>
 
                 {% if apoderado_nombre is not None %}
@@ -164,7 +176,7 @@
                     <label class="form-label fw-semibold small">Apoderado</label>
                     <input type="text" name="apoderado" class="form-control"
                            value="{{ apoderado_nombre }}"
-                           placeholder="Nombre del apoderado">
+                           readonly style="background:#f8fafd;cursor:default;">
                 </div>
                 <div class="col-md-3">
                 {% else %}
@@ -267,7 +279,38 @@ document.addEventListener('DOMContentLoaded', function () {
         text: 'El pago fue registrado exitosamente.',
         confirmButtonText: 'Aceptar',
         confirmButtonColor: '#0d6efd',
+    }).then(function () {
+        window.location.href = "{% url 'matriculas' %}";
     });
+});
+</script>
+{% endif %}
+
+{% if deuda > 0 %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var montoInput     = document.getElementById('monto');
+    var proximoInput   = document.getElementById('proximo_pago');
+    var proximoHint    = document.getElementById('proximo_pago_hint');
+    var deudaRestante  = parseFloat("{{ deuda|floatformat:2 }}");
+
+    function actualizarProximo() {
+        var monto = parseFloat(montoInput.value) || 0;
+        var esParcial = monto > 0 && monto < deudaRestante;
+        proximoInput.required = esParcial;
+        if (esParcial) {
+            proximoHint.textContent = '(obligatorio)';
+            proximoHint.className = 'text-danger fw-normal';
+        } else {
+            proximoHint.textContent = '(opcional)';
+            proximoHint.className = 'text-muted fw-normal';
+        }
+    }
+
+    if (montoInput) {
+        montoInput.addEventListener('input', actualizarProximo);
+        actualizarProximo();
+    }
 });
 </script>
 {% endif %}

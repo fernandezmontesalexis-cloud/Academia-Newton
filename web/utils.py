@@ -23,6 +23,48 @@ def validar_dni(dni):
     return bool(re.match(r'^\d{8}$', str(dni)))
 
 
+def validar_email(email):
+    """
+    Valida formato de correo con dominio y extensión reales.
+    Retorna None si es válido (o vacío), o un mensaje de error específico.
+    """
+    if not email:
+        return None  # email es opcional
+
+    if '@' not in email:
+        return "Debe ingresar un correo válido."
+
+    partes = email.split('@')
+    if len(partes) != 2:
+        return "Debe ingresar un correo válido."
+
+    local, dominio = partes
+
+    if not local:
+        return "Debe ingresar un correo válido."
+
+    if not dominio:
+        return "El correo debe incluir un dominio válido (ej. gmail.com)."
+
+    if '.' not in dominio:
+        return "El correo debe incluir un dominio válido (ej. gmail.com)."
+
+    partes_dominio = dominio.split('.')
+    nombre_dominio = '.'.join(partes_dominio[:-1])
+    extension = partes_dominio[-1]
+
+    if not nombre_dominio or len(nombre_dominio) < 2:
+        return "El correo debe incluir un dominio válido (ej. gmail.com)."
+
+    if not extension or len(extension) < 2:
+        return "El correo debe incluir una extensión válida (.com, .pe, etc.)."
+
+    if not re.match(r'^[a-zA-Z]+$', extension):
+        return "El correo debe incluir una extensión válida (.com, .pe, etc.)."
+
+    return None
+
+
 def validar_celular(celular):
     """Retorna True si el celular tiene 9 dígitos y comienza con 9."""
     if not celular:
