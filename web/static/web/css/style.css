@@ -77,10 +77,11 @@ body {
 
 /* Menu nav */
 .menu {
-    padding: 10px 10px 24px;
+    padding: 18px 10px 24px;
     flex: 1;
     display: flex;
     flex-direction: column;
+    gap: 6px;
 }
 
 .sidebar .menu > a {
@@ -88,14 +89,19 @@ body {
     align-items: center;
     gap: 10px;
     color: rgba(255,255,255,.80);
-    padding: 9px 12px;
+    padding: 11px 12px;
     border-radius: 8px;
     text-decoration: none;
     font-size: 13.5px;
     font-weight: 500;
-    margin-top: 3px;
+    margin-top: 0;
     margin-bottom: 0;
     transition: background .15s, color .15s;
+}
+
+.sidebar .menu > a.active {
+    background: rgba(237,173,12,.22);
+    color: #EDAD0C;
 }
 
 .sidebar .menu > a:hover {

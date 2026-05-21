@@ -37,23 +37,23 @@
                 <!-- SECRETARIA -->
                 {% if request.user.perfil.tipo_usuario == 'secretaria' %}
 
-                <a href="{% url 'dashboard' %}">
+                <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <i class="fas fa-home"></i> Inicio
                 </a>
 
-                <a href="{% url 'lista_alumnos' %}">
+                <a href="{% url 'lista_alumnos' %}" class="{% if request.resolver_match.url_name in 'lista_alumnos lista_alumnos_otros detalle_alumno editar_alumno' %}active{% endif %}">
                     <i class="fas fa-users"></i> Alumnos
                 </a>
 
-                <a href="{% url 'matriculas' %}">
+                <a href="{% url 'matriculas' %}" class="{% if request.resolver_match.url_name in 'matriculas matriculas_historial pagos' %}active{% endif %}">
                     <i class="fas fa-book"></i> Matrículas
                 </a>
 
-                <a href="{% url 'lista_pagos' %}">
+                <a href="{% url 'lista_pagos' %}" class="{% if request.resolver_match.url_name in 'lista_pagos reporte_ciclo exportar_reportes' %}active{% endif %}">
                     <i class="fas fa-chart-bar"></i> Reportes
                 </a>
 
-                <a href="{% url 'registrar_alumno' %}">
+                <a href="{% url 'registrar_alumno' %}" class="{% if request.resolver_match.url_name in 'registrar_alumno registrar_apoderado regis_form_academica regis_form_adicional' %}active{% endif %}">
                     <i class="fas fa-user-plus"></i> Registrar Matrícula
                 </a>
 

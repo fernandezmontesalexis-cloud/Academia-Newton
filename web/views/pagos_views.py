@@ -104,6 +104,13 @@ def pagos(request, matricula_id):
         if monto is not None and error_monto is None:
             if monto < deuda_restante and not proximo_pago_raw:
                 error_proximo = "Debe registrar una fecha de próximo pago para pagos parciales."
+            elif proximo_pago_raw:
+                try:
+                    proximo_date = datetime.strptime(proximo_pago_raw, '%Y-%m-%d').date()
+                    if proximo_date > matricula.ciclo.fecha_fin:
+                        error_proximo = f"La fecha de próximo pago no puede superar el fin del ciclo ({matricula.ciclo.fecha_fin.strftime('%d/%m/%Y')})."
+                except ValueError:
+                    error_proximo = "Formato de fecha inválido."
 
         if error_monto or error_metodo or error_proximo:
             return render(
