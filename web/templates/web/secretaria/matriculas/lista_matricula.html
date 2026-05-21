@@ -20,7 +20,21 @@
     <div class="card-body">
 
         <div class="d-flex justify-content-between align-items-center mb-3">
-            <h6 class="fw-semibold mb-0">Matrículas con deuda pendiente</h6>
+            <div class="d-flex align-items-center gap-3 flex-wrap">
+                <h6 class="fw-semibold mb-0">Matrículas con deuda pendiente</h6>
+                <div class="d-flex align-items-center gap-2">
+                    <small class="text-muted fw-semibold" style="font-size:11px;">Próx. pago:</small>
+                    <span style="display:inline-block;padding:3px 10px;border-radius:20px;background:#fff1f2;border:1px solid #fca5a5;color:#be123c;font-size:12px;font-weight:600;">
+                        Vencido
+                    </span>
+                    <span style="display:inline-block;padding:3px 10px;border-radius:20px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:12px;font-weight:600;">
+                        Vence en 7 días
+                    </span>
+                    <span style="display:inline-block;padding:3px 10px;border-radius:20px;background:#f0fdf4;border:1px solid #86efac;color:#166534;font-size:12px;font-weight:600;">
+                        Sin urgencia
+                    </span>
+                </div>
+            </div>
             <form method="GET" class="d-flex gap-2">
                 <input type="text" name="dni" class="form-control form-control-sm"
                        placeholder="Buscar por DNI" value="{{ request.GET.dni }}">
@@ -74,7 +88,19 @@
 
                         <td>
                             {% if m.proximo_pago %}
-                                <small>{{ m.proximo_pago|date:"d/m/Y" }}</small>
+                                {% if m.orden_pago == 0 %}
+                                    <span style="display:inline-block;padding:3px 10px;border-radius:20px;background:#fff1f2;border:1px solid #fca5a5;color:#be123c;font-size:12px;font-weight:600;">
+                                        {{ m.proximo_pago|date:"d/m/Y" }}
+                                    </span>
+                                {% elif m.orden_pago == 1 %}
+                                    <span style="display:inline-block;padding:3px 10px;border-radius:20px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:12px;font-weight:600;">
+                                        {{ m.proximo_pago|date:"d/m/Y" }}
+                                    </span>
+                                {% else %}
+                                    <span style="display:inline-block;padding:3px 10px;border-radius:20px;background:#f0fdf4;border:1px solid #86efac;color:#166534;font-size:12px;font-weight:600;">
+                                        {{ m.proximo_pago|date:"d/m/Y" }}
+                                    </span>
+                                {% endif %}
                             {% else %}
                                 <small class="text-muted">—</small>
                             {% endif %}

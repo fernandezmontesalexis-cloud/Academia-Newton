@@ -1,21 +1,37 @@
 from django.shortcuts import render
-from django.db.models import Sum, F, ExpressionWrapper, DecimalField, Value, Count
+from django.db.models import Sum, F, ExpressionWrapper, DecimalField, Value, Count, Case, When, IntegerField
 from django.db.models.functions import Coalesce
 from web.permisos import permiso_requerido
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 
-from ..models import Matricula
+from ..models import Matricula, Alumno
 
 
 def _limpiar_matriculas_huerfanas(sede):
-    """Elimina matrículas sin ningún pago registrado (registros inconsistentes)."""
+    """Elimina matrículas sin ningún pago y alumnos que queden sin matrícula."""
+    # Paso 1: capturar IDs de alumnos afectados antes de borrar
+    alumnos_ids = list(
+        Matricula.objects.filter(
+            alumno__sede=sede,
+            alumno__estado='activo',
+        ).annotate(num_pagos=Count('pago'))
+        .filter(num_pagos=0)
+        .values_list('alumno_id', flat=True)
+    )
+
+    # Paso 2: eliminar las matrículas huérfanas
     Matricula.objects.filter(
         alumno__sede=sede,
         alumno__estado='activo',
     ).annotate(num_pagos=Count('pago')).filter(num_pagos=0).delete()
+
+    # Paso 3: eliminar alumnos que quedaron sin ninguna matrícula
+    Alumno.objects.filter(
+        id__in=alumnos_ids,
+    ).annotate(num_matriculas=Count('matricula')).filter(num_matriculas=0).delete()
 
 
 def _matriculas_base(sede):
@@ -76,7 +92,16 @@ def matriculas(request):
 
     historial_count = base.filter(deuda_db__lte=0).count()
 
-    paginator = Paginator(pendientes_qs.order_by('-fecha_matricula'), 10)
+    pendientes_qs = pendientes_qs.annotate(
+        orden_pago=Case(
+            When(proximo_pago__lt=today, then=0),
+            When(proximo_pago__lte=today + timedelta(days=7), then=1),
+            default=2,
+            output_field=IntegerField(),
+        )
+    )
+
+    paginator = Paginator(pendientes_qs.order_by('orden_pago', 'proximo_pago'), 10)
     matriculas_page = paginator.get_page(request.GET.get('page'))
 
     for m in matriculas_page:

@@ -13,7 +13,6 @@ from ..models import Alumno, Matricula, Ciclo, DesactivacionLog
 def _matricula_activa_exists(alumno_pk, today):
     return Matricula.objects.filter(
         alumno_id=alumno_pk,
-        ciclo__fecha_inicio__lte=today,
         ciclo__fecha_fin__gte=today,
     ).exists()
 
@@ -46,7 +45,6 @@ def _estado_academico_full(alumno, matriculas_list, today):
 def _sq_activa(today):
     return Matricula.objects.filter(
         alumno=OuterRef('pk'),
-        ciclo__fecha_inicio__lte=today,
         ciclo__fecha_fin__gte=today,
     )
 

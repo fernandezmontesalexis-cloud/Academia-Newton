@@ -216,7 +216,6 @@
     let formSubmitting   = false;
     let cancelledViaLink = false;
 
-    // ── Capa 1: interceptar TODOS los <a> de la página ──────
     document.addEventListener('click', function (e) {
         if (formSubmitting || cancelledViaLink) return;
         const link = e.target.closest('a[href]');
@@ -240,7 +239,6 @@
         }).then(function (result) {
             if (!result.isConfirmed) return;
             cancelledViaLink = true;
-            window.removeEventListener('beforeunload', handleBeforeUnload);
             fetch(CANCELAR_URL, {
                 method: 'POST',
                 headers: { 'X-CSRFToken': CSRF },
@@ -249,20 +247,8 @@
                 window.location.href = href;
             });
         });
-    }, true); // capture phase para interceptar antes que otros listeners
+    }, true);
 
-    // ── Capa 2: beforeunload + sendBeacon ───────────────────
-    function handleBeforeUnload(e) {
-        if (formSubmitting || cancelledViaLink) return;
-        const data = new FormData();
-        data.append('csrfmiddlewaretoken', CSRF);
-        navigator.sendBeacon(CANCELAR_URL, data);
-        e.preventDefault();
-        e.returnValue = '';
-    }
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
-    // Desactivar bloqueo cuando el formulario se envía
     document.getElementById('form-pago').addEventListener('submit', function () {
         formSubmitting = true;
     });
@@ -296,14 +282,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function actualizarProximo() {
         var monto = parseFloat(montoInput.value) || 0;
-        var esParcial = monto > 0 && monto < deudaRestante;
+        var esParcial  = monto > 0 && monto < deudaRestante;
+        var esTotalPago = monto >= deudaRestante && monto > 0;
+
         proximoInput.required = esParcial;
-        if (esParcial) {
+
+        if (esTotalPago) {
+            proximoInput.value    = '';
+            proximoInput.disabled = true;
+            proximoHint.textContent = '(no aplica)';
+            proximoHint.className   = 'text-muted fw-normal';
+        } else if (esParcial) {
+            proximoInput.disabled = false;
             proximoHint.textContent = '(obligatorio)';
-            proximoHint.className = 'text-danger fw-normal';
+            proximoHint.className   = 'text-danger fw-normal';
         } else {
+            proximoInput.disabled = false;
             proximoHint.textContent = '(opcional)';
-            proximoHint.className = 'text-muted fw-normal';
+            proximoHint.className   = 'text-muted fw-normal';
         }
     }
 

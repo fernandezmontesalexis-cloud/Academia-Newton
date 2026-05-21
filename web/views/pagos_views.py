@@ -36,7 +36,7 @@ def pagos(request, matricula_id):
             'alumno__apoderado', 'alumno__sede', 'ciclo'
         ).get(id=matricula_id)
     except Matricula.DoesNotExist:
-        return redirect('matriculas' + '?cancelada=1')
+        return redirect(reverse('matriculas') + '?cancelada=1')
 
     if matricula.alumno.sede != request.user.perfil.sede:
         messages.error(request, "No tienes acceso a esta matrícula")
@@ -156,7 +156,10 @@ def cancelar_matricula_nueva(request, matricula_id):
         t=Sum('monto')
     )['t'] or 0
     if total == 0:
+        alumno = matricula.alumno
         matricula.delete()
+        if not Matricula.objects.filter(alumno=alumno).exists():
+            alumno.delete()
     return redirect('matriculas')
 
 
