@@ -1,10 +1,11 @@
+import json
 from datetime import date
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
 
-from ..models import Alumno, Matricula, Pago
+from ..models import Alumno, Ciclo, Matricula, Pago, Sede
 
 
 @login_required
@@ -17,41 +18,62 @@ def dashboard(request):
         hoy = date.today()
         mes_inicio = hoy.replace(day=1)
 
+        # KPIs globales
         total_alumnos = Alumno.objects.filter(estado='activo').count()
-        matriculas_activas = Matricula.objects.filter(
-            alumno__estado='activo', estado='pendiente'
-        ).count()
         ingresos_mes = (
             Pago.objects.filter(fecha_pago__gte=mes_inicio)
             .aggregate(total=Sum('monto'))['total'] or 0
-        )
-        deuda_total = sum(
-            m.deuda() for m in Matricula.objects.filter(
-                alumno__estado='activo', estado='pendiente'
-            )
         )
         ingresos_hoy = (
             Pago.objects.filter(fecha_pago=hoy)
             .aggregate(total=Sum('monto'))['total'] or 0
         )
-        alumnos_con_deuda = (
-            Alumno.objects.filter(
-                estado='activo', matricula__estado='pendiente'
-            ).distinct().count()
+        deuda_total = sum(
+            m.deuda() for m in Matricula.objects.filter(
+                alumno__estado='activo', estado='pendiente'
+            ).select_related('ciclo').prefetch_related('pago_set')
         )
-        actividad_reciente = list(
-            Pago.objects.select_related('matricula__alumno')
-            .order_by('-fecha_pago', '-id')[:5]
-        )
+
+        # Datos para gráficos por sede
+        chart_labels = []
+        chart_incomes = []    # dona: ingresos del mes
+        chart_esperado = []   # barras: esperado ciclo activo
+        chart_cobrado = []    # barras: cobrado ciclo activo
+
+        for sede in Sede.objects.filter(is_active=True):
+            ingresos_mes_sede = float(
+                Pago.objects.filter(
+                    matricula__alumno__sede=sede,
+                    fecha_pago__gte=mes_inicio
+                ).aggregate(total=Sum('monto'))['total'] or 0
+            )
+            chart_labels.append(sede.nombre)
+            chart_incomes.append(ingresos_mes_sede)
+
+            ciclos_activos = list(Ciclo.objects.filter(
+                sede=sede, fecha_fin__gte=hoy
+            ))
+            sede_esperado = 0.0
+            sede_cobrado = 0.0
+            for ciclo in ciclos_activos:
+                total_mat = Matricula.objects.filter(ciclo=ciclo).count()
+                sede_esperado += float(ciclo.precio * total_mat)
+                sede_cobrado += float(
+                    Pago.objects.filter(matricula__ciclo=ciclo)
+                    .aggregate(total=Sum('monto'))['total'] or 0
+                )
+            chart_esperado.append(sede_esperado)
+            chart_cobrado.append(sede_cobrado)
 
         return render(request, 'web/administrador/dashboard_admin.html', {
             'total_alumnos': total_alumnos,
-            'matriculas_activas': matriculas_activas,
             'ingresos_mes': ingresos_mes,
-            'deuda_total': deuda_total,
             'ingresos_hoy': ingresos_hoy,
-            'alumnos_con_deuda': alumnos_con_deuda,
-            'actividad_reciente': actividad_reciente,
+            'deuda_total': deuda_total,
+            'chart_labels':   json.dumps(chart_labels),
+            'chart_incomes':  json.dumps(chart_incomes),
+            'chart_esperado': json.dumps(chart_esperado),
+            'chart_cobrado':  json.dumps(chart_cobrado),
         })
 
     if perfil.tipo_usuario == 'secretaria':

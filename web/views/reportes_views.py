@@ -2,14 +2,16 @@ import json
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 from datetime import date
+from decimal import Decimal
 
 from django.shortcuts import render, get_object_or_404
 from django.http import HttpResponse
 from web.permisos import permiso_requerido
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, Count
+from django.db.models import Sum, Count, DecimalField, Value
+from django.db.models.functions import Coalesce
 
-from ..models import Sede, Alumno, Matricula, Pago
+from ..models import Sede, Alumno, Matricula, Pago, Ciclo
 
 
 def _ingresos_6_meses(sede=None):
@@ -37,49 +39,64 @@ def _ingresos_6_meses(sede=None):
 @login_required
 @permiso_requerido(['admin'])
 def reportes_sedes(request):
-    fecha_inicio_str = request.GET.get('fecha_inicio', '')
-    fecha_fin_str = request.GET.get('fecha_fin', '')
-
-    fecha_inicio = None
-    fecha_fin = None
-    try:
-        if fecha_inicio_str:
-            fecha_inicio = date.fromisoformat(fecha_inicio_str)
-        if fecha_fin_str:
-            fecha_fin = date.fromisoformat(fecha_fin_str)
-    except ValueError:
-        pass
-
-    sedes = Sede.objects.all()
     data_sedes = []
 
-    for sede in sedes:
-        alumnos_activos = Alumno.objects.filter(sede=sede, estado='activo').count()
-        matriculas_qs = Matricula.objects.filter(alumno__sede=sede)
+    for sede in Sede.objects.all():
+        alumnos_activos       = Alumno.objects.filter(sede=sede, estado='activo').count()
+        matriculas_qs         = Matricula.objects.filter(alumno__sede=sede)
+        matriculas_pagadas    = matriculas_qs.filter(estado='pagado').count()
+        matriculas_pendientes = matriculas_qs.filter(estado='pendiente').count()
 
-        pagos_qs = Pago.objects.filter(matricula__alumno__sede=sede)
-        if fecha_inicio:
-            pagos_qs = pagos_qs.filter(fecha_pago__gte=fecha_inicio)
-        if fecha_fin:
-            pagos_qs = pagos_qs.filter(fecha_pago__lte=fecha_fin)
-
-        ingresos = pagos_qs.aggregate(total=Sum('monto'))['total'] or 0
+        ingresos = (
+            Pago.objects.filter(matricula__alumno__sede=sede)
+            .aggregate(total=Sum('monto'))['total'] or 0
+        )
         deuda = sum(
-            m.deuda() for m in matriculas_qs.filter(estado='pendiente')
+            m.deuda() for m in
+            matriculas_qs.filter(estado='pendiente')
+            .select_related('ciclo').prefetch_related('pago_set')
         )
 
+        # Datos gráfico 1: ingresos mensuales
+        mensual_labels, mensual_data = _ingresos_6_meses(sede=sede)
+
+        # Datos gráfico 3: esperado vs cobrado por ciclo
+        ciclos = list(
+            Matricula.objects.filter(alumno__sede=sede)
+            .values('ciclo__id', 'ciclo__nombre', 'ciclo__precio')
+            .annotate(total_mats=Count('id'))
+            .order_by('ciclo__fecha_inicio')
+        )
+        bar_labels, bar_esperado, bar_cobrado = [], [], []
+        for c in ciclos:
+            bar_labels.append(c['ciclo__nombre'])
+            esperado = float(c['ciclo__precio']) * c['total_mats']
+            cobrado  = float(
+                Pago.objects.filter(
+                    matricula__ciclo_id=c['ciclo__id'],
+                    matricula__alumno__sede=sede,
+                ).aggregate(t=Sum('monto'))['t'] or 0
+            )
+            bar_esperado.append(round(esperado, 2))
+            bar_cobrado.append(round(cobrado, 2))
+
         data_sedes.append({
-            'sede': sede,
-            'alumnos_activos': alumnos_activos,
-            'total_matriculas': matriculas_qs.count(),
-            'ingresos': ingresos,
-            'deuda': deuda,
+            'sede':                   sede,
+            'alumnos_activos':        alumnos_activos,
+            'total_matriculas':       matriculas_qs.count(),
+            'ingresos':               round(float(ingresos), 2),
+            'deuda':                  round(float(deuda), 2),
+            # Para gráficos modales
+            'chart_mensual_labels':   json.dumps(mensual_labels),
+            'chart_mensual_data':     json.dumps(mensual_data),
+            'chart_estado_data':      json.dumps([matriculas_pagadas, matriculas_pendientes]),
+            'chart_bar_labels':       json.dumps(bar_labels),
+            'chart_bar_esperado':     json.dumps(bar_esperado),
+            'chart_bar_cobrado':      json.dumps(bar_cobrado),
         })
 
     return render(request, 'web/administrador/reportes/reportes_sedes.html', {
         'data_sedes': data_sedes,
-        'fecha_inicio_str': fecha_inicio_str,
-        'fecha_fin_str': fecha_fin_str,
     })
 
 
@@ -89,50 +106,71 @@ def reporte_sede_detalle(request, sede_id):
     sede = get_object_or_404(Sede, id=sede_id)
 
     alumnos_activos = Alumno.objects.filter(sede=sede, estado='activo').count()
-    alumnos_inactivos = Alumno.objects.filter(sede=sede, estado='inactivo').count()
+    matriculas_qs   = Matricula.objects.filter(alumno__sede=sede)
 
-    matriculas_qs = Matricula.objects.filter(alumno__sede=sede)
-    matriculas_pagadas = matriculas_qs.filter(estado='pagado').count()
-    matriculas_pendientes_count = matriculas_qs.filter(estado='pendiente').count()
-
-    ingresos_total = (
+    ingresos_total = round(float(
         Pago.objects.filter(matricula__alumno__sede=sede)
         .aggregate(total=Sum('monto'))['total'] or 0
-    )
-    deuda_total = sum(
-        m.deuda() for m in matriculas_qs.filter(estado='pendiente')
-    )
+    ), 2)
+    deuda_total = round(float(sum(
+        m.deuda() for m in
+        matriculas_qs.filter(estado='pendiente')
+        .select_related('ciclo').prefetch_related('pago_set')
+    )), 2)
 
-    mensual_labels, mensual_data = _ingresos_6_meses(sede=sede)
+    # Cards de ciclos — igual que secretaria en Reportes Financieros
+    ciclos_raw  = Ciclo.objects.filter(sede=sede).order_by('-fecha_inicio')
+    ciclos_data = []
 
-    pagos_recientes = list(
-        Pago.objects.filter(matricula__alumno__sede=sede)
-        .select_related('matricula__alumno', 'matricula__ciclo')
-        .order_by('-fecha_pago', '-id')[:10]
-    )
+    for c in ciclos_raw:
+        total_matriculas = Matricula.objects.filter(
+            ciclo=c, alumno__estado='activo', alumno__sede=sede,
+        ).count()
+        if total_matriculas == 0:
+            continue
 
-    ciclos_usados = list(
-        Matricula.objects.filter(alumno__sede=sede)
-        .values('ciclo__nombre')
-        .annotate(total=Count('id'))
-        .order_by('-total')[:5]
-    )
+        total_recaudado = (
+            Pago.objects.filter(
+                matricula__ciclo=c,
+                matricula__alumno__estado='activo',
+                matricula__alumno__sede=sede,
+            ).aggregate(t=Sum('monto'))['t'] or Decimal('0')
+        )
+        total_esperado = c.precio * total_matriculas
+        total_deuda    = max(total_esperado - total_recaudado, Decimal('0'))
+
+        alumnos_con_deuda = (
+            Matricula.objects
+            .filter(ciclo=c, alumno__estado='activo', alumno__sede=sede)
+            .annotate(
+                pagado_m=Coalesce(
+                    Sum('pago__monto'), Value(Decimal('0')),
+                    output_field=DecimalField(),
+                )
+            )
+            .filter(pagado_m__lt=c.precio)
+            .count()
+        )
+
+        pct = int(total_recaudado / total_esperado * 100) if total_esperado > 0 else 0
+
+        ciclos_data.append({
+            'ciclo':             c,
+            'total_matriculas':  total_matriculas,
+            'total_recaudado':   total_recaudado,
+            'total_esperado':    total_esperado,
+            'total_deuda':       total_deuda,
+            'alumnos_con_deuda': alumnos_con_deuda,
+            'pct_recaudado':     min(pct, 100),
+        })
 
     return render(request, 'web/administrador/reportes/reporte_sede_detalle.html', {
-        'sede': sede,
-        'alumnos_activos': alumnos_activos,
-        'alumnos_inactivos': alumnos_inactivos,
+        'sede':             sede,
+        'alumnos_activos':  alumnos_activos,
         'total_matriculas': matriculas_qs.count(),
-        'matriculas_pagadas': matriculas_pagadas,
-        'matriculas_pendientes': matriculas_pendientes_count,
-        'ingresos_total': ingresos_total,
-        'deuda_total': deuda_total,
-        'pagos_recientes': pagos_recientes,
-        'ciclos_usados': ciclos_usados,
-        'chart_mensual_labels': json.dumps(mensual_labels),
-        'chart_mensual_data': json.dumps(mensual_data),
-        'chart_estado_labels': json.dumps(['Pagado', 'Pendiente']),
-        'chart_estado_data': json.dumps([matriculas_pagadas, matriculas_pendientes_count]),
+        'ingresos_total':   ingresos_total,
+        'deuda_total':      deuda_total,
+        'ciclos_data':      ciclos_data,
     })
 
 

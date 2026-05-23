@@ -7,89 +7,12 @@
 
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <div>
-        <h4 class="mb-0 fw-bold">Reportes por Sede</h4>
-        <small class="text-muted">Resumen gerencial de todas las sedes</small>
-    </div>
-    <a href="{% url 'exportar_reporte_excel' %}" class="btn btn-sm btn-success">
-        <i class="fas fa-file-excel me-1"></i> Exportar Excel
-    </a>
+<div class="mb-3">
+    <h4 class="mb-0 fw-bold">Reportes por Sede</h4>
+    <small class="text-muted">Resumen gerencial de todas las sedes</small>
 </div>
-
-<!-- FILTRO POR FECHA -->
-<form method="get" class="card border-0 shadow-sm p-3 mb-3">
-    <div class="row g-2 align-items-end">
-        <div class="col-auto">
-            <label class="form-label small mb-1 text-muted">Desde</label>
-            <input type="date" name="fecha_inicio" class="form-control form-control-sm"
-                   value="{{ fecha_inicio_str }}">
-        </div>
-        <div class="col-auto">
-            <label class="form-label small mb-1 text-muted">Hasta</label>
-            <input type="date" name="fecha_fin" class="form-control form-control-sm"
-                   value="{{ fecha_fin_str }}">
-        </div>
-        <div class="col-auto">
-            <button type="submit" class="btn btn-primary btn-sm">
-                <i class="fas fa-filter me-1"></i> Filtrar
-            </button>
-            <a href="{% url 'reportes_sedes' %}" class="btn btn-outline-secondary btn-sm">
-                Limpiar
-            </a>
-        </div>
-        {% if fecha_inicio_str or fecha_fin_str %}
-        <div class="col-auto">
-            <span class="badge bg-info text-dark">
-                <i class="fas fa-info-circle me-1"></i> Ingresos filtrados por fecha
-            </span>
-        </div>
-        {% endif %}
-    </div>
-</form>
 
 {% if data_sedes %}
-
-<!-- CARDS POR SEDE -->
-<div class="row g-3 mb-4">
-    {% for item in data_sedes %}
-    <div class="col-md-6 col-lg-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-primary text-white fw-semibold">
-                <i class="fas fa-building me-1"></i> {{ item.sede.nombre }}
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted">Alumnos activos</span>
-                    <span class="badge bg-primary">{{ item.alumnos_activos }}</span>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted">Matrículas</span>
-                    <span class="badge bg-secondary">{{ item.total_matriculas }}</span>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted">Ingresos</span>
-                    <span class="text-success fw-bold">S/. {{ item.ingresos }}</span>
-                </div>
-                <div class="d-flex justify-content-between mb-3">
-                    <span class="text-muted">Deuda pendiente</span>
-                    {% if item.deuda > 0 %}
-                        <span class="text-danger fw-bold">S/. {{ item.deuda }}</span>
-                    {% else %}
-                        <span class="text-success"><i class="fas fa-check"></i> Al día</span>
-                    {% endif %}
-                </div>
-            </div>
-            <div class="card-footer bg-white border-0 pt-0 pb-3 px-3">
-                <a href="{% url 'reporte_sede_detalle' item.sede.id %}"
-                   class="btn btn-outline-primary btn-sm w-100">
-                    <i class="fas fa-chart-bar me-1"></i> Ver detalle
-                </a>
-            </div>
-        </div>
-    </div>
-    {% endfor %}
-</div>
 
 <!-- TABLA COMPARATIVA -->
 <div class="card border-0 shadow-sm mb-3">
@@ -106,6 +29,7 @@
                         <th class="text-center">Matrículas</th>
                         <th class="text-end">Ingresos</th>
                         <th class="text-end">Deuda</th>
+                        <th class="text-center">Gráficos</th>
                         <th class="text-center">Detalle</th>
                     </tr>
                 </thead>
@@ -115,18 +39,51 @@
                         <td class="fw-semibold">{{ item.sede.nombre }}</td>
                         <td class="text-center">{{ item.alumnos_activos }}</td>
                         <td class="text-center">{{ item.total_matriculas }}</td>
-                        <td class="text-end text-success fw-semibold">S/. {{ item.ingresos }}</td>
+                        <td class="text-end text-success fw-semibold">S/. {{ item.ingresos|floatformat:2 }}</td>
                         <td class="text-end">
                             {% if item.deuda > 0 %}
-                                <span class="text-danger fw-semibold">S/. {{ item.deuda }}</span>
+                                <span class="text-danger fw-semibold">S/. {{ item.deuda|floatformat:2 }}</span>
                             {% else %}
                                 <span class="text-success"><i class="fas fa-check"></i></span>
                             {% endif %}
                         </td>
+
+                        <!-- 3 botones de gráficos -->
+                        <td class="text-center">
+                            <div class="d-flex justify-content-center gap-1">
+                                <button class="btn btn-sm btn-outline-success btn-modal-grafico"
+                                        data-sede-id="{{ item.sede.id }}"
+                                        data-chart="linea"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalLinea"
+                                        title="Ingresos mensuales">
+                                    <i class="fas fa-chart-line"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-warning btn-modal-grafico"
+                                        data-sede-id="{{ item.sede.id }}"
+                                        data-chart="dona"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalDona"
+                                        title="Estado de matrículas">
+                                    <i class="fas fa-chart-pie"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary btn-modal-grafico"
+                                        data-sede-id="{{ item.sede.id }}"
+                                        data-chart="barras"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalBarras"
+                                        title="Esperado vs Cobrado">
+                                    <i class="fas fa-chart-bar"></i>
+                                </button>
+                            </div>
+                        </td>
+
+                        <!-- Botón detalle -->
                         <td class="text-center">
                             <a href="{% url 'reporte_sede_detalle' item.sede.id %}"
-                               class="btn btn-outline-primary btn-sm">
-                                <i class="fas fa-chart-bar"></i>
+                               class="btn btn-outline-secondary btn-sm"
+                               title="Ver detalle de sede">
+                                <i class="fas fa-building"></i>
                             </a>
                         </td>
                     </tr>
@@ -146,4 +103,236 @@
 </div>
 {% endif %}
 
+
+<!-- ===== MODAL: Ingresos Mensuales ===== -->
+<div class="modal fade" id="modalLinea" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h6 class="modal-title fw-semibold">
+                    <i class="fas fa-chart-line text-success me-2"></i>
+                    Ingresos Mensuales — últimos 6 meses
+                    <span class="text-muted fw-normal ms-1" id="lineaSedeName"></span>
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <div style="height: 300px;">
+                    <canvas id="canvasLinea"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL: Estado de Matrículas ===== -->
+<div class="modal fade" id="modalDona" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h6 class="modal-title fw-semibold">
+                    <i class="fas fa-chart-pie text-warning me-2"></i>
+                    Estado de Matrículas
+                    <span class="text-muted fw-normal ms-1" id="donaSedeName"></span>
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <div style="height: 260px;">
+                    <canvas id="canvasDona"></canvas>
+                </div>
+                <div class="d-flex justify-content-around mt-2">
+                    <small class="text-success fw-semibold">
+                        <i class="fas fa-circle me-1"></i> Pagado: <span id="donaLabelPagado"></span>
+                    </small>
+                    <small class="text-warning fw-semibold">
+                        <i class="fas fa-circle me-1"></i> Pendiente: <span id="donaLabelPendiente"></span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== MODAL: Esperado vs Cobrado ===== -->
+<div class="modal fade" id="modalBarras" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <h6 class="modal-title fw-semibold">
+                    <i class="fas fa-chart-bar text-primary me-2"></i>
+                    Esperado vs Cobrado por ciclo
+                    <span class="text-muted fw-normal ms-1" id="barrasSedeName"></span>
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body pt-2">
+                <div style="height: 300px;">
+                    <canvas id="canvasBarras"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+
+    // ── Datos por sede ────────────────────────────────────────────────────
+    var SEDES = {
+        {% for item in data_sedes %}
+        "{{ item.sede.id }}": {
+            nombre:        "{{ item.sede.nombre|escapejs }}",
+            mensualLabels: {{ item.chart_mensual_labels|safe }},
+            mensualData:   {{ item.chart_mensual_data|safe }},
+            estadoData:    {{ item.chart_estado_data|safe }},
+            barLabels:     {{ item.chart_bar_labels|safe }},
+            barEsperado:   {{ item.chart_bar_esperado|safe }},
+            barCobrado:    {{ item.chart_bar_cobrado|safe }}
+        }{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    };
+
+    // ── Sede activa (se fija al hacer clic en el botón) ───────────────────
+    var currentSedeId = null;
+
+    document.querySelectorAll('.btn-modal-grafico').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            currentSedeId = this.getAttribute('data-sede-id');
+        });
+    });
+
+    // ── Instancias de Chart.js activas ────────────────────────────────────
+    var charts = {};
+
+    function destroy(key) {
+        if (charts[key]) { charts[key].destroy(); charts[key] = null; }
+    }
+
+    // ── MODAL LÍNEA ───────────────────────────────────────────────────────
+    document.getElementById('modalLinea').addEventListener('shown.bs.modal', function() {
+        var sid  = currentSedeId;
+        var d    = SEDES[sid];
+        document.getElementById('lineaSedeName').textContent = '— ' + d.nombre;
+        destroy('linea');
+        charts['linea'] = new Chart(document.getElementById('canvasLinea'), {
+            type: 'line',
+            data: {
+                labels: d.mensualLabels,
+                datasets: [{
+                    label: 'Ingresos (S/.)',
+                    data: d.mensualData,
+                    borderColor: 'rgba(25,135,84,0.85)',
+                    backgroundColor: 'rgba(25,135,84,0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.4,
+                    pointBackgroundColor: 'rgba(25,135,84,1)',
+                    pointRadius: 4,
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true,
+                         ticks: { callback: function(v){ return 'S/. ' + v; }, font: { size: 11 } } },
+                    x: { ticks: { font: { size: 11 } } }
+                }
+            }
+        });
+    });
+    document.getElementById('modalLinea').addEventListener('hidden.bs.modal', function() {
+        destroy('linea');
+    });
+
+    // ── MODAL DONA ────────────────────────────────────────────────────────
+    document.getElementById('modalDona').addEventListener('shown.bs.modal', function() {
+        var sid = currentSedeId;
+        var d   = SEDES[sid];
+        document.getElementById('donaSedeName').textContent    = '— ' + d.nombre;
+        document.getElementById('donaLabelPagado').textContent   = d.estadoData[0];
+        document.getElementById('donaLabelPendiente').textContent = d.estadoData[1];
+        destroy('dona');
+        charts['dona'] = new Chart(document.getElementById('canvasDona'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Pagado', 'Pendiente'],
+                datasets: [{
+                    data: d.estadoData,
+                    backgroundColor: ['#28a745', '#ffc107'],
+                    hoverOffset: 8,
+                }]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom' } }
+            }
+        });
+    });
+    document.getElementById('modalDona').addEventListener('hidden.bs.modal', function() {
+        destroy('dona');
+    });
+
+    // ── MODAL BARRAS ──────────────────────────────────────────────────────
+    document.getElementById('modalBarras').addEventListener('shown.bs.modal', function() {
+        var sid = currentSedeId;
+        var d   = SEDES[sid];
+        document.getElementById('barrasSedeName').textContent = '— ' + d.nombre;
+        destroy('barras');
+        charts['barras'] = new Chart(document.getElementById('canvasBarras'), {
+            type: 'bar',
+            data: {
+                labels: d.barLabels,
+                datasets: [
+                    {
+                        label: 'Esperado',
+                        data: d.barEsperado,
+                        backgroundColor: 'rgba(13,110,253,0.25)',
+                        borderColor:     'rgba(13,110,253,0.8)',
+                        borderWidth: 1.5,
+                        borderRadius: 4,
+                    },
+                    {
+                        label: 'Cobrado',
+                        data: d.barCobrado,
+                        backgroundColor: 'rgba(25,135,84,0.65)',
+                        borderColor:     'rgba(25,135,84,0.9)',
+                        borderWidth: 1.5,
+                        borderRadius: 4,
+                    }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 12 } },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                return ' ' + ctx.dataset.label + ': S/. ' + ctx.parsed.y.toFixed(2);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true,
+                         grid: { color: 'rgba(0,0,0,0.05)' },
+                         ticks: { callback: function(v){ return 'S/. ' + v; }, font: { size: 11 } } },
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } }
+                }
+            }
+        });
+    });
+    document.getElementById('modalBarras').addEventListener('hidden.bs.modal', function() {
+        destroy('barras');
+    });
+
+})();
+</script>
 {% endblock %}

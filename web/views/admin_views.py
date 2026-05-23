@@ -261,6 +261,7 @@ def configuracion(request):
 @login_required
 @permiso_requerido(['admin'])
 def editar_ciclo(request, id):
+    from decimal import Decimal, InvalidOperation
     ciclo = get_object_or_404(Ciclo, id=id)
     if request.method == "POST":
         nombre = request.POST.get("nombre")
@@ -270,8 +271,18 @@ def editar_ciclo(request, id):
         if not nombre or not precio or not fecha_inicio or not fecha_fin:
             messages.error(request, "Todos los campos son obligatorios")
             return render(request, "web/administrador/ciclos/editar_ciclo.html", {"ciclo": ciclo})
+        try:
+            precio_dec = Decimal(precio)
+            if precio_dec <= 0:
+                raise ValueError
+            if precio_dec % Decimal('0.50') != 0:
+                messages.error(request, "El precio debe ser en soles enteros o medios (ej. S/. 300.00 o S/. 300.50)")
+                return render(request, "web/administrador/ciclos/editar_ciclo.html", {"ciclo": ciclo})
+        except (InvalidOperation, ValueError):
+            messages.error(request, "El precio ingresado no es válido")
+            return render(request, "web/administrador/ciclos/editar_ciclo.html", {"ciclo": ciclo})
         ciclo.nombre = nombre
-        ciclo.precio = precio
+        ciclo.precio = precio_dec
         ciclo.fecha_inicio = fecha_inicio
         ciclo.fecha_fin = fecha_fin
         ciclo.save()
@@ -293,6 +304,7 @@ def eliminar_ciclo(request, id):
 @login_required
 @permiso_requerido(['admin'])
 def crear_ciclo(request):
+    from decimal import Decimal, InvalidOperation
     sedes = Sede.objects.all()
     if request.method == "POST":
         nombre = request.POST.get("nombre")
@@ -306,10 +318,21 @@ def crear_ciclo(request):
             messages.error(request, "Todos los campos son obligatorios")
             return render(request, "web/administrador/ciclos/crear_ciclo.html", {"sedes": sedes})
 
+        try:
+            precio_dec = Decimal(precio)
+            if precio_dec <= 0:
+                raise ValueError
+            if precio_dec % Decimal('0.50') != 0:
+                messages.error(request, "El precio debe ser en soles enteros o medios (ej. S/. 300.00 o S/. 300.50)")
+                return render(request, "web/administrador/ciclos/crear_ciclo.html", {"sedes": sedes})
+        except (InvalidOperation, ValueError):
+            messages.error(request, "El precio ingresado no es válido")
+            return render(request, "web/administrador/ciclos/crear_ciclo.html", {"sedes": sedes})
+
         if alcance == "todas":
             for sede in sedes:
                 Ciclo.objects.create(
-                    nombre=nombre, precio=precio,
+                    nombre=nombre, precio=precio_dec,
                     fecha_inicio=fecha_inicio, fecha_fin=fecha_fin, sede=sede,
                 )
             messages.success(request, f"Ciclo '{nombre}' creado para todas las sedes")
@@ -319,7 +342,7 @@ def crear_ciclo(request):
                 return render(request, "web/administrador/ciclos/crear_ciclo.html", {"sedes": sedes})
             sede = get_object_or_404(Sede, id=sede_id)
             Ciclo.objects.create(
-                nombre=nombre, precio=precio,
+                nombre=nombre, precio=precio_dec,
                 fecha_inicio=fecha_inicio, fecha_fin=fecha_fin, sede=sede,
             )
             messages.success(request, f"Ciclo '{nombre}' creado para {sede.nombre}")

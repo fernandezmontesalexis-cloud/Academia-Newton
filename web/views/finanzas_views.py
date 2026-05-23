@@ -88,39 +88,50 @@ def _filtrar_historial(request):
 @permiso_requerido(['admin'])
 def finanzas(request):
     hoy        = date.today()
-    mes_inicio = hoy.replace(day=1)
     sem_inicio = hoy - timedelta(days=6)
 
-    # ── KPIs ──────────────────────────────────────────────────────────────
-    ingresos_hoy = (
-        Pago.objects.filter(fecha_pago=hoy)
-        .aggregate(t=Sum('monto'))['t'] or 0
-    )
-    ingresos_mes = (
-        Pago.objects.filter(fecha_pago__gte=mes_inicio)
-        .aggregate(t=Sum('monto'))['t'] or 0
-    )
-    alumnos_con_deuda = (
-        Alumno.objects.filter(matricula__estado='pendiente')
-        .distinct().count()
-    )
-    deuda_total = sum(
-        m.deuda()
-        for m in Matricula.objects.filter(estado='pendiente')
-                                  .select_related('ciclo')
-                                  .prefetch_related('pago_set')
-    )
+    # ── Historial filtrado (base de todos los cálculos) ───────────────────
+    historial_qs, filtros = _filtrar_historial(request)
+    historial = Paginator(historial_qs, 10).get_page(request.GET.get('page'))
 
-    # ── Resumen Financiero ────────────────────────────────────────────────
-    total_semana = (
-        Pago.objects.filter(fecha_pago__gte=sem_inicio)
-        .aggregate(t=Sum('monto'))['t'] or 0
-    )
-    promedio_raw = Pago.objects.aggregate(avg=Avg('monto'))['avg'] or 0
-    promedio_pago = round(float(promedio_raw), 2)
+    # ── KPIs ──────────────────────────────────────────────────────────────
+    fecha_desde_str = request.GET.get('fecha_desde', '')
+    fecha_hasta_str = request.GET.get('fecha_hasta', '')
+
+    if fecha_desde_str or fecha_hasta_str:
+        # Con filtro de fecha: total del período filtrado
+        ingresos_periodo = round(float(
+            historial_qs.aggregate(t=Sum('monto'))['t'] or 0
+        ), 2)
+        periodo_label = "Total del período"
+    else:
+        # Sin filtro de fecha: ingresos del mes actual
+        mes_qs = Pago.objects.filter(fecha_pago__gte=hoy.replace(day=1))
+        if filtros['sede_id']:
+            mes_qs = mes_qs.filter(matricula__alumno__sede_id=filtros['sede_id'])
+        if filtros['metodo']:
+            mes_qs = mes_qs.filter(metodo_pago=filtros['metodo'])
+        ingresos_periodo = round(float(
+            mes_qs.aggregate(t=Sum('monto'))['t'] or 0
+        ), 2)
+        periodo_label = "Ingresos del mes"
+
+    promedio_pago = round(float(
+        historial_qs.aggregate(avg=Avg('monto'))['avg'] or 0
+    ), 2)
+
+    # ── Resumen — esta semana respeta filtros de sede y método ────────────
+    sem_qs = Pago.objects.filter(fecha_pago__gte=sem_inicio)
+    if filtros['sede_id']:
+        sem_qs = sem_qs.filter(matricula__alumno__sede_id=filtros['sede_id'])
+    if filtros['metodo']:
+        sem_qs = sem_qs.filter(metodo_pago=filtros['metodo'])
+    total_semana = round(float(
+        sem_qs.aggregate(t=Sum('monto'))['t'] or 0
+    ), 2)
 
     metodo_result = (
-        Pago.objects.values('metodo_pago')
+        historial_qs.values('metodo_pago')
         .annotate(cnt=Count('id'))
         .order_by('-cnt')
         .first()
@@ -128,43 +139,16 @@ def finanzas(request):
     metodo_mas_usado = metodo_result['metodo_pago'] if metodo_result else ''
     metodo_label     = _METODO_MAP.get(metodo_mas_usado, '—')
 
-    ultimo_pago           = Pago.objects.order_by('-fecha_pago', '-id').first()
-    ultima_actualizacion  = ultimo_pago.fecha_pago if ultimo_pago else None
-
-    # ── Historial filtrado y paginado ──────────────────────────────────────
-    historial_qs, filtros = _filtrar_historial(request)
-    historial = Paginator(historial_qs, 10).get_page(request.GET.get('page'))
-
-    # ── Gráfico: ingresos últimos 7 días ──────────────────────────────────
-    chart_7d_labels, chart_7d_data = [], []
-    for i in range(6, -1, -1):
-        dia   = hoy - timedelta(days=i)
-        total = (
-            Pago.objects.filter(fecha_pago=dia)
-            .aggregate(t=Sum('monto'))['t'] or 0
-        )
-        chart_7d_labels.append(dia.strftime('%d/%m'))
-        chart_7d_data.append(float(total))
-
     return render(request, 'web/administrador/finanzas/finanzas.html', {
-        # KPIs
-        'ingresos_hoy':       ingresos_hoy,
-        'ingresos_mes':       ingresos_mes,
-        'deuda_total':        deuda_total,
-        'alumnos_con_deuda':  alumnos_con_deuda,
-        # Resumen
-        'total_semana':         total_semana,
-        'promedio_pago':        promedio_pago,
-        'metodo_mas_usado':     metodo_mas_usado,
-        'metodo_label':         metodo_label,
-        'ultima_actualizacion': ultima_actualizacion,
-        # Historial
-        'historial':  historial,
-        'page_range': _build_page_range(historial),
-        'sedes':      list(Sede.objects.all()),
-        # Gráfico
-        'chart_7d_labels': json.dumps(chart_7d_labels),
-        'chart_7d_data':   json.dumps(chart_7d_data),
+        'ingresos_periodo': ingresos_periodo,
+        'periodo_label':    periodo_label,
+        'promedio_pago':    promedio_pago,
+        'total_semana':     total_semana,
+        'metodo_mas_usado': metodo_mas_usado,
+        'metodo_label':     metodo_label,
+        'historial':        historial,
+        'page_range':       _build_page_range(historial),
+        'sedes':            list(Sede.objects.all()),
         **filtros,
     })
 
