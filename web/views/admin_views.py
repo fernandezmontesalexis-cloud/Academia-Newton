@@ -45,9 +45,31 @@ def ciclos_sede_detalle(request, sede_id):
     ciclos = list(Ciclo.objects.filter(sede=sede).order_by('-fecha_inicio'))
     for c in ciclos:
         c.estado_ciclo = estado_ciclo_hoy(c, hoy)
+        total_dias = (c.fecha_fin - c.fecha_inicio).days
+        if total_dias > 0:
+            c.progreso = max(0, min(100, int((hoy - c.fecha_inicio).days / total_dias * 100)))
+        else:
+            c.progreso = 100
+        c.tiene_matriculas = c.matricula_set.exists()
+    from django.core.paginator import Paginator
+    # Separar activos/próximos de finalizados
+    orden = {'activa': 0, 'pendiente': 1}
+    activos_proximos = sorted(
+        [c for c in ciclos if c.estado_ciclo in ('activa', 'pendiente')],
+        key=lambda c: orden.get(c.estado_ciclo, 2)
+    )
+    finalizados = [c for c in ciclos if c.estado_ciclo == 'finalizada']
+    # Paginación del historial
+    paginator = Paginator(finalizados, 10)
+    hpage = request.GET.get('hpage', 1)
+    finalizados_page = paginator.get_page(hpage)
+    historial_abierto = 'hpage' in request.GET
     return render(request, "web/administrador/ciclos/ciclos_sede_detalle.html", {
         "sede": sede,
-        "ciclos": ciclos,
+        "activos_proximos": activos_proximos,
+        "finalizados_page": finalizados_page,
+        "historial_abierto": historial_abierto,
+        "total_finalizados": len(finalizados),
     })
 
 
@@ -75,7 +97,6 @@ def crear_sede(request):
             messages.error(request, "El nombre es obligatorio")
             return render(request, "web/administrador/sedes/crear_sede.html", {"direccion": direccion})
         Sede.objects.create(nombre=nombre, direccion=direccion, is_active=True)
-        messages.success(request, f"Sede '{nombre}' creada correctamente")
         return redirect("lista_sedes")
     return render(request, "web/administrador/sedes/crear_sede.html")
 
@@ -94,7 +115,6 @@ def editar_sede(request, id):
         sede.direccion = direccion
         sede.is_active = request.POST.get("is_active") == "1"
         sede.save()
-        messages.success(request, "Sede actualizada correctamente")
         return redirect("lista_sedes")
     return render(request, "web/administrador/sedes/editar_sede.html", {"sede": sede})
 
@@ -105,7 +125,6 @@ def eliminar_sede(request, id):
     sede = get_object_or_404(Sede, id=id)
     sede.is_active = False
     sede.save()
-    messages.success(request, f"Sede '{sede.nombre}' desactivada")
     return redirect("lista_sedes")
 
 
@@ -115,7 +134,6 @@ def reactivar_sede(request, id):
     sede = get_object_or_404(Sede, id=id)
     sede.is_active = True
     sede.save()
-    messages.success(request, f"Sede '{sede.nombre}' reactivada")
     return redirect("lista_sedes")
 
 
@@ -147,7 +165,6 @@ def crear_usuario(request):
 
         user = User.objects.create(username=username, password=make_password(password))
         Perfil.objects.create(user=user, tipo_usuario=tipo_usuario, sede_id=sede_id)
-        messages.success(request, f"Usuario '{username}' creado correctamente")
         return redirect("lista_usuarios")
 
     return render(request, "web/administrador/usuarios/crear_usuario.html", {"sedes": sedes})
@@ -156,37 +173,35 @@ def crear_usuario(request):
 @login_required
 @permiso_requerido(['admin'])
 def lista_usuarios(request):
-    q = request.GET.get('q', '').strip()
-    sede_id = request.GET.get('sede_id', '')
-    rol = request.GET.get('rol', '')
-    estado = request.GET.get('estado', '')
+    from django.db.models import Case, When, Value, IntegerField
+    base_qs = User.objects.select_related("perfil", "perfil__sede").filter(perfil__isnull=False)
 
-    usuarios = User.objects.select_related("perfil", "perfil__sede").all()
-    if q:
-        usuarios = usuarios.filter(username__icontains=q)
-    if sede_id:
-        usuarios = usuarios.filter(perfil__sede_id=sede_id)
-    if rol:
-        usuarios = usuarios.filter(perfil__tipo_usuario=rol)
-    if estado == 'activo':
-        usuarios = usuarios.filter(is_active=True)
-    elif estado == 'inactivo':
-        usuarios = usuarios.filter(is_active=False)
+    from django.core.paginator import Paginator
+    # Activos: admins primero, luego secretarias, ambos por nombre
+    usuarios_activos = base_qs.filter(is_active=True).annotate(
+        rol_orden=Case(
+            When(perfil__tipo_usuario='admin', then=Value(0)),
+            default=Value(1),
+            output_field=IntegerField()
+        )
+    ).order_by('rol_orden', 'username')
 
-    todos = User.objects.select_related("perfil").all()
-    sedes = Sede.objects.all()
+    # Inactivos: orden por nombre, con paginación
+    usuarios_inactivos_qs = base_qs.filter(is_active=False).order_by('username')
+    paginator = Paginator(usuarios_inactivos_qs, 10)
+    hpage = request.GET.get('hpage', 1)
+    inactivos_page = paginator.get_page(hpage)
+    historial_abierto = 'hpage' in request.GET
 
     return render(request, "web/administrador/usuarios/lista_usuarios.html", {
-        "usuarios": usuarios,
-        "sedes": sedes,
-        "total": todos.count(),
-        "total_admins": todos.filter(perfil__tipo_usuario='admin').count(),
-        "total_secretarias": todos.filter(perfil__tipo_usuario='secretaria').count(),
-        "total_activos": todos.filter(is_active=True).count(),
-        "q": q,
-        "sede_id_sel": sede_id,
-        "rol_sel": rol,
-        "estado_sel": estado,
+        "usuarios_activos": usuarios_activos,
+        "inactivos_page": inactivos_page,
+        "historial_abierto": historial_abierto,
+        "total_inactivos": usuarios_inactivos_qs.count(),
+        "total": base_qs.count(),
+        "total_admins": base_qs.filter(perfil__tipo_usuario='admin').count(),
+        "total_secretarias": base_qs.filter(perfil__tipo_usuario='secretaria').count(),
+        "total_activos": base_qs.filter(is_active=True).count(),
     })
 
 
@@ -208,21 +223,20 @@ def editar_usuario(request, id):
 
         if nueva_password:
             if nueva_password != confirmar_password:
-                messages.error(request, "Las contraseñas no coinciden")
                 return render(request, "web/administrador/usuarios/editar_usuario.html", {
                     "user": user, "perfil": perfil, "sedes": sedes,
+                    "error_password": "Las contraseñas no coinciden",
                 })
             if len(nueva_password) < 6:
-                messages.error(request, "La contraseña debe tener al menos 6 caracteres")
                 return render(request, "web/administrador/usuarios/editar_usuario.html", {
                     "user": user, "perfil": perfil, "sedes": sedes,
+                    "error_password": "La contraseña debe tener al menos 6 caracteres",
                 })
             user.set_password(nueva_password)
             update_session_auth_hash(request, user)
 
         user.save()
         perfil.save()
-        messages.success(request, "Usuario actualizado correctamente")
         return redirect("lista_usuarios")
 
     return render(request, "web/administrador/usuarios/editar_usuario.html", {
@@ -238,7 +252,8 @@ def eliminar_usuario(request, id):
     user = get_object_or_404(User, id=id)
     user.is_active = False
     user.save()
-    messages.success(request, f"Usuario '{user.username}' desactivado")
+    user.perfil.fecha_desactivacion = timezone.now()
+    user.perfil.save()
     return redirect("lista_usuarios")
 
 
@@ -248,7 +263,8 @@ def reactivar_usuario(request, id):
     user = get_object_or_404(User, id=id)
     user.is_active = True
     user.save()
-    messages.success(request, f"Usuario '{user.username}' reactivado")
+    user.perfil.fecha_desactivacion = None
+    user.perfil.save()
     return redirect("lista_usuarios")
 
 
@@ -262,7 +278,17 @@ def configuracion(request):
 @permiso_requerido(['admin'])
 def editar_ciclo(request, id):
     from decimal import Decimal, InvalidOperation
+    from datetime import date as _date
     ciclo = get_object_or_404(Ciclo, id=id)
+    tiene_matriculas = ciclo.matricula_set.exists()
+    estado_ciclo = estado_ciclo_hoy(ciclo, _date.today())
+
+    def _ctx(extra=None):
+        base = {"ciclo": ciclo, "tiene_matriculas": tiene_matriculas, "estado_ciclo": estado_ciclo}
+        if extra:
+            base.update(extra)
+        return base
+
     if request.method == "POST":
         nombre = request.POST.get("nombre")
         precio = request.POST.get("precio")
@@ -270,25 +296,24 @@ def editar_ciclo(request, id):
         fecha_fin = request.POST.get("fecha_fin")
         if not nombre or not precio or not fecha_inicio or not fecha_fin:
             messages.error(request, "Todos los campos son obligatorios")
-            return render(request, "web/administrador/ciclos/editar_ciclo.html", {"ciclo": ciclo})
+            return render(request, "web/administrador/ciclos/editar_ciclo.html", _ctx())
         try:
             precio_dec = Decimal(precio)
             if precio_dec <= 0:
                 raise ValueError
             if precio_dec % Decimal('0.50') != 0:
                 messages.error(request, "El precio debe ser en soles enteros o medios (ej. S/. 300.00 o S/. 300.50)")
-                return render(request, "web/administrador/ciclos/editar_ciclo.html", {"ciclo": ciclo})
+                return render(request, "web/administrador/ciclos/editar_ciclo.html", _ctx())
         except (InvalidOperation, ValueError):
             messages.error(request, "El precio ingresado no es válido")
-            return render(request, "web/administrador/ciclos/editar_ciclo.html", {"ciclo": ciclo})
+            return render(request, "web/administrador/ciclos/editar_ciclo.html", _ctx())
         ciclo.nombre = nombre
         ciclo.precio = precio_dec
         ciclo.fecha_inicio = fecha_inicio
         ciclo.fecha_fin = fecha_fin
         ciclo.save()
-        messages.success(request, "Ciclo actualizado correctamente")
         return redirect("ciclos_sede_detalle", sede_id=ciclo.sede.id)
-    return render(request, "web/administrador/ciclos/editar_ciclo.html", {"ciclo": ciclo})
+    return render(request, "web/administrador/ciclos/editar_ciclo.html", _ctx())
 
 
 @login_required
@@ -296,9 +321,10 @@ def editar_ciclo(request, id):
 def eliminar_ciclo(request, id):
     ciclo = get_object_or_404(Ciclo, id=id)
     sede_id = ciclo.sede.id
-    nombre = ciclo.nombre
+    if ciclo.matricula_set.exists():
+        messages.error(request, f"No se puede eliminar '{ciclo.nombre}': tiene matrículas registradas.")
+        return redirect("ciclos_sede_detalle", sede_id=sede_id)
     ciclo.delete()
-    messages.success(request, f"Ciclo '{nombre}' eliminado correctamente")
     return redirect("ciclos_sede_detalle", sede_id=sede_id)
 
 @login_required
@@ -335,7 +361,6 @@ def crear_ciclo(request):
                     nombre=nombre, precio=precio_dec,
                     fecha_inicio=fecha_inicio, fecha_fin=fecha_fin, sede=sede,
                 )
-            messages.success(request, f"Ciclo '{nombre}' creado para todas las sedes")
         else:
             if not sede_id:
                 messages.error(request, "Debes seleccionar una sede")
@@ -345,7 +370,6 @@ def crear_ciclo(request):
                 nombre=nombre, precio=precio_dec,
                 fecha_inicio=fecha_inicio, fecha_fin=fecha_fin, sede=sede,
             )
-            messages.success(request, f"Ciclo '{nombre}' creado para {sede.nombre}")
 
         return redirect("lista_ciclos")
 

@@ -5,8 +5,6 @@ from django.db.models import Sum, F, ExpressionWrapper, DecimalField, Value
 from django.db.models.functions import Coalesce
 from django.http import HttpResponse
 from django.urls import reverse
-from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
 
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
@@ -14,17 +12,16 @@ import json
 
 from web.permisos import permiso_requerido
 from ..models import Matricula, Pago, Ciclo
+from ..utils import estado_pago_matricula
 
 import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
 from reportlab.platypus.flowables import HRFlowable
-from reportlab.lib import colors
-from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
-from reportlab.lib.enums import TA_CENTER, TA_LEFT
+from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.colors import HexColor
 
 
@@ -129,6 +126,8 @@ def pagos(request, matricula_id):
             apoderado=apo_value,
         )
 
+        # Pago.save() ya actualiza matricula.estado automáticamente.
+        # Solo guardamos proximo_pago si cambió.
         if proximo_pago_raw:
             try:
                 matricula.proximo_pago = datetime.strptime(proximo_pago_raw, '%Y-%m-%d').date()
@@ -136,11 +135,6 @@ def pagos(request, matricula_id):
                 pass
         else:
             matricula.proximo_pago = None
-
-        total_actual = Pago.objects.filter(matricula=matricula).aggregate(
-            Sum('monto')
-        )['monto__sum'] or Decimal('0')
-        matricula.estado = 'pagado' if total_actual >= total_ciclo else 'pendiente'
         matricula.save()
 
         url = reverse('pagos', kwargs={'matricula_id': matricula.id})
@@ -149,7 +143,6 @@ def pagos(request, matricula_id):
     return render(request, 'web/secretaria/pagos/pagos.html', _contexto())
 
 
-@csrf_exempt
 @login_required
 @permiso_requerido(['admin', 'secretaria'])
 def cancelar_matricula_nueva(request, matricula_id):
@@ -168,25 +161,6 @@ def cancelar_matricula_nueva(request, matricula_id):
         if not Matricula.objects.filter(alumno=alumno).exists():
             alumno.delete()
     return redirect('matriculas')
-
-
-def _matriculas_financieras(sede):
-    return (
-        Matricula.objects
-        .filter(alumno__sede=sede, alumno__estado='activo')
-        .annotate(
-            total_pagado_db=Coalesce(
-                Sum('pago__monto'), Value(Decimal('0')),
-                output_field=DecimalField(),
-            )
-        )
-        .annotate(
-            deuda_db=ExpressionWrapper(
-                F('ciclo__precio') - F('total_pagado_db'),
-                output_field=DecimalField(),
-            )
-        )
-    )
 
 
 def _matriculas_ciclo_qs(sede, ciclo):
@@ -208,16 +182,6 @@ def _matriculas_ciclo_qs(sede, ciclo):
             )
         )
     )
-
-
-def _calc_estado_pago(m, today):
-    if m.deuda_db <= 0:
-        return 'pagado'
-    if m.ciclo.fecha_fin < today:
-        return 'vencido'
-    if m.total_pagado_db > 0:
-        return 'parcial'
-    return 'sin_pago'
 
 
 def _pagos_json(m):
@@ -355,7 +319,7 @@ def reporte_ciclo(request, ciclo_id):
     matriculas_page = paginator.get_page(request.GET.get('page'))
 
     for m in matriculas_page:
-        m.estado_pago = _calc_estado_pago(m, today)
+        m.estado_pago = estado_pago_matricula(m, today)
         m.pagos_json  = _pagos_json(m)
 
     return render(request, 'web/secretaria/pagos/reporte_ciclo.html', {
@@ -472,65 +436,59 @@ def boleta_pdf(request, pago_id):
     alumno = pago.matricula.alumno
     ciclo = pago.matricula.ciclo
 
-    # Colores
-    azul = HexColor('#1a56db')
-    gris_oscuro = HexColor('#374151')
-    gris_claro = HexColor('#6b7280')
-    rojo = HexColor('#dc2626')
-    verde = HexColor('#16a34a')
-    amarillo = HexColor('#d97706')
-    separador = HexColor('#e5e7eb')
+    # Paleta en escala de grises — apta para impresión B&W sin costo extra de tinta
+    negro      = HexColor('#000000')
+    gris_datos = HexColor('#1a1a1a')   # valores y datos principales
+    gris_label = HexColor('#555555')   # etiquetas secundarias
+    gris_sep   = HexColor('#bbbbbb')   # líneas separadoras
 
     # Estilos de párrafo
     titulo = ParagraphStyle(
         'titulo', fontName='Helvetica-Bold', fontSize=13,
-        alignment=TA_CENTER, textColor=azul, spaceAfter=1,
+        alignment=TA_CENTER, textColor=negro, spaceAfter=1,
     )
     subtitulo = ParagraphStyle(
         'subtitulo', fontName='Helvetica', fontSize=7,
-        alignment=TA_CENTER, textColor=gris_claro, spaceAfter=0,
+        alignment=TA_CENTER, textColor=gris_label, spaceAfter=0,
     )
     numero_comp = ParagraphStyle(
         'numero_comp', fontName='Helvetica-Bold', fontSize=9,
-        alignment=TA_CENTER, textColor=gris_oscuro, spaceAfter=0,
+        alignment=TA_CENTER, textColor=gris_datos, spaceAfter=0,
     )
     label = ParagraphStyle(
         'label', fontName='Helvetica', fontSize=6.5,
-        textColor=gris_claro, spaceAfter=1,
+        textColor=gris_label, spaceAfter=1,
     )
     valor = ParagraphStyle(
         'valor', fontName='Helvetica-Bold', fontSize=8,
-        textColor=gris_oscuro, spaceAfter=4,
+        textColor=gris_datos, spaceAfter=4,
     )
     monto_grande = ParagraphStyle(
         'monto_grande', fontName='Helvetica-Bold', fontSize=14,
-        alignment=TA_CENTER, textColor=azul, spaceAfter=1,
+        alignment=TA_CENTER, textColor=negro, spaceAfter=1,
     )
     footer_style = ParagraphStyle(
         'footer', fontName='Helvetica', fontSize=7,
-        alignment=TA_CENTER, textColor=gris_claro, spaceAfter=2,
+        alignment=TA_CENTER, textColor=gris_label, spaceAfter=2,
     )
 
     def sep():
         return HRFlowable(
             width='100%', thickness=0.5,
-            color=separador, spaceAfter=4, spaceBefore=4,
+            color=gris_sep, spaceAfter=4, spaceBefore=4,
         )
 
-    # Estado del pago
+    # Estado del pago — solo texto, sin color (el texto ya lo comunica)
     if deuda <= 0:
         estado_texto = "PAGADO COMPLETAMENTE"
-        estado_color = verde
     elif total_pagado > pago.monto:
         estado_texto = "PAGO PARCIAL"
-        estado_color = amarillo
     else:
-        estado_texto = "PENDIENTE"
-        estado_color = rojo
+        estado_texto = "PENDIENTE DE PAGO"
 
     estado_style = ParagraphStyle(
         'estado', fontName='Helvetica-Bold', fontSize=9,
-        alignment=TA_CENTER, textColor=estado_color, spaceAfter=2,
+        alignment=TA_CENTER, textColor=negro, spaceAfter=2,
     )
 
     fecha_str = pago.fecha_pago.strftime('%d/%m/%Y')
@@ -592,7 +550,7 @@ def boleta_pdf(request, pago_id):
 
     deuda_style = ParagraphStyle(
         'deuda_line', fontName='Helvetica-Bold', fontSize=7,
-        textColor=rojo if deuda > 0 else verde, spaceAfter=1,
+        textColor=negro, spaceAfter=1,
     )
     elementos.append(Paragraph(
         f"Deuda restante:       S/. {deuda:.2f}",

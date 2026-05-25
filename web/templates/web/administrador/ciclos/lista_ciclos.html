@@ -2,60 +2,116 @@
 
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<style>
+.sede-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.sede-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10) !important;
+}
+.sede-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+</style>
+
+<!-- Encabezado -->
+<div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h4 class="mb-0 fw-bold">Ciclos</h4>
         <small class="text-muted">Gestión de ciclos por sede</small>
     </div>
-    <a href="{% url 'crear_ciclo' %}" class="btn btn-sm btn-primary">
+    <a href="{% url 'crear_ciclo' %}" class="btn btn-sm btn-primary px-3">
         <i class="fas fa-plus me-1"></i> Nuevo Ciclo
     </a>
 </div>
 
 {% if data_sedes %}
-
-<div class="row g-3 mb-4">
+<div class="row g-3">
     {% for item in data_sedes %}
     <div class="col-md-6 col-lg-4">
-        <div class="card border-0 shadow-sm h-100">
-            <div class="card-header bg-primary text-white fw-semibold">
-                <i class="fas fa-building me-1"></i> {{ item.sede.nombre }}
-            </div>
-            <div class="card-body">
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted">Ciclos activos</span>
-                    <span class="badge bg-success">{{ item.ciclos_activos }}</span>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted">Total ciclos</span>
-                    <span class="badge bg-secondary">{{ item.total_ciclos }}</span>
-                </div>
-                <div class="d-flex justify-content-between mb-2">
-                    <span class="text-muted">Próximo inicio</span>
-                    <span class="fw-semibold small">
-                        {% if item.proximo_inicio %}
-                            {{ item.proximo_inicio|date:"d/m/Y" }}
-                        {% else %}
-                            <span class="text-muted">—</span>
-                        {% endif %}
+        <div class="card border-0 shadow-sm h-100 sede-card"
+             style="border-top: 3px solid {% if item.ciclos_activos > 0 %}#198754{% else %}#adb5bd{% endif %} !important">
+            <div class="card-body p-4">
+
+                <!-- Avatar + nombre sede + badge -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="sede-avatar"
+                             style="background:{% if item.ciclos_activos > 0 %}rgba(13,110,253,0.1){% else %}rgba(108,117,125,0.1){% endif %};
+                                    color:{% if item.ciclos_activos > 0 %}#0d6efd{% else %}#6c757d{% endif %}">
+                            {{ item.sede.nombre|slice:":1"|upper }}
+                        </div>
+                        <h6 class="fw-bold mb-0" style="font-size:15px">
+                            {{ item.sede.nombre|capfirst }}
+                        </h6>
+                    </div>
+                    {% if item.ciclos_activos > 0 %}
+                    <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 fw-semibold"
+                          style="font-size:10px;padding:4px 9px;border-radius:20px;white-space:nowrap">
+                        <i class="fas fa-circle me-1" style="font-size:6px;vertical-align:middle"></i>{{ item.ciclos_activos }} activo{% if item.ciclos_activos != 1 %}s{% endif %}
                     </span>
-                </div>
-                <div class="d-flex justify-content-between mb-3">
-                    <span class="text-muted">Último ciclo</span>
-                    <span class="fw-semibold small">
-                        {% if item.ultimo_ciclo %}
-                            {{ item.ultimo_ciclo }}
-                        {% else %}
-                            <span class="text-muted">—</span>
-                        {% endif %}
+                    {% else %}
+                    <span class="badge bg-secondary bg-opacity-15 text-secondary border border-secondary border-opacity-25 fw-semibold"
+                          style="font-size:10px;padding:4px 9px;border-radius:20px;white-space:nowrap">
+                        Sin activos
                     </span>
+                    {% endif %}
                 </div>
-            </div>
-            <div class="card-footer bg-white border-0 pt-0 pb-3 px-3">
-                <a href="{% url 'ciclos_sede_detalle' item.sede.id %}"
-                   class="btn btn-outline-primary btn-sm w-100">
-                    <i class="fas fa-eye me-1"></i> Ver ciclos
-                </a>
+
+                <!-- Métricas -->
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted"
+                              style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">
+                            Total ciclos
+                        </span>
+                        <span class="fw-bold">{{ item.total_ciclos }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted"
+                              style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">
+                            Próximo inicio
+                        </span>
+                        <span class="fw-semibold small">
+                            {% if item.proximo_inicio %}
+                                {{ item.proximo_inicio|date:"d/m/Y" }}
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="text-muted"
+                              style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">
+                            Último ciclo
+                        </span>
+                        <span class="fw-semibold small text-truncate ms-3" style="max-width:140px">
+                            {% if item.ultimo_ciclo %}
+                                {{ item.ultimo_ciclo }}
+                            {% else %}
+                                <span class="text-muted">—</span>
+                            {% endif %}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div class="pt-3 border-top">
+                    <a href="{% url 'ciclos_sede_detalle' item.sede.id %}"
+                       class="btn btn-sm btn-outline-primary w-100">
+                        <i class="fas fa-eye me-1"></i> Ver ciclos
+                    </a>
+                </div>
+
             </div>
         </div>
     </div>
@@ -64,9 +120,17 @@
 
 {% else %}
 <div class="card border-0 shadow-sm">
-    <div class="card-body text-center py-5 text-muted">
-        <i class="fas fa-building fa-3x mb-3 d-block"></i>
-        No hay sedes registradas. <a href="{% url 'crear_sede' %}">Crear sede</a>
+    <div class="card-body text-center py-5">
+        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle mb-3"
+             style="width:60px;height:60px;">
+            <i class="fas fa-calendar-alt text-primary fa-lg"></i>
+        </div>
+        <div class="fw-semibold text-muted">No hay sedes registradas</div>
+        <div class="mt-2">
+            <a href="{% url 'crear_sede' %}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus me-1"></i> Crear sede
+            </a>
+        </div>
     </div>
 </div>
 {% endif %}

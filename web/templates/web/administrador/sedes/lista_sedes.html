@@ -2,88 +2,111 @@
 
 {% block content %}
 
-<div class="d-flex justify-content-between align-items-center mb-3">
+<style>
+.sede-card {
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    cursor: default;
+}
+.sede-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.10) !important;
+}
+.sede-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+</style>
+
+<!-- Encabezado -->
+<div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h4 class="mb-0 fw-bold">Sedes</h4>
         <small class="text-muted">Gestión de sedes del sistema</small>
     </div>
-    <a href="{% url 'crear_sede' %}" class="btn btn-sm btn-primary">
+    <a href="{% url 'crear_sede' %}" class="btn btn-sm btn-primary px-3">
         <i class="fas fa-plus me-1"></i> Nueva Sede
     </a>
 </div>
 
-{% if messages %}
-{% for message in messages %}
-<div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-    {{ message }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-{% endfor %}
-{% endif %}
-
 {% if data_sedes %}
-<div class="d-flex flex-column gap-2">
+<div class="row g-3">
     {% for item in data_sedes %}
-    <div class="card border-0 shadow-sm">
-        <div class="card-body py-3 px-4">
-            <div class="d-flex align-items-center gap-3">
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm h-100 sede-card"
+             style="border-top: 3px solid {% if item.sede.is_active %}#198754{% else %}#adb5bd{% endif %} !important">
+            <div class="card-body p-4">
 
-                <!-- Icono -->
-                <div class="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0
-                            {% if item.sede.is_active %}bg-primary-subtle text-primary{% else %}bg-secondary-subtle text-secondary{% endif %}"
-                     style="width:44px;height:44px;font-size:18px;">
-                    <i class="fas fa-building"></i>
-                </div>
+                <!-- Nombre + badge estado -->
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="sede-avatar"
+                             style="background:{% if item.sede.is_active %}rgba(13,110,253,0.1){% else %}rgba(108,117,125,0.1){% endif %};
+                                    color:{% if item.sede.is_active %}#0d6efd{% else %}#6c757d{% endif %}">
+                            {{ item.sede.nombre|slice:":1"|upper }}
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0" style="font-size:15px">
+                                {{ item.sede.nombre|capfirst }}
+                            </h6>
+                            {% if item.sede.direccion %}
+                            <small class="text-muted">
+                                <i class="fas fa-map-marker-alt me-1 opacity-50" style="font-size:10px"></i>{{ item.sede.direccion }}
+                            </small>
+                            {% else %}
+                            <small class="text-muted fst-italic opacity-50">Sin dirección</small>
+                            {% endif %}
+                        </div>
+                    </div>
 
-                <!-- Nombre + badge -->
-                <div class="flex-grow-1">
-                    <div class="fw-semibold">{{ item.sede.nombre }}</div>
-                    {% if item.sede.direccion %}
-                    <div class="text-muted small">{{ item.sede.direccion }}</div>
-                    {% endif %}
-                </div>
-
-                <!-- Badge estado -->
-                <div class="flex-shrink-0">
+                    <!-- Badge estado -->
                     {% if item.sede.is_active %}
-                    <span class="badge bg-success-subtle text-success border border-success-subtle">
-                        <i class="fas fa-circle me-1" style="font-size:8px;"></i> Activa
+                    <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 fw-semibold"
+                          style="font-size:10px;padding:4px 9px;border-radius:20px;white-space:nowrap">
+                        <i class="fas fa-circle me-1" style="font-size:6px;vertical-align:middle"></i>Activa
                     </span>
                     {% else %}
-                    <span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle">
-                        <i class="fas fa-circle me-1" style="font-size:8px;"></i> Inactiva
+                    <span class="badge bg-secondary bg-opacity-15 text-secondary border border-secondary border-opacity-25 fw-semibold"
+                          style="font-size:10px;padding:4px 9px;border-radius:20px;white-space:nowrap">
+                        <i class="fas fa-circle me-1" style="font-size:6px;vertical-align:middle"></i>Inactiva
                     </span>
                     {% endif %}
                 </div>
 
-                <!-- Stats -->
-                <div class="d-flex gap-4 text-center flex-shrink-0 px-3 border-start border-end">
-                    <div>
-                        <div class="fw-bold">{{ item.usuarios_count }}</div>
-                        <div class="text-muted" style="font-size:11px;">Usuarios</div>
+                <!-- Métricas -->
+                <div class="mb-3">
+                    <div class="text-muted"
+                         style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">
+                        Usuarios
                     </div>
-                    <div>
-                        <div class="fw-bold">{{ item.alumnos_count }}</div>
-                        <div class="text-muted" style="font-size:11px;">Alumnos</div>
+                    <div class="fw-bold" style="font-size:22px">
+                        {{ item.usuarios_count }}
                     </div>
                 </div>
 
-                <!-- Acciones -->
-                <div class="d-flex gap-2 flex-shrink-0">
+                <!-- Footer: acciones -->
+                <div class="d-flex gap-2 pt-3 border-top">
                     <a href="{% url 'editar_sede' item.sede.id %}"
                        class="btn btn-sm btn-outline-warning">
-                        <i class="fas fa-edit me-1"></i> Editar
+                        <i class="fas fa-pen me-1"></i>Editar
                     </a>
+
                     {% if item.sede.is_active %}
                     <a href="{% url 'eliminar_sede' item.sede.id %}"
                        class="btn btn-sm btn-outline-danger"
                        onclick="confirmarAccion(event, this.href, '¿Desactivar sede?', 'La sede {{ item.sede.nombre }} quedará inactiva. Sus datos históricos se conservan.', 'Sí, desactivar')">
-                        <i class="fas fa-ban me-1"></i> Desactivar
+                        <i class="fas fa-ban me-1"></i>Desactivar
                     </a>
                     {% else %}
                     <a href="{% url 'reactivar_sede' item.sede.id %}"
                        class="btn btn-sm btn-outline-success">
-                        <i class="fas fa-redo me-1"></i> Reactivar
+                        <i class="fas fa-redo me-1"></i>Reactivar
                     </a>
                     {% endif %}
                 </div>
@@ -96,10 +119,17 @@
 
 {% else %}
 <div class="card border-0 shadow-sm">
-    <div class="card-body text-center py-5 text-muted">
-        <i class="fas fa-building fa-3x mb-3 d-block"></i>
-        No hay sedes registradas.
-        <a href="{% url 'crear_sede' %}">Crear la primera sede</a>
+    <div class="card-body text-center py-5">
+        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle mb-3"
+             style="width:60px;height:60px;">
+            <i class="fas fa-building text-primary fa-lg"></i>
+        </div>
+        <div class="fw-semibold text-muted">No hay sedes registradas</div>
+        <div class="mt-2">
+            <a href="{% url 'crear_sede' %}" class="btn btn-sm btn-primary">
+                <i class="fas fa-plus me-1"></i> Crear primera sede
+            </a>
+        </div>
     </div>
 </div>
 {% endif %}

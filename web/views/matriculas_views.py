@@ -4,15 +4,27 @@ from django.db.models.functions import Coalesce
 from web.permisos import permiso_requerido
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
-from datetime import date, timedelta
+from datetime import date, timedelta, datetime
 from decimal import Decimal
 
 from ..models import Matricula, Alumno
+from ..utils import estado_pago_matricula
+
+# ── Limpieza de matrículas huérfanas ─────────────────────────────────────────
+# Cubre el caso donde el navegador se cierra inesperadamente (crash, corte de
+# luz/internet, cierre forzado de pestaña) antes de que el JS pueda llamar a
+# cancelar_matricula_nueva. La función en sí es eficiente (ORM puro); el
+# throttle evita que corra en CADA page load con cientos de matrículas.
+
+_LIMPIEZA_INTERVALO_SEGUNDOS = 600  # 10 minutos
 
 
 def _limpiar_matriculas_huerfanas(sede):
-    """Elimina matrículas sin ningún pago y alumnos que queden sin matrícula."""
-    # Paso 1: capturar IDs de alumnos afectados antes de borrar
+    """
+    Elimina matrículas sin ningún pago y alumnos que queden sin matrícula.
+    Usa ORM puro — no carga objetos en memoria.
+    """
+    # Paso 1: IDs de alumnos afectados (antes de borrar para step 3)
     alumnos_ids = list(
         Matricula.objects.filter(
             alumno__sede=sede,
@@ -21,6 +33,9 @@ def _limpiar_matriculas_huerfanas(sede):
         .filter(num_pagos=0)
         .values_list('alumno_id', flat=True)
     )
+
+    if not alumnos_ids:
+        return  # nada que limpiar — evita los DELETEs innecesarios
 
     # Paso 2: eliminar las matrículas huérfanas
     Matricula.objects.filter(
@@ -32,6 +47,23 @@ def _limpiar_matriculas_huerfanas(sede):
     Alumno.objects.filter(
         id__in=alumnos_ids,
     ).annotate(num_matriculas=Count('matricula')).filter(num_matriculas=0).delete()
+
+
+def _limpiar_si_necesario(request, sede):
+    """
+    Ejecuta _limpiar_matriculas_huerfanas como máximo una vez cada
+    _LIMPIEZA_INTERVALO_SEGUNDOS por sesión de usuario.
+
+    Con muchos alumnos, esto garantiza que la limpieza no se dispara en
+    cada page load — solo cuando el intervalo ha expirado.
+    """
+    clave = f'ultimo_limpiado_{sede.id}'
+    ahora = datetime.now().timestamp()
+    ultimo = request.session.get(clave, 0)
+
+    if ahora - ultimo >= _LIMPIEZA_INTERVALO_SEGUNDOS:
+        _limpiar_matriculas_huerfanas(sede)
+        request.session[clave] = ahora
 
 
 def _matriculas_base(sede):
@@ -58,16 +90,6 @@ def _matriculas_base(sede):
     )
 
 
-def _estado_pago(m, today):
-    if m.deuda_db <= 0:
-        return 'pagado'
-    if m.ciclo.fecha_fin < today:
-        return 'vencido'
-    if m.total_pagado_db > 0:
-        return 'parcial'
-    return 'sin_pago'
-
-
 def _ultimo_pago(m):
     pagos = sorted(m.pago_set.all(), key=lambda p: p.fecha_pago, reverse=True)
     return pagos[0] if pagos else None
@@ -79,7 +101,7 @@ def matriculas(request):
     sede = request.user.perfil.sede
     today = date.today()
 
-    _limpiar_matriculas_huerfanas(sede)
+    _limpiar_si_necesario(request, sede)
 
     base = _matriculas_base(sede)
 
@@ -105,7 +127,7 @@ def matriculas(request):
     matriculas_page = paginator.get_page(request.GET.get('page'))
 
     for m in matriculas_page:
-        m.estado_pago = _estado_pago(m, today)
+        m.estado_pago = estado_pago_matricula(m, today)
         m.ultimo_pago = _ultimo_pago(m)
 
     return render(request, 'web/secretaria/matriculas/lista_matricula.html', {

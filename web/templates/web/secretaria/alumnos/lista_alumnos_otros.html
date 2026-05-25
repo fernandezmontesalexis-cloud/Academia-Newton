@@ -69,14 +69,12 @@
                         </td>
 
                         <td>
-                            <div class="d-flex gap-1 align-items-center">
+                            <div class="d-flex gap-2 align-items-center">
 
                                 <!-- Ver — siempre -->
                                 <a href="{% url 'detalle_alumno' a.id %}"
-                                   class="btn btn-sm btn-outline-primary"
-                                   data-bs-toggle="tooltip"
-                                   data-bs-title="Ver ficha del alumno">
-                                    <i class="fas fa-eye"></i>
+                                   class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye me-1"></i>Ver ficha
                                 </a>
 
                                 {% if a.estado_academico == 'sin_matricula' %}
@@ -84,7 +82,6 @@
                                     <!-- Renovar -->
                                     <button type="button"
                                             class="btn btn-sm btn-outline-success"
-                                            title="Renovar matrícula"
                                             data-bs-toggle="modal"
                                             data-bs-target="#modalRenovar"
                                             data-renovar-url="{% url 'renovar_matricula' a.id %}"
@@ -96,18 +93,17 @@
                                             data-email="{{ a.email|default:'' }}"
                                             data-apo="{{ a.apoderado.nombre_completo|default:'' }}"
                                             data-apo-celular="{{ a.apoderado.celular|default:'' }}">
-                                        <i class="fas fa-rotate"></i>
+                                        <i class="fas fa-rotate me-1"></i>Renovar
                                     </button>
 
                                     <!-- Bloquear -->
                                     <button type="button"
                                             class="btn btn-sm btn-outline-danger"
-                                            title="Bloquear alumno"
                                             data-bs-toggle="modal"
                                             data-bs-target="#modalBloquear"
                                             data-url="{% url 'desactivar_alumno' a.id %}"
                                             data-alumno="{{ a.nombres }} {{ a.apellido_paterno }}">
-                                        <i class="fas fa-ban"></i>
+                                        <i class="fas fa-ban me-1"></i>Bloquear
                                     </button>
 
                                 {% elif a.estado_academico == 'inactivo' %}
@@ -115,11 +111,9 @@
                                     <!-- Reactivar -->
                                     <button type="button"
                                             class="btn btn-sm btn-outline-success"
-                                            data-bs-toggle="tooltip"
-                                            data-bs-title="Reactivar alumno"
                                             data-url="{% url 'reactivar_alumno' a.id %}"
                                             onclick="confirmarPost(this.dataset.url,'¿Reactivar alumno?','El alumno volverá a estar disponible para nuevos procesos académicos y renovaciones.',{confirmText:'Sí, reactivar',confirmColor:'#198754'})">
-                                        <i class="fas fa-arrow-rotate-left"></i>
+                                        <i class="fas fa-arrow-rotate-left me-1"></i>Reactivar
                                     </button>
 
                                 {% endif %}{# bloqueado: solo ver detalle #}

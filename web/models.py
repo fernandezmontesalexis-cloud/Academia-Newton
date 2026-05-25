@@ -2,8 +2,6 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils import timezone
 from django.core.validators import RegexValidator
-from django.utils import timezone
-from django.db.models import Sum  
 
 class Sede(models.Model):
     nombre = models.CharField(max_length=70)
@@ -22,8 +20,8 @@ class Perfil(models.Model):
     ]
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     tipo_usuario = models.CharField(max_length=20, choices=TIPO_USUARIO)
-
     sede = models.ForeignKey(Sede, on_delete=models.CASCADE)
+    fecha_desactivacion = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return self.user.username

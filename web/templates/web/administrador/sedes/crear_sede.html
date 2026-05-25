@@ -14,55 +14,59 @@
 
 <div class="row justify-content-center">
     <div class="col-md-6">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm overflow-hidden">
+
+            <!-- Header visual -->
+            <div class="card-header border-0 py-4 px-4"
+                 style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-circle bg-primary text-white flex-shrink-0"
+                         style="width:52px;height:52px;font-size:20px;">
+                        <i class="fas fa-plus"></i>
+                    </div>
+                    <div>
+                        <div class="fw-bold">Registrar sede</div>
+                        <small class="text-muted">La sede quedará activa automáticamente al crearla</small>
+                    </div>
+                </div>
+            </div>
+
             <div class="card-body p-4">
-
-                <!-- Icono + subtítulo -->
-                <div class="text-center mb-4">
-                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle text-primary mb-2"
-                          style="width:56px;height:56px;font-size:22px;">
-                        <i class="fas fa-building"></i>
-                    </span>
-                    <div class="text-muted small">La sede quedará activa automáticamente al crearla.</div>
-                </div>
-
-                {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                {% endfor %}
-                {% endif %}
-
                 <form method="POST">
                     {% csrf_token %}
 
+                    <!-- Sección: Información General -->
+                    <p class="small fw-semibold text-muted text-uppercase mb-1" style="letter-spacing:.07em;">
+                        <i class="fas fa-info-circle me-1 opacity-50"></i>Información General
+                    </p>
+                    <hr class="mt-1 mb-3">
+
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Nombre de la sede</label>
-                        <input type="text" name="nombre" class="form-control" required
-                               placeholder="Ej: Sede Huacho">
+                        <label class="form-label fw-semibold small" for="nombre">Nombre de la sede</label>
+                        <input type="text" id="nombre" name="nombre" class="form-control" required
+                               placeholder="Ej: Sede Huacho" autofocus>
                     </div>
 
                     <div class="mb-4">
-                        <label class="form-label fw-semibold">Dirección</label>
-                        <input type="text" name="direccion" class="form-control"
+                        <label class="form-label fw-semibold small" for="direccion">Dirección</label>
+                        <input type="text" id="direccion" name="direccion" class="form-control"
                                value="{{ direccion|default:'' }}"
                                placeholder="Ej: Jr. Lima 123, Huacho">
                     </div>
 
+                    <!-- Acciones -->
                     <div class="d-flex gap-2 justify-content-end">
                         <a href="{% url 'lista_sedes' %}" class="btn btn-outline-secondary">
                             Cancelar
                         </a>
-                        <button type="submit" class="btn btn-primary">
+                        <button type="submit" class="btn btn-primary px-4">
                             <i class="fas fa-save me-1"></i> Guardar
                         </button>
                     </div>
 
                 </form>
-
             </div>
+
         </div>
     </div>
 </div>

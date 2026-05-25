@@ -1,5 +1,6 @@
 import json
 from datetime import date
+from decimal import Decimal
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -28,11 +29,14 @@ def dashboard(request):
             Pago.objects.filter(fecha_pago=hoy)
             .aggregate(total=Sum('monto'))['total'] or 0
         )
-        deuda_total = sum(
-            m.deuda() for m in Matricula.objects.filter(
-                alumno__estado='activo', estado='pendiente'
-            ).select_related('ciclo').prefetch_related('pago_set')
+        # 2 queries en lugar de N+1: suma precios y suma pagos por separado
+        _mats_pend = Matricula.objects.filter(alumno__estado='activo', estado='pendiente')
+        _total_precio  = _mats_pend.aggregate(t=Sum('ciclo__precio'))['t'] or Decimal('0')
+        _total_pagado  = (
+            Pago.objects.filter(matricula__in=_mats_pend)
+            .aggregate(t=Sum('monto'))['t'] or Decimal('0')
         )
+        deuda_total = _total_precio - _total_pagado
 
         # Datos para gráficos por sede
         chart_labels = []

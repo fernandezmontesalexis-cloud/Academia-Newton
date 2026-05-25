@@ -12,14 +12,7 @@
     </a>
 </div>
 
-{% if messages %}
-{% for message in messages %}
-<div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-    {{ message }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-</div>
-{% endfor %}
-{% endif %}
+
 
 <form method="POST">
 {% csrf_token %}
@@ -57,26 +50,44 @@
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Tipo de usuario</label>
-                    <select name="tipo_usuario" class="form-select">
-                        <option value="admin" {% if perfil.tipo_usuario == "admin" %}selected{% endif %}>
-                            Administrador
-                        </option>
-                        <option value="secretaria" {% if perfil.tipo_usuario == "secretaria" %}selected{% endif %}>
-                            Secretaria
-                        </option>
-                    </select>
+                    <label class="form-label fw-semibold small">Tipo de usuario</label>
+                    <div class="d-flex gap-2">
+                        <!-- Hidden: envía el valor original mientras el select esté bloqueado -->
+                        <input type="hidden" name="tipo_usuario" id="tipo_usuario_hidden"
+                               value="{{ perfil.tipo_usuario }}">
+                        <select id="tipo_usuario_select" class="form-select form-select-sm"
+                                disabled style="background:#f8f9fa;cursor:not-allowed;max-width:220px;">
+                            <option value="admin" {% if perfil.tipo_usuario == "admin" %}selected{% endif %}>Administrador</option>
+                            <option value="secretaria" {% if perfil.tipo_usuario == "secretaria" %}selected{% endif %}>Secretaria</option>
+                        </select>
+                        <button type="button" id="btn_tipo_usuario"
+                                class="btn btn-sm btn-outline-secondary flex-shrink-0"
+                                onclick="toggleCampo('tipo_usuario')">
+                            <i class="fas fa-lock me-1"></i>Cambiar
+                        </button>
+                    </div>
                 </div>
 
                 <div class="mb-3">
-                    <label class="form-label fw-semibold">Sede asignada</label>
-                    <select name="sede" class="form-select">
-                        {% for sede in sedes %}
-                        <option value="{{ sede.id }}" {% if perfil.sede.id == sede.id %}selected{% endif %}>
-                            {{ sede.nombre }}
-                        </option>
-                        {% endfor %}
-                    </select>
+                    <label class="form-label fw-semibold small">Sede asignada</label>
+                    <div class="d-flex gap-2">
+                        <!-- Hidden: envía el valor original mientras el select esté bloqueado -->
+                        <input type="hidden" name="sede" id="sede_hidden"
+                               value="{{ perfil.sede.id }}">
+                        <select id="sede_select" class="form-select form-select-sm"
+                                disabled style="background:#f8f9fa;cursor:not-allowed;max-width:220px;">
+                            {% for s in sedes %}
+                            <option value="{{ s.id }}" {% if perfil.sede.id == s.id %}selected{% endif %}>
+                                {{ s.nombre }}
+                            </option>
+                            {% endfor %}
+                        </select>
+                        <button type="button" id="btn_sede"
+                                class="btn btn-sm btn-outline-secondary flex-shrink-0"
+                                onclick="toggleCampo('sede')">
+                            <i class="fas fa-lock me-1"></i>Cambiar
+                        </button>
+                    </div>
                 </div>
 
             </div>
@@ -151,7 +162,8 @@
                     <label class="form-label fw-semibold">Confirmar contraseña</label>
                     <div class="input-group">
                         <input type="password" name="confirmar_password" id="confirmarPass"
-                               class="form-control" placeholder="Repetir contraseña"
+                               class="form-control"
+                               placeholder="Repetir contraseña"
                                autocomplete="new-password">
                         <button class="btn btn-outline-secondary" type="button"
                                 onclick="togglePass('confirmarPass', this)">
@@ -179,6 +191,34 @@
 </form>
 
 <script>
+function toggleCampo(campo) {
+    const select = document.getElementById(campo + '_select');
+    const hidden = document.getElementById(campo + '_hidden');
+    const btn    = document.getElementById('btn_' + campo);
+
+    const bloqueado = select.disabled;
+
+    if (bloqueado) {
+        // Desbloquear
+        select.disabled = false;
+        select.style.background = '';
+        select.style.cursor = '';
+        select.style.maxWidth = '220px';
+        hidden.disabled = true;
+        btn.innerHTML = '<i class="fas fa-lock-open me-1"></i>Cancelar';
+        btn.classList.replace('btn-outline-secondary', 'btn-outline-warning');
+    } else {
+        // Volver a bloquear y restaurar valor original
+        select.disabled = true;
+        select.style.background = '#f8f9fa';
+        select.style.cursor = 'not-allowed';
+        select.value = hidden.value;   // reset al valor del servidor
+        hidden.disabled = false;
+        btn.innerHTML = '<i class="fas fa-lock me-1"></i>Cambiar';
+        btn.classList.replace('btn-outline-warning', 'btn-outline-secondary');
+    }
+}
+
 function togglePass(inputId, btn) {
     const input = document.getElementById(inputId);
     const icon = btn.querySelector('i');
@@ -190,6 +230,23 @@ function togglePass(inputId, btn) {
         icon.classList.replace('fa-eye-slash', 'fa-eye');
     }
 }
+
+const confirmarPass = document.getElementById('confirmarPass');
+const nuevaPass = document.getElementById('nuevaPass');
+
+document.querySelector('form').addEventListener('submit', function(e) {
+    if (nuevaPass.value && nuevaPass.value !== confirmarPass.value) {
+        e.preventDefault();
+        confirmarPass.setCustomValidity('Las contraseñas no coinciden');
+        confirmarPass.reportValidity();
+    } else {
+        confirmarPass.setCustomValidity('');
+    }
+});
+
+confirmarPass.addEventListener('input', function() {
+    this.setCustomValidity('');
+});
 </script>
 
 {% endblock %}

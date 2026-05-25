@@ -72,6 +72,22 @@ def validar_celular(celular):
     return bool(re.match(r'^9\d{8}$', str(celular)))
 
 
+def estado_pago_matricula(m, today):
+    """
+    Calcula el estado de pago de una matrícula anotada con deuda_db y total_pagado_db.
+    Fuente de verdad única usada en Matrículas y Reportes de Ciclo.
+
+    Devuelve: 'pagado' | 'vencido' | 'parcial' | 'sin_pago'
+    """
+    if m.deuda_db <= 0:
+        return 'pagado'
+    if m.ciclo.fecha_fin < today:
+        return 'vencido'
+    if m.total_pagado_db > 0:
+        return 'parcial'
+    return 'sin_pago'
+
+
 def estado_ciclo_hoy(ciclo, today=None):
     """
     Fuente de verdad única para el estado académico de un ciclo.

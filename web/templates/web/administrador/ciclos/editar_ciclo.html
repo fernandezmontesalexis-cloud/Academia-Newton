@@ -14,52 +14,162 @@
 
 <div class="row justify-content-center">
     <div class="col-md-6">
-        <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
+        <div class="card border-0 shadow-sm overflow-hidden">
 
+            <!-- Header visual -->
+            <div class="card-header border-0 py-4 px-4"
+                 style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="d-flex align-items-center justify-content-center rounded-circle fw-bold text-white flex-shrink-0
+                                {% if estado_ciclo == 'activa' %}bg-success{% elif estado_ciclo == 'pendiente' %}bg-info{% else %}bg-secondary{% endif %}"
+                         style="width:52px;height:52px;font-size:22px;">
+                        {{ ciclo.nombre|slice:":1"|upper }}
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-bold">{{ ciclo.nombre }}</div>
+                        <small class="text-muted">{{ ciclo.sede.nombre|capfirst }}</small>
+                    </div>
+                    {% if estado_ciclo == 'activa' %}
+                    <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 fw-semibold"
+                          style="font-size:10px;padding:4px 10px;border-radius:20px">
+                        <i class="fas fa-circle me-1" style="font-size:6px;vertical-align:middle"></i>Activo
+                    </span>
+                    {% elif estado_ciclo == 'pendiente' %}
+                    <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25 fw-semibold"
+                          style="font-size:10px;padding:4px 10px;border-radius:20px">
+                        <i class="fas fa-clock me-1" style="font-size:9px;vertical-align:middle"></i>Próximo
+                    </span>
+                    {% else %}
+                    <span class="badge bg-secondary bg-opacity-15 text-secondary border border-secondary border-opacity-25 fw-semibold"
+                          style="font-size:10px;padding:4px 10px;border-radius:20px">
+                        Finalizado
+                    </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card-body p-4">
                 <form method="POST">
                     {% csrf_token %}
 
+                    <!-- Sección: Información -->
+                    <p class="small fw-semibold text-muted text-uppercase mb-1" style="letter-spacing:.07em;">
+                        <i class="fas fa-info-circle me-1 opacity-50"></i>Información
+                    </p>
+                    <hr class="mt-1 mb-3">
+
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Nombre del ciclo</label>
+                        <label class="form-label fw-semibold small">Nombre del ciclo</label>
                         <input type="text" name="nombre" class="form-control"
                                value="{{ ciclo.nombre }}" required>
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Precio (S/.)</label>
-                        <input type="number" step="0.50" min="0.50" name="precio"
-                               class="form-control" value="{{ ciclo.precio }}" required
-                               oninvalid="this.setCustomValidity(this.validity.valueMissing ? 'El precio es obligatorio' : this.validity.stepMismatch ? 'El precio debe ser en soles enteros o medios (ej. S/. 300.00 o S/. 300.50)' : 'El precio debe ser mayor a 0')"
-                               oninput="this.setCustomValidity('')">
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold small">Precio (S/.)</label>
+                        <div class="d-flex gap-2">
+                            <input type="hidden" name="precio" id="precio_hidden"
+                                   value="{{ ciclo.precio }}">
+                            <input type="text" id="precio_input"
+                                   class="form-control form-control-sm"
+                                   value="{{ ciclo.precio|floatformat:2 }}"
+                                   disabled style="background:#f8f9fa;cursor:not-allowed;max-width:220px;">
+                            <button type="button" id="btn_precio"
+                                    class="btn btn-sm btn-outline-secondary flex-shrink-0"
+                                    onclick="toggleCampo('precio')">
+                                <i class="fas fa-lock me-1"></i>Cambiar
+                            </button>
+                        </div>
+                        <div class="form-text">Solo cambiar si el precio del ciclo fue incorrecto.</div>
                     </div>
 
+                    <!-- Sección: Fechas -->
+                    <p class="small fw-semibold text-muted text-uppercase mb-1" style="letter-spacing:.07em;">
+                        <i class="fas fa-calendar-alt me-1 opacity-50"></i>Fechas
+                    </p>
+                    <hr class="mt-1 mb-3">
+
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">Fecha de inicio</label>
+                        <label class="form-label fw-semibold small">Fecha de inicio</label>
+                        {% if tiene_matriculas %}
+                        <div class="d-flex gap-2">
+                            <input type="hidden" name="fecha_inicio" id="fecha_inicio_hidden"
+                                   value="{{ ciclo.fecha_inicio|date:'Y-m-d' }}">
+                            <input type="date" id="fecha_inicio_input" class="form-control form-control-sm"
+                                   value="{{ ciclo.fecha_inicio|date:'Y-m-d' }}"
+                                   disabled style="background:#f8f9fa;cursor:not-allowed;max-width:220px;">
+                            <button type="button" id="btn_fecha_inicio"
+                                    class="btn btn-sm btn-outline-secondary flex-shrink-0"
+                                    onclick="toggleCampo('fecha_inicio')">
+                                <i class="fas fa-lock me-1"></i>Cambiar
+                            </button>
+                        </div>
+                        <div class="form-text text-danger">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            Tiene matrículas — cambiar la fecha de inicio afecta el ciclo activo.
+                        </div>
+                        {% else %}
                         <input type="date" name="fecha_inicio" class="form-control"
                                value="{{ ciclo.fecha_inicio|date:'Y-m-d' }}" required>
+                        {% endif %}
                     </div>
 
-                    <div class="mb-3">
-                        <label class="form-label fw-semibold">Fecha de fin</label>
+                    <div class="mb-4">
+                        <label class="form-label fw-semibold small">Fecha de fin</label>
                         <input type="date" name="fecha_fin" class="form-control"
                                value="{{ ciclo.fecha_fin|date:'Y-m-d' }}" required>
                     </div>
 
-                    <div class="d-flex gap-2 justify-content-end mt-4">
-                        <a href="{% url 'ciclos_sede_detalle' ciclo.sede.id %}" class="btn btn-outline-secondary">
-                            Cancelar
-                        </a>
-                        <button type="submit" class="btn btn-primary">
+                    <!-- Acciones -->
+                    <div class="d-flex gap-2 justify-content-end mt-2">
+                        <a href="{% url 'ciclos_sede_detalle' ciclo.sede.id %}"
+                           class="btn btn-outline-secondary">Cancelar</a>
+                        <button type="submit" class="btn btn-primary px-4">
                             <i class="fas fa-save me-1"></i> Actualizar
                         </button>
                     </div>
 
                 </form>
-
             </div>
+
         </div>
     </div>
 </div>
+
+<script>
+function toggleCampo(campo) {
+    const input  = document.getElementById(campo + '_input');
+    const hidden = document.getElementById(campo + '_hidden');
+    const btn    = document.getElementById('btn_' + campo);
+
+    if (input.disabled) {
+        // Desbloquear
+        if (campo === 'precio') {
+            input.type = 'number';
+            input.setAttribute('step', '0.50');
+            input.setAttribute('min', '0.50');
+            input.value = hidden.value;
+        }
+        input.disabled = false;
+        input.style.background = '';
+        input.style.cursor = '';
+        input.style.maxWidth = '220px';
+        hidden.disabled = true;
+        btn.innerHTML = '<i class="fas fa-lock-open me-1"></i>Cancelar';
+        btn.classList.replace('btn-outline-secondary', 'btn-outline-warning');
+    } else {
+        // Bloquear y restaurar
+        if (campo === 'precio') {
+            input.type = 'text';
+        }
+        input.disabled = true;
+        input.style.background = '#f8f9fa';
+        input.style.cursor = 'not-allowed';
+        input.value = hidden.value;
+        hidden.disabled = false;
+        btn.innerHTML = '<i class="fas fa-lock me-1"></i>Cambiar';
+        btn.classList.replace('btn-outline-warning', 'btn-outline-secondary');
+    }
+}
+</script>
 
 {% endblock %}

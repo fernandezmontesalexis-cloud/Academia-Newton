@@ -1,47 +1,116 @@
 import json
-import openpyxl
-from openpyxl.styles import Font, PatternFill, Alignment
 from datetime import date
 from decimal import Decimal
 
 from django.shortcuts import render, get_object_or_404
-from django.http import HttpResponse
 from web.permisos import permiso_requerido
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum, Count, DecimalField, Value
-from django.db.models.functions import Coalesce
+from django.db.models.functions import Coalesce, ExtractYear, ExtractMonth
 
 from ..models import Sede, Alumno, Matricula, Pago, Ciclo
 
 
+def _salud_badge(pct):
+    """Devuelve etiqueta, clase Bootstrap y color hex según % de recaudación."""
+    if pct >= 75:
+        return {'label': 'Saludable',    'clase': 'success', 'color': '#198754'}
+    if pct >= 50:
+        return {'label': 'Riesgo medio', 'clase': 'warning', 'color': '#ffc107'}
+    return     {'label': 'Alta deuda',   'clase': 'danger',  'color': '#dc3545'}
+
+
 def _ingresos_6_meses(sede=None):
-    """Calcula ingresos de los últimos 6 meses. Si sede es None, calcula globales."""
+    """
+    Calcula ingresos de los últimos 6 meses en 1 sola query
+    (antes hacía 6 queries separadas, una por mes).
+    """
     hoy = date.today()
+
+    # Calcular el primer día del período (hace 5 meses)
+    mes_inicio = hoy.month - 5
+    año_inicio = hoy.year
+    while mes_inicio <= 0:
+        mes_inicio += 12
+        año_inicio -= 1
+    inicio_periodo = date(año_inicio, mes_inicio, 1)
+
+    # 1 sola query agrupada por año + mes
+    qs = Pago.objects.filter(fecha_pago__gte=inicio_periodo)
+    if sede is not None:
+        qs = qs.filter(matricula__alumno__sede=sede)
+
+    resultados = (
+        qs
+        .annotate(año=ExtractYear('fecha_pago'), mes=ExtractMonth('fecha_pago'))
+        .values('año', 'mes')
+        .annotate(total=Sum('monto'))
+    )
+    mapa = {(r['año'], r['mes']): float(r['total'] or 0) for r in resultados}
+
+    # Construir labels y data en orden cronológico
     labels = []
     data = []
     for i in range(5, -1, -1):
-        mes = hoy.month - i
-        año = hoy.year
-        while mes <= 0:
-            mes += 12
-            año -= 1
-        inicio = date(año, mes, 1)
-        fin = date(año + 1, 1, 1) if mes == 12 else date(año, mes + 1, 1)
-        qs = Pago.objects.filter(fecha_pago__gte=inicio, fecha_pago__lt=fin)
-        if sede is not None:
-            qs = qs.filter(matricula__alumno__sede=sede)
-        total = qs.aggregate(total=Sum('monto'))['total'] or 0
-        labels.append(inicio.strftime('%b %Y'))
-        data.append(float(total))
+        m = hoy.month - i
+        a = hoy.year
+        while m <= 0:
+            m += 12
+            a -= 1
+        labels.append(date(a, m, 1).strftime('%b %Y'))
+        data.append(mapa.get((a, m), 0.0))
+
     return labels, data
 
 
 @login_required
 @permiso_requerido(['admin'])
 def reportes_sedes(request):
+    from collections import defaultdict
+
+    sedes = list(Sede.objects.all())
+
+    # ── Ganancias anuales ─────────────────────────────────────────────────
+    pagos_anuales = (
+        Pago.objects
+        .annotate(año=ExtractYear('fecha_pago'))
+        .values('año', 'matricula__alumno__sede_id')
+        .annotate(total=Sum('monto'))
+        .order_by('año')
+    )
+
+    matriz = defaultdict(dict)
+    for row in pagos_anuales:
+        matriz[row['año']][row['matricula__alumno__sede_id']] = float(row['total'] or 0)
+
+    años_list   = sorted(matriz.keys())[-4:]   # máximo últimos 4 años
+    anual_rows  = []
+    prev_total  = None
+    for año in años_list:
+        totales   = [round(matriz[año].get(s.id, 0), 2) for s in sedes]
+        total_año = round(sum(totales), 2)
+        if prev_total is not None and prev_total > 0:
+            crecimiento      = round((total_año - prev_total) / prev_total * 100, 1)
+            tiene_crecimiento = True
+        else:
+            crecimiento       = 0
+            tiene_crecimiento = False
+        anual_rows.append({
+            'año':              año,
+            'totales':          totales,
+            # Lista de (nombre_sede, monto) para iterar en template sin indexado
+            'sede_totales':     list(zip([s.nombre for s in sedes], totales)),
+            'total':            total_año,
+            'crecimiento':      crecimiento,
+            'tiene_crecimiento': tiene_crecimiento,
+            'positivo':         crecimiento >= 0,
+        })
+        prev_total = total_año
+
+    # ── Comparativo de sedes ──────────────────────────────────────────────
     data_sedes = []
 
-    for sede in Sede.objects.all():
+    for sede in sedes:
         alumnos_activos       = Alumno.objects.filter(sede=sede, estado='activo').count()
         matriculas_qs         = Matricula.objects.filter(alumno__sede=sede)
         matriculas_pagadas    = matriculas_qs.filter(estado='pagado').count()
@@ -80,12 +149,18 @@ def reportes_sedes(request):
             bar_esperado.append(round(esperado, 2))
             bar_cobrado.append(round(cobrado, 2))
 
+        total_esperado = sum(bar_esperado)
+        ingresos_f     = round(float(ingresos), 2)
+        pct            = int(ingresos_f / total_esperado * 100) if total_esperado > 0 else 0
+
         data_sedes.append({
             'sede':                   sede,
             'alumnos_activos':        alumnos_activos,
             'total_matriculas':       matriculas_qs.count(),
-            'ingresos':               round(float(ingresos), 2),
+            'ingresos':               ingresos_f,
             'deuda':                  round(float(deuda), 2),
+            'pct_recaudado':          min(pct, 100),
+            'salud':                  _salud_badge(pct),
             # Para gráficos modales
             'chart_mensual_labels':   json.dumps(mensual_labels),
             'chart_mensual_data':     json.dumps(mensual_data),
@@ -96,7 +171,9 @@ def reportes_sedes(request):
         })
 
     return render(request, 'web/administrador/reportes/reportes_sedes.html', {
-        'data_sedes': data_sedes,
+        'data_sedes':  data_sedes,
+        'anual_rows':  anual_rows,
+        'sedes':       sedes,
     })
 
 
@@ -164,6 +241,10 @@ def reporte_sede_detalle(request, sede_id):
             'pct_recaudado':     min(pct, 100),
         })
 
+    # Badge de salud global de la sede
+    total_esperado_sede = sum(float(item['total_esperado']) for item in ciclos_data)
+    pct_sede = int(ingresos_total / total_esperado_sede * 100) if total_esperado_sede > 0 else 0
+
     return render(request, 'web/administrador/reportes/reporte_sede_detalle.html', {
         'sede':             sede,
         'alumnos_activos':  alumnos_activos,
@@ -171,51 +252,8 @@ def reporte_sede_detalle(request, sede_id):
         'ingresos_total':   ingresos_total,
         'deuda_total':      deuda_total,
         'ciclos_data':      ciclos_data,
+        'salud':            _salud_badge(pct_sede),
+        'pct_recaudado':    min(pct_sede, 100),
     })
 
 
-@login_required
-@permiso_requerido(['admin'])
-def exportar_reporte_excel(request):
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = "Reporte Financiero"
-
-    header_fill = PatternFill("solid", fgColor="1F4E79")
-    header_font = Font(bold=True, color="FFFFFF")
-    center = Alignment(horizontal='center')
-
-    headers = ['Alumno', 'DNI', 'Sede', 'Ciclo', 'Monto Pagado', 'Deuda', 'Fecha', 'Método']
-    for col, h in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col, value=h)
-        cell.font = header_font
-        cell.fill = header_fill
-        cell.alignment = center
-
-    pagos = Pago.objects.select_related(
-        'matricula__alumno',
-        'matricula__alumno__sede',
-        'matricula__ciclo',
-    ).order_by('-fecha_pago')
-
-    for row, pago in enumerate(pagos, 2):
-        alumno = pago.matricula.alumno
-        ws.cell(row=row, column=1, value=str(alumno))
-        ws.cell(row=row, column=2, value=alumno.dni)
-        ws.cell(row=row, column=3, value=str(alumno.sede))
-        ws.cell(row=row, column=4, value=str(pago.matricula.ciclo))
-        ws.cell(row=row, column=5, value=float(pago.monto))
-        ws.cell(row=row, column=6, value=float(pago.matricula.deuda()))
-        ws.cell(row=row, column=7, value=str(pago.fecha_pago))
-        ws.cell(row=row, column=8, value=pago.get_metodo_pago_display())
-
-    for col in ws.columns:
-        max_len = max((len(str(cell.value or '')) for cell in col), default=10)
-        ws.column_dimensions[col[0].column_letter].width = max_len + 4
-
-    response = HttpResponse(
-        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    )
-    response['Content-Disposition'] = 'attachment; filename="reporte_financiero.xlsx"'
-    wb.save(response)
-    return response

@@ -17,13 +17,6 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body p-4">
 
-                {% if error %}
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="fas fa-exclamation-triangle me-1"></i> {{ error }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-                {% endif %}
-
                 <form method="POST">
                     {% csrf_token %}
 
@@ -115,6 +108,23 @@ function togglePass(inputId, btn) {
         icon.classList.replace('fa-eye-slash', 'fa-eye');
     }
 }
+
+const confirmarInput = document.getElementById('confirmarInput');
+const passInput = document.getElementById('passInput');
+
+document.querySelector('form').addEventListener('submit', function(e) {
+    if (passInput.value && passInput.value !== confirmarInput.value) {
+        e.preventDefault();
+        confirmarInput.setCustomValidity('Las contraseñas no coinciden');
+        confirmarInput.reportValidity();
+    } else {
+        confirmarInput.setCustomValidity('');
+    }
+});
+
+confirmarInput.addEventListener('input', function() {
+    this.setCustomValidity('');
+});
 </script>
 
 {% endblock %}

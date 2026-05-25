@@ -3,11 +3,12 @@ import openpyxl
 from openpyxl.styles import Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 from datetime import date, timedelta
+from decimal import Decimal
 
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from django.db.models import Sum, Avg, Count
+from django.db.models import Sum, Count
 from django.core.paginator import Paginator
 
 from web.permisos import permiso_requerido
@@ -116,9 +117,16 @@ def finanzas(request):
         ), 2)
         periodo_label = "Ingresos del mes"
 
-    promedio_pago = round(float(
-        historial_qs.aggregate(avg=Avg('monto'))['avg'] or 0
-    ), 2)
+    # ── Deuda total pendiente (respeta filtro de sede, no de fecha) ──────
+    _mats_pend = Matricula.objects.filter(alumno__estado='activo', estado='pendiente')
+    if filtros['sede_id']:
+        _mats_pend = _mats_pend.filter(alumno__sede_id=filtros['sede_id'])
+    _precio_pend = _mats_pend.aggregate(t=Sum('ciclo__precio'))['t'] or Decimal('0')
+    _pagado_pend = (
+        Pago.objects.filter(matricula__in=_mats_pend)
+        .aggregate(t=Sum('monto'))['t'] or Decimal('0')
+    )
+    deuda_total = round(float(_precio_pend - _pagado_pend), 2)
 
     # ── Resumen — esta semana respeta filtros de sede y método ────────────
     sem_qs = Pago.objects.filter(fecha_pago__gte=sem_inicio)
@@ -142,7 +150,7 @@ def finanzas(request):
     return render(request, 'web/administrador/finanzas/finanzas.html', {
         'ingresos_periodo': ingresos_periodo,
         'periodo_label':    periodo_label,
-        'promedio_pago':    promedio_pago,
+        'deuda_total':      deuda_total,
         'total_semana':     total_semana,
         'metodo_mas_usado': metodo_mas_usado,
         'metodo_label':     metodo_label,

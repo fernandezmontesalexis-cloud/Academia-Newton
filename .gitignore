@@ -19,3 +19,6 @@ Thumbs.db
 
 # Archivos de VS Code
 .vscode/.claude/
+
+# Documentación personal (diagramas, notas del desarrollador)
+docs/

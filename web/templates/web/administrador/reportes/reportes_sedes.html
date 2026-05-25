@@ -1,96 +1,176 @@
 {% extends 'web/base/base.html' %}
 {% load static %}
 
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'web/css/reportes_sedes.css' %}">
-{% endblock %}
-
 {% block content %}
 
-<div class="mb-3">
+<div class="mb-4">
     <h4 class="mb-0 fw-bold">Reportes por Sede</h4>
     <small class="text-muted">Resumen gerencial de todas las sedes</small>
 </div>
 
-{% if data_sedes %}
 
-<!-- TABLA COMPARATIVA -->
-<div class="card border-0 shadow-sm mb-3">
-    <div class="card-body">
-        <h6 class="fw-semibold mb-3">
-            <i class="fas fa-table text-primary me-1"></i> Comparativo de Sedes
-        </h6>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th>Sede</th>
-                        <th class="text-center">Alumnos</th>
-                        <th class="text-center">Matrículas</th>
-                        <th class="text-end">Ingresos</th>
-                        <th class="text-end">Deuda</th>
-                        <th class="text-center">Gráficos</th>
-                        <th class="text-center">Detalle</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for item in data_sedes %}
-                    <tr>
-                        <td class="fw-semibold">{{ item.sede.nombre }}</td>
-                        <td class="text-center">{{ item.alumnos_activos }}</td>
-                        <td class="text-center">{{ item.total_matriculas }}</td>
-                        <td class="text-end text-success fw-semibold">S/. {{ item.ingresos|floatformat:2 }}</td>
-                        <td class="text-end">
-                            {% if item.deuda > 0 %}
-                                <span class="text-danger fw-semibold">S/. {{ item.deuda|floatformat:2 }}</span>
-                            {% else %}
-                                <span class="text-success"><i class="fas fa-check"></i></span>
-                            {% endif %}
-                        </td>
+{% if anual_rows %}
+<!-- ── GANANCIAS ANUALES ──────────────────────────────────────────────── -->
+<div class="mb-4">
+    <h6 class="fw-semibold mb-3">
+        <i class="fas fa-calendar-alt text-primary me-2"></i> Ganancias Anuales
+        <small class="text-muted fw-normal ms-1" style="font-size:11px">Ingresos totales registrados por año</small>
+    </h6>
 
-                        <!-- 3 botones de gráficos -->
-                        <td class="text-center">
-                            <div class="d-flex justify-content-center gap-1">
-                                <button class="btn btn-sm btn-outline-success btn-modal-grafico"
-                                        data-sede-id="{{ item.sede.id }}"
-                                        data-chart="linea"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#modalLinea"
-                                        title="Ingresos mensuales">
-                                    <i class="fas fa-chart-line"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-warning btn-modal-grafico"
-                                        data-sede-id="{{ item.sede.id }}"
-                                        data-chart="dona"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#modalDona"
-                                        title="Estado de matrículas">
-                                    <i class="fas fa-chart-pie"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-primary btn-modal-grafico"
-                                        data-sede-id="{{ item.sede.id }}"
-                                        data-chart="barras"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#modalBarras"
-                                        title="Esperado vs Cobrado">
-                                    <i class="fas fa-chart-bar"></i>
-                                </button>
-                            </div>
-                        </td>
+    <div class="row g-3">
+        {% for row in anual_rows %}
+        <div class="col-sm-6 col-lg-3">
+            <div class="card border-0 shadow-sm h-100"
+                 style="border-top:3px solid #3b82f6!important">
+                <div class="card-body p-3">
 
-                        <!-- Botón detalle -->
-                        <td class="text-center">
-                            <a href="{% url 'reporte_sede_detalle' item.sede.id %}"
-                               class="btn btn-outline-secondary btn-sm"
-                               title="Ver detalle de sede">
-                                <i class="fas fa-building"></i>
-                            </a>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+                    <!-- Año + variación -->
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <span class="text-muted fw-semibold"
+                              style="font-size:11px;text-transform:uppercase;letter-spacing:.5px">
+                            {{ row.año }}
+                        </span>
+                        {% if row.tiene_crecimiento %}
+                        <span class="badge fw-semibold
+                                     {% if row.positivo %}bg-success bg-opacity-15 text-success border border-success border-opacity-25
+                                     {% else %}bg-danger bg-opacity-15 text-danger border border-danger border-opacity-25{% endif %}"
+                              style="font-size:10px;padding:3px 8px;border-radius:20px">
+                            <i class="fas fa-arrow-{% if row.positivo %}up{% else %}down{% endif %} me-1"></i>{% if row.positivo %}+{% endif %}{{ row.crecimiento }}%
+                        </span>
+                        {% else %}
+                        <span class="text-muted" style="font-size:10px">Primer año</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Total del año -->
+                    <div class="fw-bold mb-3" style="font-size:17px">
+                        S/. {{ row.total|floatformat:2 }}
+                    </div>
+
+                    <!-- Desglose por sede -->
+                    <div class="border-top pt-2">
+                        {% for sede_nombre, monto in row.sede_totales %}
+                        <div class="d-flex justify-content-between align-items-center
+                                    {% if not forloop.last %}mb-1{% endif %}">
+                            <small class="text-muted">{{ sede_nombre|capfirst }}</small>
+                            <small class="fw-semibold">
+                                {% if monto > 0 %}
+                                    S/. {{ monto|floatformat:2 }}
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </small>
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                </div>
+            </div>
         </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+
+{% if data_sedes %}
+<!-- ── COMPARATIVO DE SEDES ───────────────────────────────────────────── -->
+<div class="mb-3">
+    <h6 class="fw-semibold mb-3">
+        <i class="fas fa-table text-primary me-2"></i> Comparativo de Sedes
+    </h6>
+
+    <div class="row g-3">
+        {% for item in data_sedes %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card border-0 shadow-sm h-100"
+                 style="border-top:3px solid {{ item.salud.color }}!important">
+                <div class="card-body p-4">
+
+                    <!-- Nombre sede + badge salud -->
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h6 class="fw-bold mb-0" style="font-size:15px">
+                                <i class="fas fa-building text-secondary me-1" style="font-size:12px"></i>
+                                {{ item.sede.nombre|capfirst }}
+                            </h6>
+                            <small class="text-muted">
+                                {{ item.total_matriculas }}
+                                matrícula{% if item.total_matriculas != 1 %}s{% endif %}
+                            </small>
+                        </div>
+                        <span class="badge bg-{{ item.salud.clase }} bg-opacity-15
+                                     text-{{ item.salud.clase }}
+                                     border border-{{ item.salud.clase }} border-opacity-25
+                                     fw-semibold"
+                              style="font-size:10px;padding:4px 9px;border-radius:20px;white-space:nowrap">
+                            {{ item.salud.label }}
+                        </span>
+                    </div>
+
+                    <!-- Ingresos + Deuda -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div class="text-muted"
+                                 style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">
+                                Ingresos
+                            </div>
+                            <div class="fw-bold text-success" style="font-size:16px">
+                                S/. {{ item.ingresos|floatformat:2 }}
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="text-muted"
+                                 style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">
+                                Deuda
+                            </div>
+                            <div class="fw-bold {% if item.deuda > 0 %}text-danger{% else %}text-success{% endif %}"
+                                 style="font-size:16px">
+                                {% if item.deuda > 0 %}
+                                    S/. {{ item.deuda|floatformat:2 }}
+                                {% else %}
+                                    <i class="fas fa-check-circle"></i> Al día
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Footer: gráficos + detalle -->
+                    <div class="d-flex justify-content-between align-items-center
+                                pt-3 border-top">
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-sm btn-outline-success btn-modal-grafico"
+                                    data-sede-id="{{ item.sede.id }}"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalLinea"
+                                    title="Ingresos mensuales">
+                                <i class="fas fa-chart-line"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning btn-modal-grafico"
+                                    data-sede-id="{{ item.sede.id }}"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalDona"
+                                    title="Estado de matrículas">
+                                <i class="fas fa-chart-pie"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-primary btn-modal-grafico"
+                                    data-sede-id="{{ item.sede.id }}"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#modalBarras"
+                                    title="Esperado vs Cobrado">
+                                <i class="fas fa-chart-bar"></i>
+                            </button>
+                        </div>
+                        <a href="{% url 'reporte_sede_detalle' item.sede.id %}"
+                           class="btn btn-sm btn-outline-secondary">
+                            <i class="fas fa-arrow-right me-1"></i> Detalle
+                        </a>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% endfor %}
     </div>
 </div>
 
@@ -117,7 +197,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body pt-2">
-                <div style="height: 300px;">
+                <div style="height:300px">
                     <canvas id="canvasLinea"></canvas>
                 </div>
             </div>
@@ -127,7 +207,7 @@
 
 <!-- ===== MODAL: Estado de Matrículas ===== -->
 <div class="modal fade" id="modalDona" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:420px">
         <div class="modal-content border-0 shadow">
             <div class="modal-header border-0 pb-0">
                 <h6 class="modal-title fw-semibold">
@@ -138,7 +218,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body pt-2">
-                <div style="height: 260px;">
+                <div style="height:260px">
                     <canvas id="canvasDona"></canvas>
                 </div>
                 <div class="d-flex justify-content-around mt-2">
@@ -167,7 +247,7 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body pt-2">
-                <div style="height: 300px;">
+                <div style="height:300px">
                     <canvas id="canvasBarras"></canvas>
                 </div>
             </div>

@@ -11,6 +11,7 @@ from .views.registro_views import (
     regis_form_academica,
     regis_form_adicional,
     cancelar_registro,
+    nuevo_registro,
     get_distritos,
     get_provincias,
     buscar_colegios,
@@ -19,7 +20,7 @@ from .views.registro_views import (
 
 from .views.matriculas_views import matriculas, matriculas_historial
 from .views.pagos_views import pagos
-from .views.reportes_views import reportes_sedes, reporte_sede_detalle, exportar_reporte_excel
+from .views.reportes_views import reportes_sedes, reporte_sede_detalle
 from .views.finanzas_views import finanzas, historial_completo, exportar_finanzas_excel
 from .views.admin_views import (
     lista_ciclos,
@@ -43,7 +44,6 @@ from .views.pagos_views import (
     lista_pagos, reporte_ciclo, exportar_reportes, boleta_pdf,
     cancelar_matricula_nueva,
 )
-from .views.registro_views import  nuevo_registro
 
 urlpatterns = [
     # AUTENTICACIÓN
@@ -99,7 +99,6 @@ urlpatterns = [
     # REPORTES
     path("reportes/sedes/", reportes_sedes, name="reportes_sedes"),
     path("reportes/sede/<int:sede_id>/", reporte_sede_detalle, name="reporte_sede_detalle"),
-    path("reportes/exportar/", exportar_reporte_excel, name="exportar_reporte_excel"),
     # FINANZAS
     path("panel/finanzas/", finanzas, name="finanzas"),
     path("panel/finanzas/historial/", historial_completo, name="historial_completo"),
