@@ -28,6 +28,17 @@
                     </div>
 
                     <div class="mb-3">
+                        <label class="form-label fw-semibold">
+                            Correo electrónico
+                            <span class="text-muted fw-normal small">(opcional)</span>
+                        </label>
+                        <input type="email" name="email" class="form-control"
+                               value="{{ email|default:'' }}"
+                               placeholder="Ej: secretaria@academia.com" autocomplete="off">
+                        <div class="form-text">Se usará para recuperación de contraseña.</div>
+                    </div>
+
+                    <div class="mb-3">
                         <label class="form-label fw-semibold">Tipo de usuario</label>
                         <select name="tipo_usuario" class="form-select">
                             <option value="admin" {% if tipo_usuario == "admin" %}selected{% endif %}>

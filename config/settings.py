@@ -23,9 +23,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-(ch@qzs9zw9v9&t^_o*i$!^)q(avbs$!nmvm1@v0m&2xi74uzo'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -117,6 +117,7 @@ STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     BASE_DIR / "web/static"
 ]
+STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # Configuración del tipo de ID automático para los modelos (mejora recomendada por Django)
 DEFAULT_AUTO_FIELD ='django.db.models.BigAutoField'

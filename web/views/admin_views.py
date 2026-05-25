@@ -143,6 +143,7 @@ def crear_usuario(request):
     sedes = Sede.objects.filter(is_active=True)
     if request.method == "POST":
         username = request.POST.get("username", "").strip()
+        email    = request.POST.get("email", "").strip()
         password = request.POST.get("password", "")
         confirmar_password = request.POST.get("confirmar_password", "")
         tipo_usuario = request.POST.get("tipo_usuario")
@@ -151,7 +152,8 @@ def crear_usuario(request):
         def render_error(msg):
             return render(request, "web/administrador/usuarios/crear_usuario.html", {
                 "error": msg, "sedes": sedes,
-                "username": username, "tipo_usuario": tipo_usuario, "sede_id": sede_id,
+                "username": username, "email": email,
+                "tipo_usuario": tipo_usuario, "sede_id": sede_id,
             })
 
         if not username or not password:
@@ -163,7 +165,7 @@ def crear_usuario(request):
         if User.objects.filter(username=username).exists():
             return render_error("Ese nombre de usuario ya existe")
 
-        user = User.objects.create(username=username, password=make_password(password))
+        user = User.objects.create(username=username, email=email, password=make_password(password))
         Perfil.objects.create(user=user, tipo_usuario=tipo_usuario, sede_id=sede_id)
         return redirect("lista_usuarios")
 
@@ -214,6 +216,7 @@ def editar_usuario(request, id):
 
     if request.method == "POST":
         user.username = request.POST.get("username")
+        user.email    = request.POST.get("email", "").strip()
         perfil.tipo_usuario = request.POST.get("tipo_usuario")
         perfil.sede_id = request.POST.get("sede")
         user.is_active = request.POST.get("is_active") == "1"

@@ -50,6 +50,17 @@
                 </div>
 
                 <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        Correo electrónico
+                        <span class="text-muted fw-normal small">(opcional)</span>
+                    </label>
+                    <input type="email" name="email" class="form-control"
+                           value="{{ user.email }}"
+                           placeholder="Ej: secretaria@academia.com">
+                    <div class="form-text">Se usará para recuperación de contraseña.</div>
+                </div>
+
+                <div class="mb-3">
                     <label class="form-label fw-semibold small">Tipo de usuario</label>
                     <div class="d-flex gap-2">
                         <!-- Hidden: envía el valor original mientras el select esté bloqueado -->

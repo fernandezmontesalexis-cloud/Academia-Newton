@@ -22,3 +22,6 @@ Thumbs.db
 
 # Documentación personal (diagramas, notas del desarrollador)
 docs/
+
+# Archivos estáticos recopilados (se generan con collectstatic en cada servidor)
+staticfiles/
