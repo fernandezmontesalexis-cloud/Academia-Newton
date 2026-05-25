@@ -1,5 +1,5 @@
 import functools
-from django.shortcuts import redirect
+from django.core.exceptions import PermissionDenied
 
 
 def permiso_requerido(roles_permitidos):
@@ -9,7 +9,7 @@ def permiso_requerido(roles_permitidos):
             perfil = getattr(request.user, 'perfil', None)
 
             if not perfil or perfil.tipo_usuario not in roles_permitidos:
-                return redirect('dashboard')
+                raise PermissionDenied
 
             return view_func(request, *args, **kwargs)
         return wrapper
