@@ -48,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'web.middleware.NoCacheMiddleware',
 ]
 
 ROOT_URLCONF = 'config.urls'
@@ -127,3 +128,7 @@ DEFAULT_AUTO_FIELD ='django.db.models.BigAutoField'
 LOGIN_URL = '/'
 LOGIN_REDIRECT_URL = '/dashboard/'
 LOGOUT_REDIRECT_URL = '/'
+
+# Sesión: expira a los 30 minutos de inactividad
+SESSION_COOKIE_AGE = 1800        # 30 minutos en segundos
+SESSION_SAVE_EVERY_REQUEST = True  # reinicia el contador con cada acción del usuario
