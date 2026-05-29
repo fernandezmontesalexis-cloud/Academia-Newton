@@ -1,15 +1,19 @@
-
 {% load static %}
-
-{% block content %}
-<link rel="stylesheet" href="{% static 'web/css/login.css' %}">
-
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Newton en Red — Ingresar</title>
+    <link rel="stylesheet" href="{% static 'web/css/login.css' %}">
+</head>
+<body>
 
 <div class="login-background">
     <div class="login-wrapper">
         <div class="card-login">
 
-            <!-- 🔥 HEADER CON IMAGEN COMPLETA -->
+            <!-- HEADER CON IMAGEN COMPLETA -->
             <div class="card-header-img"></div>
 
             <div class="card-body-form">
@@ -47,4 +51,5 @@
     </div>
 </div>
 
-{% endblock %}
+</body>
+</html>

@@ -249,3 +249,54 @@ body {
     background: #f5f7fa;
     min-width: 0;
 }
+
+/* ── HAMBURGUESA (oculta en desktop) ─────────────────────── */
+.btn-hamburger {
+    display: none;
+    background: none;
+    border: none;
+    color: rgba(255,255,255,.88);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    line-height: 1;
+    transition: background .15s;
+}
+.btn-hamburger:hover { background: rgba(255,255,255,.12); }
+
+/* ── OVERLAY móvil ───────────────────────────────────────── */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.45);
+    z-index: 1040;
+}
+.sidebar-overlay.show { display: block; }
+
+/* ── RESPONSIVE ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+
+    /* Sidebar: se mueve fuera de pantalla */
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: -220px;
+        height: 100vh;
+        z-index: 1050;
+        transition: left .25s ease;
+    }
+
+    /* Sidebar abierto */
+    .sidebar.open { left: 0; }
+
+    /* Botón hamburguesa visible en móvil */
+    .btn-hamburger { display: inline-flex; }
+
+    /* Contenido ocupa todo el ancho */
+    .content { padding: 16px; }
+
+    /* Topbar: menos padding en móvil */
+    .topbar { padding: 0 14px; }
+}

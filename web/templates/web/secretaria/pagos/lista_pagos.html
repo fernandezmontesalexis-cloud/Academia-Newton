@@ -1,4 +1,9 @@
 {% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/pagos.css' %}">
+{% endblock %}
 
 {% block content %}
 
@@ -28,19 +33,18 @@
 
     {# Encabezado del historial — actúa como toggle #}
     <div class="d-flex align-items-center gap-2 mb-3">
-        <hr class="flex-grow-1 m-0" style="border-color:#e2e8f0;">
+        <hr class="flex-grow-1 m-0 hr-divider">
         <a href="{% if historial_abierto %}{% url 'lista_pagos' %}{% else %}{% url 'lista_pagos' %}?hpage=1{% endif %}"
-           class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2"
-           style="font-size:12.5px; border-radius:20px; padding: 4px 14px;">
+           class="btn btn-sm btn-outline-secondary btn-pill d-flex align-items-center gap-2">
             <i class="fas {% if historial_abierto %}fa-chevron-up{% else %}fa-history{% endif %}"></i>
             {% if historial_abierto %}
                 Ocultar historial
             {% else %}
                 Historial de ciclos finalizados
-                <span class="badge bg-secondary ms-1" style="font-size:11px">{{ total_finalizados }}</span>
+                <span class="badge bg-secondary ms-1 fs-11">{{ total_finalizados }}</span>
             {% endif %}
         </a>
-        <hr class="flex-grow-1 m-0" style="border-color:#e2e8f0;">
+        <hr class="flex-grow-1 m-0 hr-divider">
     </div>
 
     {% if historial_abierto %}

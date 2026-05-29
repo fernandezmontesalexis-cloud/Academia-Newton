@@ -4,19 +4,19 @@
 <div class="card border-0 shadow-sm h-100">
     <div class="card-header bg-white border-0 pt-3 pb-0 px-3 d-flex justify-content-between align-items-start">
         <div>
-            <h6 class="fw-bold mb-0" style="font-size:14px">{{ c.nombre }}</h6>
-            <small class="text-muted" style="font-size:11.5px">
+            <h6 class="fw-bold mb-0 fs-14">{{ c.nombre }}</h6>
+            <small class="text-muted fs-105">
                 {{ c.fecha_inicio|date:"d/m/Y" }} – {{ c.fecha_fin|date:"d/m/Y" }}
             </small>
         </div>
         {% if c.alerta_vigencia == 'activo' %}
-            <span class="badge bg-success ms-2 mt-1" style="font-size:10px;white-space:nowrap">Activo</span>
+            <span class="badge bg-success ms-2 mt-1 fs-10">Activo</span>
         {% elif c.alerta_vigencia == 'finaliza_pronto' %}
-            <span class="badge bg-warning text-dark ms-2 mt-1" style="font-size:10px;white-space:nowrap">Finaliza pronto</span>
+            <span class="badge bg-warning text-dark ms-2 mt-1 fs-10">Finaliza pronto</span>
         {% elif c.alerta_vigencia == 'pendiente' %}
-            <span class="badge bg-primary ms-2 mt-1" style="font-size:10px;white-space:nowrap">Próximo</span>
+            <span class="badge bg-primary ms-2 mt-1 fs-10">Próximo</span>
         {% else %}
-            <span class="badge bg-secondary ms-2 mt-1" style="font-size:10px;white-space:nowrap">Finalizado</span>
+            <span class="badge bg-secondary ms-2 mt-1 fs-10">Finalizado</span>
         {% endif %}
     </div>
 
@@ -26,34 +26,34 @@
         <div class="row g-2 mb-3">
 
             <div class="col-6">
-                <div class="rounded-2 px-2 py-2" style="background:#f1f5f9">
-                    <div class="text-muted" style="font-size:10.5px">Matrículas activas</div>
-                    <div class="fw-bold" style="font-size:17px;line-height:1.2">{{ item.total_matriculas }}</div>
+                <div class="ciclo-metrica" style="background:#f1f5f9">
+                    <div class="ciclo-metrica-label">Matrículas activas</div>
+                    <div class="ciclo-metrica-valor fs-17">{{ item.total_matriculas }}</div>
                 </div>
             </div>
 
             <div class="col-6">
-                <div class="rounded-2 px-2 py-2" style="background:#f0fdf4">
-                    <div class="text-muted" style="font-size:10.5px">Recaudado</div>
-                    <div class="fw-bold text-success" style="font-size:15px;line-height:1.2">
+                <div class="ciclo-metrica" style="background:#f0fdf4">
+                    <div class="ciclo-metrica-label">Recaudado</div>
+                    <div class="ciclo-metrica-valor fs-15 text-success">
                         S/. {{ item.total_recaudado|floatformat:2 }}
                     </div>
                 </div>
             </div>
 
             <div class="col-6">
-                <div class="rounded-2 px-2 py-2" style="background:#fef2f2">
-                    <div class="text-muted" style="font-size:10.5px">Deuda total</div>
-                    <div class="fw-bold" style="font-size:15px;line-height:1.2;color:#c0392b">
+                <div class="ciclo-metrica" style="background:#fef2f2">
+                    <div class="ciclo-metrica-label">Deuda total</div>
+                    <div class="ciclo-metrica-valor fs-15 text-red-soft">
                         S/. {{ item.total_deuda|floatformat:2 }}
                     </div>
                 </div>
             </div>
 
             <div class="col-6">
-                <div class="rounded-2 px-2 py-2" style="background:#fffbeb">
-                    <div class="text-muted" style="font-size:10.5px">Con deuda</div>
-                    <div class="fw-bold" style="font-size:17px;line-height:1.2;color:#d97706">{{ item.alumnos_con_deuda }}</div>
+                <div class="ciclo-metrica" style="background:#fffbeb">
+                    <div class="ciclo-metrica-label">Con deuda</div>
+                    <div class="ciclo-metrica-valor fs-17 text-amber">{{ item.alumnos_con_deuda }}</div>
                 </div>
             </div>
 
@@ -61,10 +61,10 @@
 
         {# Barra de progreso #}
         <div class="mb-1 d-flex justify-content-between align-items-center">
-            <small class="text-muted" style="font-size:11px">Recaudación</small>
-            <small class="fw-semibold" style="font-size:11px">{{ item.pct_recaudado }}%</small>
+            <small class="text-muted fs-11">Recaudación</small>
+            <small class="fw-semibold fs-11">{{ item.pct_recaudado }}%</small>
         </div>
-        <div class="progress mb-3" style="height:7px;border-radius:4px;">
+        <div class="progress progress-ciclo mb-3">
             <div class="progress-bar
                         {% if item.pct_recaudado >= 75 %}bg-success
                         {% elif item.pct_recaudado >= 40 %}bg-warning
@@ -78,8 +78,7 @@
 
         {# Botón de acción #}
         <a href="{% url 'reporte_ciclo' c.id %}"
-           class="btn btn-sm btn-outline-primary w-100"
-           style="font-size:12.5px">
+           class="btn btn-sm btn-outline-primary w-100 fs-125">
             <i class="fas fa-chart-bar me-1"></i> Ver reporte
         </a>
 

@@ -384,3 +384,54 @@ h4.fw-bold, .fw-bold.mb-0 {
     border: 1px solid #f1f5f9;
     border-radius: 8px !important;
 }
+
+/* ── FONT SIZE UTILITIES ──────────────────────────────────── */
+/* Uso: class="fs-10" en lugar de style="font-size:10px"      */
+.fs-10  { font-size: 10px   !important; }
+.fs-105 { font-size: 10.5px !important; }
+.fs-11  { font-size: 11px   !important; }
+.fs-12  { font-size: 12px   !important; }
+.fs-125 { font-size: 12.5px !important; }
+.fs-13  { font-size: 13px   !important; }
+.fs-135 { font-size: 13.5px !important; }
+.fs-14  { font-size: 14px   !important; }
+.fs-15  { font-size: 15px   !important; }
+.fs-17  { font-size: 17px   !important; }
+
+/* ── COLOR UTILITIES (paleta del proyecto) ────────────────── */
+.text-slate   { color: #64748b !important; }   /* etiquetas secundarias */
+.text-dark-1  { color: #0f172a !important; }   /* títulos principales   */
+.text-dark-2  { color: #374151 !important; }   /* cuerpo de texto       */
+.text-red-soft    { color: #c0392b !important; }
+.text-amber       { color: #d97706 !important; }
+
+/* ── DIVIDER / SEPARADORES ────────────────────────────────── */
+.hr-divider { border-color: #e2e8f0 !important; }
+
+/* ── BOTÓN PILL (toggle historial, filtros) ───────────────── */
+.btn-pill {
+    font-size: 12.5px !important;
+    border-radius: 20px !important;
+    padding: 4px 14px !important;
+}
+
+/* ── BREADCRUMB ───────────────────────────────────────────── */
+.breadcrumb-link {
+    font-size: 13px;
+    color: #64748b;
+    text-decoration: none;
+}
+.breadcrumb-link:hover { color: #374151; }
+.breadcrumb-current   { font-size: 13px; font-weight: 500; color: #374151; }
+
+/* ── LABEL CAPS (etiquetas en mayúsculas dentro de modales) ── */
+.label-caps {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    color: #64748b;
+}
+
+/* ── PHONE NUMBER ─────────────────────────────────────────── */
+.phone-number { font-size: 15px; letter-spacing: .5px; }

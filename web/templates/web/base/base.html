@@ -4,6 +4,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Newton en Red</title>
     <meta name="google" content="notranslate">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -16,10 +17,13 @@
 
 <body>
 
+    <!-- Overlay móvil: toca para cerrar el sidebar -->
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
     <div class="layout">
 
         <!-- SIDEBAR -->
-        <aside class="sidebar">
+        <aside class="sidebar" id="sidebar">
 
             <div class="sidebar-logo">
 
@@ -120,7 +124,12 @@
             <!-- TOPBAR -->
             <header class="topbar">
                 <div>
-                    <i class="fas fa-graduation-cap"></i> Academia Newton
+                    <!-- Hamburguesa: solo visible en móvil -->
+                    <button class="btn-hamburger" onclick="toggleSidebar()" aria-label="Menú">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <i class="fas fa-graduation-cap d-none d-md-inline"></i>
+                    <span class="d-none d-md-inline">Academia Newton</span>
                 </div>
                 <div class="dropdown">
                     <a class="dropdown-toggle text-white text-decoration-none" href="#" data-bs-toggle="dropdown">
@@ -158,6 +167,21 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <script>
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+            document.getElementById('sidebar-overlay').classList.toggle('show');
+        }
+
+        // Cierra el sidebar al navegar (útil en móvil)
+        document.querySelectorAll('.sidebar a').forEach(function(link) {
+            link.addEventListener('click', function() {
+                if (window.innerWidth < 769) {
+                    document.getElementById('sidebar').classList.remove('open');
+                    document.getElementById('sidebar-overlay').classList.remove('show');
+                }
+            });
+        });
+
         function toggleMant() {
 
             const submenu = document.getElementById('submenu-mant');

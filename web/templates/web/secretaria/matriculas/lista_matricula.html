@@ -1,6 +1,10 @@
 {% extends 'web/base/base.html' %}
 {% load static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/matricula.css' %}">
+{% endblock %}
+
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -23,16 +27,10 @@
             <div class="d-flex align-items-center gap-3 flex-wrap">
                 <h6 class="fw-semibold mb-0">Matrículas con deuda pendiente</h6>
                 <div class="d-flex align-items-center gap-2">
-                    <small class="text-muted fw-semibold" style="font-size:11px;">Próx. pago:</small>
-                    <span style="display:inline-block;padding:3px 10px;border-radius:20px;background:#fff1f2;border:1px solid #fca5a5;color:#be123c;font-size:12px;font-weight:600;">
-                        Vencido
-                    </span>
-                    <span style="display:inline-block;padding:3px 10px;border-radius:20px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:12px;font-weight:600;">
-                        Vence en 7 días
-                    </span>
-                    <span style="display:inline-block;padding:3px 10px;border-radius:20px;background:#f0fdf4;border:1px solid #86efac;color:#166534;font-size:12px;font-weight:600;">
-                        Sin urgencia
-                    </span>
+                    <small class="text-muted fw-semibold fs-11">Próx. pago:</small>
+                    <span class="tag-pill tag-pill-danger">Vencido</span>
+                    <span class="tag-pill tag-pill-warning">Vence en 7 días</span>
+                    <span class="tag-pill tag-pill-success">Sin urgencia</span>
                 </div>
             </div>
             <form method="GET" class="d-flex gap-2">
@@ -89,17 +87,11 @@
                         <td>
                             {% if m.proximo_pago %}
                                 {% if m.orden_pago == 0 %}
-                                    <span style="display:inline-block;padding:3px 10px;border-radius:20px;background:#fff1f2;border:1px solid #fca5a5;color:#be123c;font-size:12px;font-weight:600;">
-                                        {{ m.proximo_pago|date:"d/m/Y" }}
-                                    </span>
+                                    <span class="tag-pill tag-pill-danger">{{ m.proximo_pago|date:"d/m/Y" }}</span>
                                 {% elif m.orden_pago == 1 %}
-                                    <span style="display:inline-block;padding:3px 10px;border-radius:20px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:12px;font-weight:600;">
-                                        {{ m.proximo_pago|date:"d/m/Y" }}
-                                    </span>
+                                    <span class="tag-pill tag-pill-warning">{{ m.proximo_pago|date:"d/m/Y" }}</span>
                                 {% else %}
-                                    <span style="display:inline-block;padding:3px 10px;border-radius:20px;background:#f0fdf4;border:1px solid #86efac;color:#166534;font-size:12px;font-weight:600;">
-                                        {{ m.proximo_pago|date:"d/m/Y" }}
-                                    </span>
+                                    <span class="tag-pill tag-pill-success">{{ m.proximo_pago|date:"d/m/Y" }}</span>
                                 {% endif %}
                             {% else %}
                                 <small class="text-muted">—</small>
@@ -112,7 +104,7 @@
                             {% elif m.estado_pago == 'parcial' %}
                                 <span class="badge bg-warning">Parcial</span>
                             {% elif m.estado_pago == 'sin_pago' %}
-                                <span class="badge bg-danger" style="opacity:.75">Sin pago</span>
+                                <span class="badge bg-danger opacity-75">Sin pago</span>
                             {% else %}
                                 <span class="badge bg-success">Pagado</span>
                             {% endif %}
@@ -194,7 +186,7 @@
 
             <div class="modal-header border-0 pb-1 pt-3 px-4">
                 <div>
-                    <div class="fw-bold" id="mc-nombre" style="font-size:15px"></div>
+                    <div class="fw-bold fs-15" id="mc-nombre"></div>
                     <div class="d-flex align-items-center gap-2 mt-1">
                         <small class="text-muted" id="mc-dni"></small>
                         <span id="mc-badge"></span>
@@ -206,31 +198,29 @@
             <div class="modal-body px-4 pt-2 pb-3">
 
                 <!-- Deuda -->
-                <div class="rounded-3 p-3 mb-3" style="background:#f8fafc;border:1px solid #f1f5f9">
+                <div class="bg-light rounded-3 p-3 mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="text-muted" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Ciclo</span>
+                        <span class="label-caps">Ciclo</span>
                         <span class="fw-semibold small" id="mc-ciclo"></span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="text-muted" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Deuda</span>
+                        <span class="label-caps">Deuda</span>
                         <span class="fw-bold text-danger" id="mc-deuda"></span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Último pago</span>
+                        <span class="label-caps">Último pago</span>
                         <span class="small text-muted" id="mc-ultimo-pago"></span>
                     </div>
                 </div>
 
                 <!-- Celular alumno -->
                 <div class="mb-2">
-                    <div class="text-muted mb-1" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Alumno</div>
-                    <div class="d-flex align-items-center justify-content-between gap-2 p-2 rounded-3"
-                         style="background:#f1f5f9">
-                        <span class="fw-semibold" id="mc-celular" style="font-size:15px;letter-spacing:.5px"></span>
+                    <div class="label-caps mb-1">Alumno</div>
+                    <div class="d-flex align-items-center justify-content-between gap-2 p-2 rounded-3 bg-light">
+                        <span class="fw-semibold phone-number" id="mc-celular"></span>
                         <button type="button"
-                                class="btn btn-sm btn-outline-secondary py-0 px-2"
-                                onclick="copiarNumero('mc-celular', this)"
-                                style="font-size:11px">
+                                class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11"
+                                onclick="copiarNumero('mc-celular', this)">
                             <i class="fas fa-copy me-1"></i>Copiar
                         </button>
                     </div>
@@ -238,14 +228,12 @@
 
                 <!-- Celular apoderado -->
                 <div id="mc-apo-section" class="d-none">
-                    <div class="text-muted mb-1" style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px">Apoderado</div>
-                    <div class="d-flex align-items-center justify-content-between gap-2 p-2 rounded-3"
-                         style="background:#f1f5f9">
-                        <span class="fw-semibold" id="mc-apo-celular" style="font-size:15px;letter-spacing:.5px"></span>
+                    <div class="label-caps mb-1">Apoderado</div>
+                    <div class="d-flex align-items-center justify-content-between gap-2 p-2 rounded-3 bg-light">
+                        <span class="fw-semibold phone-number" id="mc-apo-celular"></span>
                         <button type="button"
-                                class="btn btn-sm btn-outline-secondary py-0 px-2"
-                                onclick="copiarNumero('mc-apo-celular', this)"
-                                style="font-size:11px">
+                                class="btn btn-sm btn-outline-secondary py-0 px-2 fs-11"
+                                onclick="copiarNumero('mc-apo-celular', this)">
                             <i class="fas fa-copy me-1"></i>Copiar
                         </button>
                     </div>

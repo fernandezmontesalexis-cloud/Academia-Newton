@@ -1,4 +1,9 @@
 {% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/pagos.css' %}">
+{% endblock %}
 
 {% block content %}
 
@@ -6,25 +11,24 @@
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <div class="d-flex align-items-center gap-2 mb-1">
-            <a href="{% url 'lista_pagos' %}" class="text-muted text-decoration-none"
-               style="font-size:13px">
+            <a href="{% url 'lista_pagos' %}" class="breadcrumb-link">
                 <i class="fas fa-chart-bar me-1"></i>Reportes
             </a>
-            <span class="text-muted" style="font-size:13px">/</span>
-            <span style="font-size:13px;color:#374151;font-weight:500">{{ ciclo.nombre }}</span>
+            <span class="breadcrumb-link">/</span>
+            <span class="breadcrumb-current">{{ ciclo.nombre }}</span>
         </div>
         <h4 class="mb-0 fw-bold">{{ ciclo.nombre }}</h4>
         <small class="text-muted">
             {{ ciclo.fecha_inicio|date:"d/m/Y" }} – {{ ciclo.fecha_fin|date:"d/m/Y" }}
             &nbsp;·&nbsp;
             {% if ciclo.alerta_vigencia == 'activo' %}
-                <span class="badge bg-success" style="font-size:10.5px">Activo</span>
+                <span class="badge bg-success fs-105">Activo</span>
             {% elif ciclo.alerta_vigencia == 'finaliza_pronto' %}
-                <span class="badge bg-warning" style="font-size:10.5px">Finaliza pronto</span>
+                <span class="badge bg-warning fs-105">Finaliza pronto</span>
             {% elif ciclo.alerta_vigencia == 'pendiente' %}
-                <span class="badge bg-primary" style="font-size:10.5px">Próximo</span>
+                <span class="badge bg-primary fs-105">Próximo</span>
             {% else %}
-                <span class="badge bg-secondary" style="font-size:10.5px">Finalizado</span>
+                <span class="badge bg-secondary fs-105">Finalizado</span>
             {% endif %}
         </small>
     </div>
@@ -42,42 +46,42 @@
 <!-- STAT CHIPS del ciclo -->
 <div class="d-flex flex-wrap gap-2 mb-3">
 
-    <div class="card border-0 shadow-sm" style="flex:1;min-width:140px">
+    <div class="card border-0 shadow-sm stat-chip">
         <div class="card-body py-2 px-3 d-flex align-items-center gap-2">
-            <i class="fas fa-coins text-success" style="font-size:14px;flex-shrink:0"></i>
+            <i class="fas fa-coins text-success stat-chip-icon"></i>
             <div>
-                <div class="fw-bold" style="font-size:15px">S/. {{ pagos_hoy|floatformat:2 }}</div>
-                <div class="text-muted" style="font-size:11px">Cobrado hoy</div>
+                <div class="stat-chip-valor">S/. {{ pagos_hoy|floatformat:2 }}</div>
+                <div class="text-muted stat-chip-label">Cobrado hoy</div>
             </div>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm" style="flex:1;min-width:140px">
+    <div class="card border-0 shadow-sm stat-chip">
         <div class="card-body py-2 px-3 d-flex align-items-center gap-2">
-            <i class="fas fa-check-circle text-primary" style="font-size:14px;flex-shrink:0"></i>
+            <i class="fas fa-check-circle text-primary stat-chip-icon"></i>
             <div>
-                <div class="fw-bold" style="font-size:15px">S/. {{ total_recaudado|floatformat:2 }}</div>
-                <div class="text-muted" style="font-size:11px">Total recaudado</div>
+                <div class="stat-chip-valor">S/. {{ total_recaudado|floatformat:2 }}</div>
+                <div class="text-muted stat-chip-label">Total recaudado</div>
             </div>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm" style="flex:1;min-width:140px">
+    <div class="card border-0 shadow-sm stat-chip">
         <div class="card-body py-2 px-3 d-flex align-items-center gap-2">
-            <i class="fas fa-exclamation-circle text-danger" style="font-size:14px;flex-shrink:0"></i>
+            <i class="fas fa-exclamation-circle text-danger stat-chip-icon"></i>
             <div>
-                <div class="fw-bold" style="font-size:15px">S/. {{ total_deuda|floatformat:2 }}</div>
-                <div class="text-muted" style="font-size:11px">Deuda del ciclo</div>
+                <div class="stat-chip-valor">S/. {{ total_deuda|floatformat:2 }}</div>
+                <div class="text-muted stat-chip-label">Deuda del ciclo</div>
             </div>
         </div>
     </div>
 
-    <div class="card border-0 shadow-sm" style="flex:1;min-width:140px">
+    <div class="card border-0 shadow-sm stat-chip">
         <div class="card-body py-2 px-3 d-flex align-items-center gap-2">
-            <i class="fas fa-users text-warning" style="font-size:14px;flex-shrink:0"></i>
+            <i class="fas fa-users text-warning stat-chip-icon"></i>
             <div>
-                <div class="fw-bold" style="font-size:15px">{{ alumnos_con_deuda }}</div>
-                <div class="text-muted" style="font-size:11px">Con deuda</div>
+                <div class="stat-chip-valor">{{ alumnos_con_deuda }}</div>
+                <div class="text-muted stat-chip-label">Con deuda</div>
             </div>
         </div>
     </div>
@@ -163,7 +167,7 @@
                             {% elif m.estado_pago == 'parcial' %}
                                 <span class="badge bg-warning">Parcial</span>
                             {% elif m.estado_pago == 'sin_pago' %}
-                                <span class="badge bg-danger" style="opacity:.75">Sin pago</span>
+                                <span class="badge bg-danger opacity-75">Sin pago</span>
                             {% else %}
                                 <span class="badge bg-success">Pagado</span>
                             {% endif %}
@@ -231,7 +235,7 @@
 
             <div class="modal-header border-0 pb-1 pt-3 px-4">
                 <div>
-                    <div class="fw-bold" id="mh-alumno" style="font-size:15px"></div>
+                    <div class="fw-bold fs-15" id="mh-alumno"></div>
                     <div class="d-flex align-items-center gap-2 mt-1">
                         <small class="text-muted" id="mh-ciclo"></small>
                         <span id="mh-badge"></span>
@@ -241,7 +245,7 @@
             </div>
 
             <div class="px-4 pt-2 pb-0">
-                <div class="d-flex gap-3" style="font-size:12.5px">
+                <div class="d-flex gap-3 fs-125">
                     <span class="text-muted">
                         Total: <strong id="mh-total" class="text-dark ms-1"></strong>
                     </span>
@@ -260,7 +264,7 @@
                     Sin pagos registrados aún
                 </div>
                 <div class="table-responsive" id="mh-tabla-wrapper">
-                    <table class="table table-hover align-middle mb-0" style="font-size:13.5px">
+                    <table class="table table-hover align-middle mb-0 fs-135">
                         <thead class="table-light">
                             <tr>
                                 <th>Fecha</th>
