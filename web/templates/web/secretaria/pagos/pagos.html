@@ -184,19 +184,29 @@
                            value="{{ apoderado_nombre }}"
                            readonly style="background:#f8fafd;cursor:default;">
                 </div>
-                <div class="col-md-3">
-                {% else %}
-                <div class="col-md-6">
                 {% endif %}
-                    <button type="submit" class="btn w-100 fw-semibold"
-                            style="background:#86efac;color:#14532d;border:1.5px solid #22c55e;"
-                            onmouseover="this.style.background='#4ade80';this.style.borderColor='#16a34a';"
-                            onmouseout="this.style.background='#86efac';this.style.borderColor='#22c55e';">
-                        <i class="fas fa-save me-1"></i> Registrar pago
-                    </button>
-                </div>
 
             </div>
+
+            <!-- Botones separados del row de inputs -->
+            <div class="d-flex gap-2 justify-content-end mt-3">
+                {% if ultimo_pago %}
+                <a href="{% url 'boleta_pdf' ultimo_pago.id %}" target="_blank"
+                   class="btn btn-sm fw-semibold px-3"
+                   style="background:#dbeafe;color:#1d4ed8;border:1.5px solid #93c5fd;"
+                   onmouseover="this.style.background='#bfdbfe';this.style.borderColor='#3b82f6';"
+                   onmouseout="this.style.background='#dbeafe';this.style.borderColor='#93c5fd';">
+                    <i class="fas fa-file-pdf me-1"></i> Última boleta
+                </a>
+                {% endif %}
+                <button type="submit" class="btn btn-sm fw-semibold px-4"
+                        style="background:#86efac;color:#14532d;border:1.5px solid #22c55e;"
+                        onmouseover="this.style.background='#4ade80';this.style.borderColor='#16a34a';"
+                        onmouseout="this.style.background='#86efac';this.style.borderColor='#22c55e';">
+                    <i class="fas fa-save me-1"></i> Registrar pago
+                </button>
+            </div>
+
         </form>
     </div>
 </div>
@@ -266,16 +276,32 @@
 {% endif %}
 
 {% if request.GET.ok %}
+{# Data attributes: toda la lógica Django queda en HTML, no en JS #}
+<div id="pago-exito"
+     data-matriculas-url="{% url 'matriculas' %}"
+     {% if request.GET.pago_id %}data-boleta-url="{% url 'boleta_pdf' request.GET.pago_id %}"{% endif %}
+     style="display:none;"></div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    var el           = document.getElementById('pago-exito');
+    var matriculasUrl = el.dataset.matriculasUrl;
+    var boletaUrl     = el.dataset.boletaUrl || null;
+
     Swal.fire({
         icon: 'success',
-        title: 'Pago registrado',
+        title: '¡Pago registrado!',
         text: 'El pago fue registrado exitosamente.',
-        confirmButtonText: 'Aceptar',
+        showCancelButton: !!boletaUrl,
+        confirmButtonText: 'Ir a Matrículas',
+        cancelButtonText: 'Descargar boleta',
         confirmButtonColor: '#0d6efd',
-    }).then(function () {
-        window.location.href = "{% url 'matriculas' %}";
+        cancelButtonColor: '#6c757d',
+        reverseButtons: true,
+    }).then(function (result) {
+        if (result.dismiss === Swal.DismissReason.cancel && boletaUrl) {
+            window.open(boletaUrl, '_blank');
+        }
+        window.location.href = matriculasUrl;
     });
 });
 </script>

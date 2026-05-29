@@ -11,7 +11,7 @@ from ..models import Alumno, Ciclo, Matricula, Pago, Sede
 
 @login_required
 def dashboard(request):
-    perfil = getattr(request.user, 'perfil', None)
+    perfil = getattr(request, 'perfil', None)
     if not perfil:
         return redirect('login')
 

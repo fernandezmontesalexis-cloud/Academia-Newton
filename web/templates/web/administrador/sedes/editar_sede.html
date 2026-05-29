@@ -43,9 +43,31 @@
                     <hr class="mt-1 mb-3">
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold small" for="nombre">Nombre de la sede</label>
-                        <input type="text" id="nombre" name="nombre" class="form-control" required
-                               value="{{ sede.nombre }}" placeholder="Ej: Sede Huacho">
+                        <label class="form-label fw-semibold small">Nombre de la sede</label>
+                        <div class="d-flex gap-2">
+                            <input type="text" id="nombre_input" name="nombre"
+                                   class="form-control form-control-sm" required
+                                   value="{{ sede.nombre }}"
+                                   readonly
+                                   data-original="{{ sede.nombre }}"
+                                   style="background:#f8f9fa;cursor:not-allowed;">
+                            <button type="button" id="btn_nombre"
+                                    class="btn btn-sm btn-outline-secondary flex-shrink-0"
+                                    onclick="toggleNombre()">
+                                <i class="fas fa-lock me-1"></i>Cambiar
+                            </button>
+                        </div>
+                        <div id="aviso-nombre" class="alert alert-warning py-2 px-3 mt-2 mb-0"
+                             style="display:none;font-size:12.5px;border-radius:8px;">
+                            <i class="fas fa-exclamation-triangle me-1"></i>
+                            <strong>Solo para correcciones o complementos.</strong>
+                            Usa este campo si el nombre tiene un error ortográfico o quieres
+                            precisarlo (ej. <em>«Huaura»</em> → <em>«Sede Huaura Central»</em>).
+                            Si se trata de una ubicación completamente diferente
+                            (ej. <em>«Huaura»</em> → <em>«Barranca»</em>),
+                            <strong>crea una sede nueva</strong> en lugar de modificar esta,
+                            ya que el cambio afectaría todos los registros históricos.
+                        </div>
                     </div>
 
                     <div class="mb-4">
@@ -96,4 +118,34 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleNombre() {
+    var input  = document.getElementById('nombre_input');
+    var btn    = document.getElementById('btn_nombre');
+    var aviso  = document.getElementById('aviso-nombre');
+
+    if (input.readOnly) {
+        // Desbloquear
+        input.readOnly         = false;
+        input.style.background = '';
+        input.style.cursor     = '';
+        input.focus();
+        btn.innerHTML = '<i class="fas fa-lock-open me-1"></i>Cancelar';
+        btn.classList.replace('btn-outline-secondary', 'btn-outline-warning');
+        aviso.style.display = 'block';
+    } else {
+        // Volver a bloquear y restaurar valor original
+        input.readOnly         = true;
+        input.style.background = '#f8f9fa';
+        input.style.cursor     = 'not-allowed';
+        input.value            = input.dataset.original;
+        btn.innerHTML = '<i class="fas fa-lock me-1"></i>Cambiar';
+        btn.classList.replace('btn-outline-warning', 'btn-outline-secondary');
+        aviso.style.display = 'none';
+    }
+}
+</script>
 {% endblock %}

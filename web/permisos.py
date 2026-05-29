@@ -6,7 +6,8 @@ def permiso_requerido(roles_permitidos):
     def decorator(view_func):
         @functools.wraps(view_func)
         def wrapper(request, *args, **kwargs):
-            perfil = getattr(request.user, 'perfil', None)
+            # request.perfil es inyectado por PerfilActivoMiddleware
+            perfil = getattr(request, 'perfil', None)
 
             if not perfil or perfil.tipo_usuario not in roles_permitidos:
                 raise PermissionDenied

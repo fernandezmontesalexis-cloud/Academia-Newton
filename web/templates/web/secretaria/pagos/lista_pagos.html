@@ -9,94 +9,86 @@
     </div>
 </div>
 
-{% if ciclos_data %}
-<div class="row g-3">
-    {% for item in ciclos_data %}
+{# ── CICLOS VIGENTES (activos, finalizan pronto, próximos) ──────────── #}
+{% if vigentes_data %}
+<div class="row g-3 mb-2">
+    {% for item in vigentes_data %}
     {% with c=item.ciclo %}
-
     <div class="col-md-6 col-lg-4">
-        <div class="card border-0 shadow-sm h-100"
-             style="border-top: 3px solid {% if c.alerta_vigencia == 'activo' %}#22c55e{% elif c.alerta_vigencia == 'finaliza_pronto' %}#eab308{% elif c.alerta_vigencia == 'pendiente' %}#3b82f6{% else %}#94a3b8{% endif %} !important">
-            <div class="card-body p-4">
-
-                <!-- Nombre + badge estado ciclo -->
-                <div class="d-flex justify-content-between align-items-start mb-3">
-                    <div>
-                        <h6 class="fw-bold mb-0" style="font-size:15px">{{ c.nombre }}</h6>
-                        <small class="text-muted">
-                            {{ c.fecha_inicio|date:"d/m/Y" }} – {{ c.fecha_fin|date:"d/m/Y" }}
-                        </small>
-                    </div>
-                    {% if c.alerta_vigencia == 'activo' %}
-                        <span class="badge bg-success" style="font-size:11px">Activo</span>
-                    {% elif c.alerta_vigencia == 'finaliza_pronto' %}
-                        <span class="badge bg-warning" style="font-size:11px">Finaliza pronto</span>
-                    {% elif c.alerta_vigencia == 'pendiente' %}
-                        <span class="badge bg-primary" style="font-size:11px">Próximo</span>
-                    {% else %}
-                        <span class="badge bg-secondary" style="font-size:11px">Finalizado</span>
-                    {% endif %}
-                </div>
-
-                <!-- Métricas 2×2 -->
-                <div class="row g-2 mb-3">
-                    <div class="col-6">
-                        <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Matrículas</div>
-                        <div class="fw-bold" style="font-size:17px">{{ item.total_matriculas }}</div>
-                    </div>
-                    <div class="col-6">
-                        <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Recaudado</div>
-                        <div class="fw-bold text-success" style="font-size:17px">S/. {{ item.total_recaudado|floatformat:2 }}</div>
-                    </div>
-                    <div class="col-6">
-                        <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Deuda</div>
-                        <div class="fw-bold {% if item.total_deuda > 0 %}text-danger{% else %}text-success{% endif %}" style="font-size:17px">
-                            S/. {{ item.total_deuda|floatformat:2 }}
-                        </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Con deuda</div>
-                        <div class="fw-bold {% if item.alumnos_con_deuda > 0 %}text-warning{% endif %}" style="font-size:17px">
-                            {{ item.alumnos_con_deuda }}
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Barra de progreso -->
-                <div class="mb-4">
-                    <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="text-muted" style="font-size:11px">Recaudación</span>
-                        <span class="fw-semibold" style="font-size:12px">{{ item.pct_recaudado }}%</span>
-                    </div>
-                    <div class="progress" style="height:7px;border-radius:4px;background:#f1f5f9">
-                        <div class="progress-bar
-                                {% if item.pct_recaudado >= 80 %}bg-success
-                                {% elif item.pct_recaudado >= 50 %}bg-warning
-                                {% else %}bg-danger{% endif %}"
-                             role="progressbar"
-                             style="width:{{ item.pct_recaudado }}%;border-radius:4px">
-                        </div>
-                    </div>
-                    <div class="text-muted mt-1" style="font-size:11px">
-                        S/. {{ item.total_recaudado|floatformat:2 }} de S/. {{ item.total_esperado|floatformat:2 }}
-                    </div>
-                </div>
-
-                <!-- Acción principal -->
-                <a href="{% url 'reporte_ciclo' c.id %}"
-                   class="btn btn-primary btn-sm w-100">
-                    <i class="fas fa-chart-bar me-1"></i> Ver reporte
-                </a>
-
-            </div>
-        </div>
+        {% include 'web/secretaria/pagos/_tarjeta_ciclo.html' %}
     </div>
-
     {% endwith %}
     {% endfor %}
 </div>
+{% endif %}
 
-{% else %}
+{# ── HISTORIAL DE CICLOS FINALIZADOS ───────────────────────────────── #}
+{% if total_finalizados > 0 %}
+<div class="mt-4">
+
+    {# Encabezado del historial — actúa como toggle #}
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <hr class="flex-grow-1 m-0" style="border-color:#e2e8f0;">
+        <a href="{% if historial_abierto %}{% url 'lista_pagos' %}{% else %}{% url 'lista_pagos' %}?hpage=1{% endif %}"
+           class="btn btn-sm btn-outline-secondary d-flex align-items-center gap-2"
+           style="font-size:12.5px; border-radius:20px; padding: 4px 14px;">
+            <i class="fas {% if historial_abierto %}fa-chevron-up{% else %}fa-history{% endif %}"></i>
+            {% if historial_abierto %}
+                Ocultar historial
+            {% else %}
+                Historial de ciclos finalizados
+                <span class="badge bg-secondary ms-1" style="font-size:11px">{{ total_finalizados }}</span>
+            {% endif %}
+        </a>
+        <hr class="flex-grow-1 m-0" style="border-color:#e2e8f0;">
+    </div>
+
+    {% if historial_abierto %}
+    <div class="row g-3">
+        {% for item in finalizados_page %}
+        {% with c=item.ciclo %}
+        <div class="col-md-6 col-lg-4">
+            {% include 'web/secretaria/pagos/_tarjeta_ciclo.html' %}
+        </div>
+        {% endwith %}
+        {% endfor %}
+    </div>
+
+    {# Paginación del historial #}
+    {% if finalizados_page.has_other_pages %}
+    <nav class="mt-3 d-flex justify-content-center" aria-label="Historial">
+        <ul class="pagination pagination-sm mb-0">
+            {% if finalizados_page.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?hpage={{ finalizados_page.previous_page_number }}">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            {% endif %}
+
+            {% for num in finalizados_page.paginator.page_range %}
+            <li class="page-item {% if num == finalizados_page.number %}active{% endif %}">
+                <a class="page-link" href="?hpage={{ num }}">{{ num }}</a>
+            </li>
+            {% endfor %}
+
+            {% if finalizados_page.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?hpage={{ finalizados_page.next_page_number }}">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
+
+    {% endif %}{# fin historial_abierto #}
+</div>
+{% endif %}
+
+{# Estado vacío: sin ningún ciclo #}
+{% if not vigentes_data and total_finalizados == 0 %}
 <div class="card border-0 shadow-sm">
     <div class="card-body text-center py-5 text-muted">
         <i class="fas fa-inbox fa-2x d-block mb-2"></i>

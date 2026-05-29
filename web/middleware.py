@@ -1,3 +1,26 @@
+class PerfilActivoMiddleware:
+    """
+    Adjunta el Perfil activo del usuario a request.perfil en cada petición.
+    Permite usar request.perfil en vistas y templates sin consultar la BD
+    repetidamente. Si el usuario no está autenticado o no tiene perfil
+    activo, request.perfil queda en None.
+    """
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        if request.user.is_authenticated:
+            request.perfil = (
+                request.user.perfiles
+                .filter(activo=True)
+                .select_related('sede')
+                .first()
+            )
+        else:
+            request.perfil = None
+        return self.get_response(request)
+
+
 class NoCacheMiddleware:
     """
     Evita que el navegador guarde en caché las páginas del sistema.

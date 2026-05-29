@@ -98,7 +98,7 @@ def _ultimo_pago(m):
 @login_required
 @permiso_requerido(['admin', 'secretaria'])
 def matriculas(request):
-    sede = request.user.perfil.sede
+    sede = request.perfil.sede
     today = date.today()
 
     _limpiar_si_necesario(request, sede)
@@ -139,7 +139,7 @@ def matriculas(request):
 @login_required
 @permiso_requerido(['admin', 'secretaria'])
 def matriculas_historial(request):
-    sede = request.user.perfil.sede
+    sede = request.perfil.sede
 
     base = _matriculas_base(sede)
     pagados_qs = base.filter(deuda_db__lte=0)

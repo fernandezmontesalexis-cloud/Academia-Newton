@@ -282,7 +282,7 @@ def regis_form_adicional(request):
 
     # Ciclos activos y próximos (pendiente = aún no comenzó)
     ciclos_disponibles = []
-    for c in Ciclo.objects.filter(sede=request.user.perfil.sede).order_by('fecha_inicio'):
+    for c in Ciclo.objects.filter(sede=request.perfil.sede).order_by('fecha_inicio'):
         estado = estado_ciclo_hoy(c, today)
         if estado in ('activa', 'pendiente'):
             c.estado_ciclo = estado
@@ -360,7 +360,7 @@ def regis_form_adicional(request):
                 apoderado.direccion = apoderado_data["direccion_apoderado"]
                 apoderado.save()
 
-        sede = request.user.perfil.sede
+        sede = request.perfil.sede
 
         distrito = None
         distrito_id = alumno_data.get("distrito")
@@ -409,7 +409,7 @@ def regis_form_adicional(request):
             ciclo=ciclo,
             fecha_matricula=today,
             estado="pendiente",
-            registrado_por=request.user.perfil,
+            registrado_por=request.perfil,
         )
 
         # Limpiar sesión

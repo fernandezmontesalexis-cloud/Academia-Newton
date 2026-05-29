@@ -35,7 +35,7 @@
             <nav class="menu">
 
                 <!-- SECRETARIA -->
-                {% if request.user.perfil.tipo_usuario == 'secretaria' %}
+                {% if request.perfil.tipo_usuario == 'secretaria' %}
 
                 <a href="{% url 'dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
                     <i class="fas fa-home"></i> Inicio
@@ -60,7 +60,7 @@
                 {% endif %}
 
                 <!-- ADMINISTRADOR -->
-                {% if request.user.perfil.tipo_usuario == 'admin' %}
+                {% if request.perfil.tipo_usuario == 'admin' %}
 
                 <a href="{% url 'dashboard' %}">
                     <i class="fas fa-chart-line"></i> Panel

@@ -166,7 +166,7 @@ def crear_usuario(request):
             return render_error("Ese nombre de usuario ya existe")
 
         user = User.objects.create(username=username, email=email, password=make_password(password))
-        Perfil.objects.create(user=user, tipo_usuario=tipo_usuario, sede_id=sede_id)
+        Perfil.objects.create(user=user, tipo_usuario=tipo_usuario, sede_id=sede_id, activo=True)
         return redirect("lista_usuarios")
 
     return render(request, "web/administrador/usuarios/crear_usuario.html", {"sedes": sedes})
@@ -175,20 +175,36 @@ def crear_usuario(request):
 @login_required
 @permiso_requerido(['admin'])
 def lista_usuarios(request):
-    from django.db.models import Case, When, Value, IntegerField
-    base_qs = User.objects.select_related("perfil", "perfil__sede").filter(perfil__isnull=False)
-
+    from django.db.models import Prefetch
     from django.core.paginator import Paginator
-    # Activos: admins primero, luego secretarias, ambos por nombre
-    usuarios_activos = base_qs.filter(is_active=True).annotate(
-        rol_orden=Case(
-            When(perfil__tipo_usuario='admin', then=Value(0)),
-            default=Value(1),
-            output_field=IntegerField()
-        )
-    ).order_by('rol_orden', 'username')
 
-    # Inactivos: orden por nombre, con paginación
+    # Prefetch solo el perfil activo de cada usuario para evitar N+1
+    base_qs = (
+        User.objects
+        .prefetch_related(
+            Prefetch(
+                'perfiles',
+                queryset=Perfil.objects.filter(activo=True).select_related('sede'),
+                to_attr='perfil_activo'
+            )
+        )
+        .filter(perfiles__activo=True)
+        .distinct()
+    )
+
+    # Activos evaluados en memoria para ordenar y contar sin queries extra
+    activos_list = list(base_qs.filter(is_active=True))
+    usuarios_activos = sorted(
+        activos_list,
+        key=lambda u: (
+            0 if u.perfil_activo and u.perfil_activo[0].tipo_usuario == 'admin' else 1,
+            u.username,
+        )
+    )
+    total_admins     = sum(1 for u in activos_list if u.perfil_activo and u.perfil_activo[0].tipo_usuario == 'admin')
+    total_secretarias = sum(1 for u in activos_list if u.perfil_activo and u.perfil_activo[0].tipo_usuario == 'secretaria')
+
+    # Inactivos: paginados
     usuarios_inactivos_qs = base_qs.filter(is_active=False).order_by('username')
     paginator = Paginator(usuarios_inactivos_qs, 10)
     hpage = request.GET.get('hpage', 1)
@@ -196,14 +212,14 @@ def lista_usuarios(request):
     historial_abierto = 'hpage' in request.GET
 
     return render(request, "web/administrador/usuarios/lista_usuarios.html", {
-        "usuarios_activos": usuarios_activos,
-        "inactivos_page": inactivos_page,
-        "historial_abierto": historial_abierto,
-        "total_inactivos": usuarios_inactivos_qs.count(),
-        "total": base_qs.count(),
-        "total_admins": base_qs.filter(perfil__tipo_usuario='admin').count(),
-        "total_secretarias": base_qs.filter(perfil__tipo_usuario='secretaria').count(),
-        "total_activos": base_qs.filter(is_active=True).count(),
+        "usuarios_activos":   usuarios_activos,
+        "inactivos_page":     inactivos_page,
+        "historial_abierto":  historial_abierto,
+        "total_inactivos":    usuarios_inactivos_qs.count(),
+        "total":              base_qs.count(),
+        "total_admins":       total_admins,
+        "total_secretarias":  total_secretarias,
+        "total_activos":      len(activos_list),
     })
 
 
@@ -211,17 +227,17 @@ def lista_usuarios(request):
 @permiso_requerido(['admin'])
 def editar_usuario(request, id):
     user = get_object_or_404(User, id=id)
-    perfil = user.perfil
+    perfil = user.perfiles.filter(activo=True).select_related('sede').first()
     sedes = Sede.objects.all()
 
     if request.method == "POST":
-        user.username = request.POST.get("username")
-        user.email    = request.POST.get("email", "").strip()
-        perfil.tipo_usuario = request.POST.get("tipo_usuario")
-        perfil.sede_id = request.POST.get("sede")
-        user.is_active = request.POST.get("is_active") == "1"
+        user.username      = request.POST.get("username")
+        user.email         = request.POST.get("email", "").strip()
+        user.is_active     = request.POST.get("is_active") == "1"
+        nueva_sede_id      = request.POST.get("sede")
+        nuevo_tipo_usuario = request.POST.get("tipo_usuario")
 
-        nueva_password = request.POST.get("nueva_password", "").strip()
+        nueva_password     = request.POST.get("nueva_password", "").strip()
         confirmar_password = request.POST.get("confirmar_password", "").strip()
 
         if nueva_password:
@@ -239,7 +255,24 @@ def editar_usuario(request, id):
             update_session_auth_hash(request, user)
 
         user.save()
-        perfil.save()
+
+        # Si cambia de sede: desactiva el perfil actual y crea uno nuevo
+        # en la sede destino para preservar el historial por sede.
+        sede_cambio = str(perfil.sede_id) != str(nueva_sede_id)
+        if sede_cambio:
+            perfil.activo = False
+            perfil.save()
+            Perfil.objects.create(
+                user=user,
+                tipo_usuario=nuevo_tipo_usuario,
+                sede_id=nueva_sede_id,
+                activo=True,
+            )
+        else:
+            # Misma sede: solo actualiza el tipo de usuario
+            perfil.tipo_usuario = nuevo_tipo_usuario
+            perfil.save()
+
         return redirect("lista_usuarios")
 
     return render(request, "web/administrador/usuarios/editar_usuario.html", {
@@ -255,8 +288,10 @@ def eliminar_usuario(request, id):
     user = get_object_or_404(User, id=id)
     user.is_active = False
     user.save()
-    user.perfil.fecha_desactivacion = timezone.now()
-    user.perfil.save()
+    perfil = user.perfiles.filter(activo=True).first()
+    if perfil:
+        perfil.fecha_desactivacion = timezone.now()
+        perfil.save()
     return redirect("lista_usuarios")
 
 
@@ -266,8 +301,10 @@ def reactivar_usuario(request, id):
     user = get_object_or_404(User, id=id)
     user.is_active = True
     user.save()
-    user.perfil.fecha_desactivacion = None
-    user.perfil.save()
+    perfil = user.perfiles.filter(activo=True).first()
+    if perfil:
+        perfil.fecha_desactivacion = None
+        perfil.save()
     return redirect("lista_usuarios")
 
 

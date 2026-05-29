@@ -18,9 +18,10 @@ class Perfil(models.Model):
         ('admin','Administrador'),
         ('secretaria','Secretaria'),
     ]
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='perfiles')
     tipo_usuario = models.CharField(max_length=20, choices=TIPO_USUARIO)
     sede = models.ForeignKey(Sede, on_delete=models.CASCADE)
+    activo = models.BooleanField(default=True)
     fecha_desactivacion = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):

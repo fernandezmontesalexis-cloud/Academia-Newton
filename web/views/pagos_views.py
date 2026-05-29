@@ -35,7 +35,7 @@ def pagos(request, matricula_id):
     except Matricula.DoesNotExist:
         return redirect(reverse('matriculas') + '?cancelada=1')
 
-    if matricula.alumno.sede != request.user.perfil.sede:
+    if matricula.alumno.sede != request.perfil.sede:
         messages.error(request, "No tienes acceso a esta matrícula")
         return redirect('matriculas')
 
@@ -117,9 +117,9 @@ def pagos(request, matricula_id):
                           metodo_prev=metodo, proximo_prev=proximo_pago_raw),
             )
 
-        Pago.objects.create(
+        nuevo_pago = Pago.objects.create(
             matricula=matricula,
-            registrado_por=request.user.perfil,
+            registrado_por=request.perfil,
             fecha_pago=date.today(),
             monto=monto,
             metodo_pago=metodo,
@@ -138,9 +138,15 @@ def pagos(request, matricula_id):
         matricula.save()
 
         url = reverse('pagos', kwargs={'matricula_id': matricula.id})
-        return redirect(f"{url}?ok=1")
+        return redirect(f"{url}?ok=1&pago_id={nuevo_pago.id}")
 
-    return render(request, 'web/secretaria/pagos/pagos.html', _contexto())
+    # Último pago registrado para esta matrícula (para el botón de boleta)
+    ultimo_pago = Pago.objects.filter(matricula=matricula).order_by('-fecha_pago', '-id').first()
+
+    return render(request, 'web/secretaria/pagos/pagos.html', {
+        **_contexto(),
+        'ultimo_pago': ultimo_pago,
+    })
 
 
 @login_required
@@ -150,7 +156,7 @@ def cancelar_matricula_nueva(request, matricula_id):
     if request.method != 'POST':
         return redirect('matriculas')
     matricula = get_object_or_404(
-        Matricula, id=matricula_id, alumno__sede=request.user.perfil.sede
+        Matricula, id=matricula_id, alumno__sede=request.perfil.sede
     )
     total = Pago.objects.filter(matricula=matricula).aggregate(
         t=Sum('monto')
@@ -200,12 +206,16 @@ def _pagos_json(m):
 @login_required
 @permiso_requerido(['admin', 'secretaria'])
 def lista_pagos(request):
-    sede  = request.user.perfil.sede
+    from django.core.paginator import Paginator
+
+    sede  = request.perfil.sede
     today = date.today()
 
     ciclos_raw = Ciclo.objects.filter(sede=sede).order_by('-fecha_inicio')
 
-    ciclos_data = []
+    vigentes_data   = []   # activos, finalizan pronto y próximos
+    finalizados_data = []  # ciclos ya cerrados
+
     for c in ciclos_raw:
         total_matriculas = Matricula.objects.filter(
             ciclo=c, alumno__estado='activo', alumno__sede=sede,
@@ -240,7 +250,7 @@ def lista_pagos(request):
 
         pct = int(total_recaudado / total_esperado * 100) if total_esperado > 0 else 0
 
-        ciclos_data.append({
+        item = {
             'ciclo':             c,
             'total_matriculas':  total_matriculas,
             'total_recaudado':   total_recaudado,
@@ -248,17 +258,31 @@ def lista_pagos(request):
             'total_deuda':       total_deuda,
             'alumnos_con_deuda': alumnos_con_deuda,
             'pct_recaudado':     min(pct, 100),
-        })
+        }
+
+        if c.alerta_vigencia == 'finalizado':
+            finalizados_data.append(item)
+        else:
+            vigentes_data.append(item)
+
+    # Paginación del historial: 6 tarjetas por página
+    paginator       = Paginator(finalizados_data, 6)
+    hpage           = request.GET.get('hpage', 1)
+    finalizados_page = paginator.get_page(hpage)
+    historial_abierto = 'hpage' in request.GET
 
     return render(request, 'web/secretaria/pagos/lista_pagos.html', {
-        'ciclos_data': ciclos_data,
+        'vigentes_data':    vigentes_data,
+        'finalizados_page': finalizados_page,
+        'historial_abierto': historial_abierto,
+        'total_finalizados': len(finalizados_data),
     })
 
 
 @login_required
 @permiso_requerido(['admin', 'secretaria'])
 def reporte_ciclo(request, ciclo_id):
-    sede  = request.user.perfil.sede
+    sede  = request.perfil.sede
     today = date.today()
 
     ciclo = get_object_or_404(Ciclo, id=ciclo_id, sede=sede)
@@ -337,7 +361,7 @@ def reporte_ciclo(request, ciclo_id):
 @login_required
 @permiso_requerido(['admin', 'secretaria'])
 def exportar_reportes(request):
-    sede = request.user.perfil.sede
+    sede = request.perfil.sede
 
     pagos_qs = (
         Pago.objects.filter(matricula__alumno__sede=sede)
@@ -409,7 +433,7 @@ def exportar_reportes(request):
 def boleta_pdf(request, pago_id):
     pago = get_object_or_404(Pago, id=pago_id)
 
-    if pago.matricula.alumno.sede != request.user.perfil.sede:
+    if pago.matricula.alumno.sede != request.perfil.sede:
         return HttpResponse("No autorizado", status=403)
 
     response = HttpResponse(content_type='application/pdf')

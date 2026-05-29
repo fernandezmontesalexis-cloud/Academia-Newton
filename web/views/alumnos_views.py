@@ -70,7 +70,7 @@ def _set_ultimo_ciclo(alumno):
 @login_required
 @permiso_requerido(['admin', 'secretaria'])
 def lista_alumnos(request):
-    sede = request.user.perfil.sede
+    sede = request.perfil.sede
     today = date.today()
 
     base = _base_qs(sede, today)
@@ -104,7 +104,7 @@ def lista_alumnos(request):
 @login_required
 @permiso_requerido(['admin', 'secretaria'])
 def lista_alumnos_otros(request):
-    sede = request.user.perfil.sede
+    sede = request.perfil.sede
     today = date.today()
 
     base = _base_qs(sede, today)
@@ -157,7 +157,7 @@ def lista_alumnos_otros(request):
 def desactivar_alumno(request, alumno_id):
     if request.method != 'POST':
         return redirect('lista_alumnos')
-    alumno = get_object_or_404(Alumno, id=alumno_id, sede=request.user.perfil.sede)
+    alumno = get_object_or_404(Alumno, id=alumno_id, sede=request.perfil.sede)
 
     motivo     = request.POST.get('motivo',     '').strip()
     comentario = request.POST.get('comentario', '').strip()
@@ -167,7 +167,7 @@ def desactivar_alumno(request, alumno_id):
             alumno=alumno,
             motivo=motivo,
             comentario=comentario,
-            registrado_por=request.user.perfil,
+            registrado_por=request.perfil,
         )
 
     alumno.estado = 'bloqueado'
@@ -180,7 +180,7 @@ def desactivar_alumno(request, alumno_id):
 def reactivar_alumno(request, alumno_id):
     if request.method != 'POST':
         return redirect('lista_alumnos')
-    alumno = get_object_or_404(Alumno, id=alumno_id, sede=request.user.perfil.sede)
+    alumno = get_object_or_404(Alumno, id=alumno_id, sede=request.perfil.sede)
     if alumno.estado == 'bloqueado':
         return redirect('lista_alumnos_otros')
     alumno.estado = 'activo'
@@ -194,7 +194,7 @@ def detalle_alumno(request, alumno_id):
     alumno = get_object_or_404(
         Alumno.objects.select_related('apoderado', 'distrito', 'sede'),
         id=alumno_id,
-        sede=request.user.perfil.sede,
+        sede=request.perfil.sede,
     )
 
     formacion_academica = getattr(alumno, 'formacionacademica', None)
@@ -233,7 +233,7 @@ def detalle_alumno(request, alumno_id):
 @permiso_requerido(['admin', 'secretaria'])
 def editar_alumno(request, alumno_id):
     alumno = get_object_or_404(
-        Alumno, id=alumno_id, sede=request.user.perfil.sede
+        Alumno, id=alumno_id, sede=request.perfil.sede
     )
     if request.method == 'POST':
         alumno.apellido_paterno = request.POST.get('apellido_paterno', '').strip()
@@ -253,7 +253,7 @@ def renovar_matricula(request, alumno_id):
     if request.method != 'POST':
         return redirect('lista_alumnos')
 
-    alumno = get_object_or_404(Alumno, id=alumno_id, sede=request.user.perfil.sede)
+    alumno = get_object_or_404(Alumno, id=alumno_id, sede=request.perfil.sede)
 
     if alumno.estado == 'bloqueado':
         messages.error(request, "El alumno se encuentra bloqueado y no puede matricularse.")
@@ -290,7 +290,7 @@ def renovar_matricula(request, alumno_id):
         ciclo=ciclo,
         fecha_matricula=date.today(),
         estado='pendiente',
-        registrado_por=request.user.perfil,
+        registrado_por=request.perfil,
     )
 
     return redirect('pagos', matricula_id=nueva_matricula.id)
