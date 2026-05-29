@@ -2,29 +2,7 @@
 {% load static %}
 
 {% block extra_css %}
-<style>
-    /* Inputs con bordes más pronunciados — igual que en registrar matrícula */
-    .card .form-control {
-        border: 1.5px solid #94a3b8;
-        border-radius: 7px;
-        font-size: 13.5px;
-        color: #1e293b;
-        transition: border-color .15s, box-shadow .15s;
-    }
-    .card .form-control:hover:not(:disabled) {
-        border-color: #64748b;
-    }
-    .card .form-control:focus {
-        border-color: #2563eb;
-        box-shadow: 0 0 0 3px rgba(37, 99, 235, .1);
-    }
-    /* Campos de solo lectura (DNI, fecha) */
-    .card .form-control:disabled {
-        border: 1.5px solid #e2e8f0;
-        background: #f8fafc;
-        color: #94a3b8;
-    }
-</style>
+<link rel="stylesheet" href="{% static 'web/css/alumnos.css' %}">
 {% endblock %}
 
 {% block content %}

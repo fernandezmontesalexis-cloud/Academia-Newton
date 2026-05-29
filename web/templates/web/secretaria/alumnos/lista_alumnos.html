@@ -1,6 +1,10 @@
 {% extends 'web/base/base.html' %}
 {% load static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/alumnos.css' %}">
+{% endblock %}
+
 {% block content %}
 
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -120,10 +124,10 @@
 
 <!-- MODAL: BLOQUEAR ALUMNO -->
 <div class="modal fade" id="modalBloquear" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width:440px">
+    <div class="modal-dialog modal-dialog-centered modal-440">
         <div class="modal-content border-0 shadow">
             <div class="modal-header border-0 pb-1 pt-3 px-4">
-                <h5 class="modal-title fw-bold" style="font-size:15px;color:#dc2626">
+                <h5 class="modal-title fw-bold modal-title-danger">
                     <i class="fas fa-ban me-2"></i>Bloquear alumno
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -131,8 +135,7 @@
             <form method="POST" id="formBloquear">
                 {% csrf_token %}
                 <div class="modal-body px-4 pt-2 pb-2">
-                    <div class="rounded-3 p-3 mb-3"
-                         style="background:#fff5f5;border:1px solid #fecaca;font-size:13.5px">
+                    <div class="alert-bloqueo mb-3">
                         <i class="fas fa-exclamation-triangle text-danger me-1"></i>
                         Esta acción bloqueará a <strong id="bloquear-nombre"></strong>
                         para futuras matrículas. ¿Desea continuar?

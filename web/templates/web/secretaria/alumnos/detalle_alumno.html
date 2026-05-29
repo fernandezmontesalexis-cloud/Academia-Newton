@@ -1,6 +1,10 @@
 {% extends 'web/base/base.html' %}
 {% load static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/alumnos.css' %}">
+{% endblock %}
+
 {% block content %}
 
 <!-- HEADER -->
@@ -26,14 +30,13 @@
             <!-- Avatar + nombre + estado -->
             <div class="card-body text-center pt-3 pb-2">
                 <div class="rounded-circle bg-primary text-white d-inline-flex align-items-center
-                            justify-content-center mb-2"
-                     style="width:52px;height:52px;font-size:1.15rem;font-weight:700;letter-spacing:1px">
+                            justify-content-center mb-2 alumno-avatar">
                     {{ alumno.nombres|first|upper }}{{ alumno.apellido_paterno|first|upper }}
                 </div>
-                <div class="fw-bold" style="font-size:14px">
+                <div class="fw-bold fs-14">
                     {{ alumno.nombres }} {{ alumno.apellido_paterno }}
                 </div>
-                <div class="text-muted" style="font-size:12px">{{ alumno.apellido_materno }}</div>
+                <div class="text-muted fs-12">{{ alumno.apellido_materno }}</div>
                 <div class="mt-1">
                     {% if estado_academico == "matriculado" %}
                         <span class="badge bg-success">Matriculado</span>
@@ -53,51 +56,51 @@
             <div class="card-body px-4 py-0">
 
                 <div class="d-flex align-items-center gap-3 py-1 border-bottom">
-                    <i class="fas fa-id-card text-muted" style="width:13px;font-size:11px;flex-shrink:0"></i>
-                    <div style="font-size:12.5px;min-width:0">
-                        <span class="text-muted" style="font-size:10.5px">DNI</span>
+                    <i class="fas fa-id-card text-muted alumno-info-icon"></i>
+                    <div class="alumno-info-row">
+                        <span class="text-muted fs-105">DNI</span>
                         <div class="fw-semibold">{{ alumno.dni }}</div>
                     </div>
                 </div>
 
                 <div class="d-flex align-items-center gap-3 py-1 border-bottom">
-                    <i class="fas fa-phone text-muted" style="width:13px;font-size:11px;flex-shrink:0"></i>
-                    <div style="font-size:12.5px;min-width:0">
-                        <span class="text-muted" style="font-size:10.5px">Celular</span>
+                    <i class="fas fa-phone text-muted alumno-info-icon"></i>
+                    <div class="alumno-info-row">
+                        <span class="text-muted fs-105">Celular</span>
                         <div class="fw-semibold">{{ alumno.celular }}</div>
                     </div>
                 </div>
 
                 {% if alumno.email %}
                 <div class="d-flex align-items-center gap-3 py-1 border-bottom">
-                    <i class="fas fa-envelope text-muted" style="width:13px;font-size:11px;flex-shrink:0"></i>
-                    <div style="font-size:12.5px;min-width:0;overflow:hidden">
-                        <span class="text-muted" style="font-size:10.5px">Correo</span>
+                    <i class="fas fa-envelope text-muted alumno-info-icon"></i>
+                    <div class="alumno-info-row overflow-hidden">
+                        <span class="text-muted fs-105">Correo</span>
                         <div class="fw-semibold text-truncate">{{ alumno.email }}</div>
                     </div>
                 </div>
                 {% endif %}
 
                 <div class="d-flex align-items-center gap-3 py-1 border-bottom">
-                    <i class="fas fa-calendar text-muted" style="width:13px;font-size:11px;flex-shrink:0"></i>
-                    <div style="font-size:12.5px">
-                        <span class="text-muted" style="font-size:10.5px">Nacimiento</span>
+                    <i class="fas fa-calendar text-muted alumno-info-icon"></i>
+                    <div class="alumno-info-row">
+                        <span class="text-muted fs-105">Nacimiento</span>
                         <div class="fw-semibold">{{ alumno.fecha_nacimiento|date:"d/m/Y" }}</div>
                     </div>
                 </div>
 
                 <div class="d-flex align-items-center gap-3 py-1 border-bottom">
-                    <i class="fas fa-map-marker-alt text-muted" style="width:13px;font-size:11px;flex-shrink:0"></i>
-                    <div style="font-size:12.5px">
-                        <span class="text-muted" style="font-size:10.5px">Distrito</span>
+                    <i class="fas fa-map-marker-alt text-muted alumno-info-icon"></i>
+                    <div class="alumno-info-row">
+                        <span class="text-muted fs-105">Distrito</span>
                         <div class="fw-semibold">{{ alumno.distrito.nombre|default:"—" }}</div>
                     </div>
                 </div>
 
                 <div class="d-flex align-items-center gap-3 py-1">
-                    <i class="fas fa-home text-muted" style="width:13px;font-size:11px;flex-shrink:0"></i>
-                    <div style="font-size:12.5px;min-width:0">
-                        <span class="text-muted" style="font-size:10.5px">Dirección</span>
+                    <i class="fas fa-home text-muted alumno-info-icon"></i>
+                    <div class="alumno-info-row">
+                        <span class="text-muted fs-105">Dirección</span>
                         <div class="fw-semibold">{{ alumno.direccion }}</div>
                     </div>
                 </div>
@@ -119,8 +122,7 @@
                 {% if formacion_academica %}
                 <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed fw-semibold py-2"
-                                style="font-size:13px"
+                        <button class="accordion-button collapsed fw-semibold py-2 fs-13"
                                 type="button"
                                 data-bs-toggle="collapse"
                                 data-bs-target="#collapseFormacion"
@@ -129,14 +131,14 @@
                         </button>
                     </h2>
                     <div id="collapseFormacion" class="accordion-collapse collapse">
-                        <div class="accordion-body py-2 px-4" style="font-size:12.5px">
+                        <div class="accordion-body py-2 px-4 fs-125">
                             <div class="py-1 border-bottom">
-                                <span class="text-muted d-block" style="font-size:10.5px">Tipo de institución</span>
+                                <span class="text-muted d-block fs-105">Tipo de institución</span>
                                 <strong>{{ formacion_academica.tipo_institucion|capfirst }}</strong>
                             </div>
                             {% if formacion_academica.institucion %}
                             <div class="py-1">
-                                <span class="text-muted d-block" style="font-size:10.5px">Institución</span>
+                                <span class="text-muted d-block fs-105">Institución</span>
                                 <strong>{{ formacion_academica.institucion.nombre }}</strong>
                             </div>
                             {% endif %}
@@ -148,8 +150,7 @@
                 {% if alumno.apoderado %}
                 <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed fw-semibold py-2"
-                                style="font-size:13px"
+                        <button class="accordion-button collapsed fw-semibold py-2 fs-13"
                                 type="button"
                                 data-bs-toggle="collapse"
                                 data-bs-target="#collapseApoderado"
@@ -158,21 +159,21 @@
                         </button>
                     </h2>
                     <div id="collapseApoderado" class="accordion-collapse collapse">
-                        <div class="accordion-body py-2 px-4" style="font-size:12.5px">
+                        <div class="accordion-body py-2 px-4 fs-125">
                             <div class="py-1 border-bottom">
-                                <span class="text-muted d-block" style="font-size:10.5px">Nombre</span>
+                                <span class="text-muted d-block fs-105">Nombre</span>
                                 <strong>{{ alumno.apoderado.nombre_completo }}</strong>
                             </div>
                             <div class="py-1 border-bottom">
-                                <span class="text-muted d-block" style="font-size:10.5px">DNI</span>
+                                <span class="text-muted d-block fs-105">DNI</span>
                                 <strong>{{ alumno.apoderado.dni }}</strong>
                             </div>
                             <div class="py-1 border-bottom">
-                                <span class="text-muted d-block" style="font-size:10.5px">Celular</span>
+                                <span class="text-muted d-block fs-105">Celular</span>
                                 <strong>{{ alumno.apoderado.celular }}</strong>
                             </div>
                             <div class="py-1">
-                                <span class="text-muted d-block" style="font-size:10.5px">Dirección</span>
+                                <span class="text-muted d-block fs-105">Dirección</span>
                                 <strong>{{ alumno.apoderado.direccion }}</strong>
                             </div>
                         </div>
@@ -183,8 +184,7 @@
                 {% if formacion_adicional %}
                 <div class="accordion-item">
                     <h2 class="accordion-header">
-                        <button class="accordion-button collapsed fw-semibold py-2"
-                                style="font-size:13px"
+                        <button class="accordion-button collapsed fw-semibold py-2 fs-13"
                                 type="button"
                                 data-bs-toggle="collapse"
                                 data-bs-target="#collapseAdicional"
@@ -193,28 +193,28 @@
                         </button>
                     </h2>
                     <div id="collapseAdicional" class="accordion-collapse collapse">
-                        <div class="accordion-body py-2 px-4" style="font-size:12.5px">
+                        <div class="accordion-body py-2 px-4 fs-125">
                             <div class="py-1 border-bottom">
-                                <span class="text-muted d-block" style="font-size:10.5px">Estudio previo en academia</span>
+                                <span class="text-muted d-block fs-105">Estudio previo en academia</span>
                                 <strong>{% if formacion_adicional.estudio_previo %}Sí{% else %}No{% endif %}</strong>
                             </div>
                             {% if formacion_adicional.estudio_previo %}
                             <div class="py-1 border-bottom">
-                                <span class="text-muted d-block" style="font-size:10.5px">Tipo de estudio</span>
+                                <span class="text-muted d-block fs-105">Tipo de estudio</span>
                                 <strong>{{ formacion_adicional.tipo_estudio|capfirst }}</strong>
                             </div>
                             <div class="py-1 border-bottom">
-                                <span class="text-muted d-block" style="font-size:10.5px">Academia anterior</span>
+                                <span class="text-muted d-block fs-105">Academia anterior</span>
                                 <strong>{{ formacion_adicional.academia_anterior }}</strong>
                             </div>
                             {% endif %}
                             <div class="py-1 {% if formacion_adicional.segunda_carrera %}border-bottom{% endif %}">
-                                <span class="text-muted d-block" style="font-size:10.5px">Carrera de interés</span>
+                                <span class="text-muted d-block fs-105">Carrera de interés</span>
                                 <strong>{{ formacion_adicional.carrera_interes }}</strong>
                             </div>
                             {% if formacion_adicional.segunda_carrera %}
                             <div class="py-1">
-                                <span class="text-muted d-block" style="font-size:10.5px">Segunda carrera</span>
+                                <span class="text-muted d-block fs-105">Segunda carrera</span>
                                 <strong>{{ formacion_adicional.segunda_carrera }}</strong>
                             </div>
                             {% endif %}
@@ -234,10 +234,10 @@
         <div class="card border-0 shadow-sm h-100">
 
             <div class="card-header bg-white border-0 pt-3 pb-0 px-4">
-                <h6 class="fw-bold mb-0" style="font-size:14px">
+                <h6 class="fw-bold mb-0 fs-14">
                     <i class="fas fa-graduation-cap me-2 text-primary"></i>Historial Académico
                 </h6>
-                <p class="text-muted mb-0 mt-1" style="font-size:12px">
+                <p class="text-muted mb-0 mt-1 fs-12">
                     Registro de ciclos matriculados y estado financiero
                 </p>
             </div>

@@ -1,11 +1,8 @@
 {% extends 'web/base/base.html' %}
+{% load static %}
 
 {% block extra_css %}
-<style>
-    #monto::-webkit-inner-spin-button,
-    #monto::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-    #monto { -moz-appearance: textfield; }
-</style>
+<link rel="stylesheet" href="{% static 'web/css/pagos.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -25,24 +22,18 @@
 <div class="row g-3 mb-4">
 
     <div class="col-4">
-        <div class="card border-0 h-100"
-             style="box-shadow:0 2px 8px rgba(0,0,0,.08);border-top:3px solid #94a3b8!important;">
-            <div class="card-body text-center py-3" style="background:#f8fafc;border-radius:inherit;">
-                <div class="text-muted mb-1" style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;">
-                    Total del ciclo
-                </div>
+        <div class="card border-0 h-100 pago-card pago-card-top-gray">
+            <div class="card-body text-center py-3 pago-card-bg-default">
+                <div class="label-caps mb-1">Total del ciclo</div>
                 <div class="fw-bold fs-5">S/. {{ total_ciclo|floatformat:2 }}</div>
             </div>
         </div>
     </div>
 
     <div class="col-4">
-        <div class="card border-0 h-100"
-             style="box-shadow:0 2px 8px rgba(0,0,0,.08);border-top:3px solid #93c5fd!important;">
-            <div class="card-body text-center py-3" style="background:#f0f7ff;border-radius:inherit;">
-                <div class="text-muted mb-1" style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;">
-                    Total pagado
-                </div>
+        <div class="card border-0 h-100 pago-card pago-card-top-blue">
+            <div class="card-body text-center py-3 pago-card-bg-blue">
+                <div class="label-caps mb-1">Total pagado</div>
                 <div class="fw-bold fs-5 text-primary">S/. {{ total_pagado|floatformat:2 }}</div>
             </div>
         </div>
@@ -50,22 +41,16 @@
 
     <div class="col-4">
         {% if deuda > 0 %}
-        <div class="card border-0 h-100"
-             style="box-shadow:0 2px 8px rgba(0,0,0,.08);border-top:3px solid #fca5a5!important;">
-            <div class="card-body text-center py-3" style="background:#fff5f5;border-radius:inherit;">
-                <div class="text-muted mb-1" style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;">
-                    Deuda pendiente
-                </div>
+        <div class="card border-0 h-100 pago-card pago-card-top-red">
+            <div class="card-body text-center py-3 pago-card-bg-red">
+                <div class="label-caps mb-1">Deuda pendiente</div>
                 <div class="fw-bold fs-5 text-danger">S/. {{ deuda|floatformat:2 }}</div>
             </div>
         </div>
         {% else %}
-        <div class="card border-0 h-100"
-             style="box-shadow:0 2px 8px rgba(0,0,0,.08);border-top:3px solid #86efac!important;">
-            <div class="card-body text-center py-3" style="background:#f0fdf4;border-radius:inherit;">
-                <div class="text-muted mb-1" style="font-size:11px;letter-spacing:.5px;text-transform:uppercase;font-weight:600;">
-                    Deuda pendiente
-                </div>
+        <div class="card border-0 h-100 pago-card pago-card-top-green">
+            <div class="card-body text-center py-3 pago-card-bg-green">
+                <div class="label-caps mb-1">Deuda pendiente</div>
                 <div class="fw-bold fs-5 text-success">
                     <i class="fas fa-check-circle me-1"></i> Al día
                 </div>
@@ -77,45 +62,44 @@
 </div>
 
 <!-- ── 2. INFORMACIÓN DEL PAGO ───────────────────────────────── -->
-<div class="card border-0 mb-4" style="box-shadow:0 2px 10px rgba(0,0,0,.07);border:1px solid #60a5fa!important;">
-    <div class="card-header border-0 fw-semibold py-2 px-4"
-         style="background:#bfdbfe;color:#1d4ed8;border-bottom:1px solid #60a5fa;border-radius:calc(.375rem - 1px) calc(.375rem - 1px) 0 0;">
-        <i class="fas fa-receipt me-2" style="color:#2563eb;"></i> Información del pago
+<div class="card border-0 mb-4 pago-info-card">
+    <div class="card-header border-0 fw-semibold py-2 px-4 pago-info-header">
+        <i class="fas fa-receipt me-2"></i> Información del pago
     </div>
-    <div class="card-body py-3 px-4" style="background:#f8fafd;">
+    <div class="card-body py-3 px-4 pago-info-body">
         <div class="row g-3">
             <div class="col-6 col-md-4">
-                <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;" class="text-muted mb-1">
+                <div class="label-caps mb-1">
                     <i class="fas fa-calendar-alt me-1"></i> Fecha y hora
                 </div>
                 <div class="fw-semibold small">{% now "d/m/Y H:i" %}</div>
             </div>
             <div class="col-6 col-md-4">
-                <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;" class="text-muted mb-1">
+                <div class="label-caps mb-1">
                     <i class="fas fa-user-tie me-1"></i> Cajero
                 </div>
                 <div class="fw-semibold small">{{ request.user.username }}</div>
             </div>
             <div class="col-6 col-md-4">
-                <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;" class="text-muted mb-1">
+                <div class="label-caps mb-1">
                     <i class="fas fa-building me-1"></i> Sede
                 </div>
                 <div class="fw-semibold small">{{ matricula.alumno.sede }}</div>
             </div>
             <div class="col-6 col-md-4">
-                <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;" class="text-muted mb-1">
+                <div class="label-caps mb-1">
                     <i class="fas fa-user-graduate me-1"></i> Alumno
                 </div>
                 <div class="fw-semibold small">{{ matricula.alumno }}</div>
             </div>
             <div class="col-6 col-md-4">
-                <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;" class="text-muted mb-1">
+                <div class="label-caps mb-1">
                     <i class="fas fa-id-card me-1"></i> DNI
                 </div>
                 <div class="fw-semibold small">{{ matricula.alumno.dni }}</div>
             </div>
             <div class="col-6 col-md-4">
-                <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.4px;" class="text-muted mb-1">
+                <div class="label-caps mb-1">
                     <i class="fas fa-book me-1"></i> Ciclo
                 </div>
                 <div class="fw-semibold small">{{ matricula.ciclo.nombre }}</div>
@@ -126,10 +110,9 @@
 
 <!-- ── 3. FORMULARIO ─────────────────────────────────────────── -->
 {% if deuda > 0 %}
-<div class="card border-0 mb-4" style="box-shadow:0 2px 10px rgba(0,0,0,.07);border:1px solid #4ade80!important;">
-    <div class="card-header border-0 fw-semibold py-2 px-4"
-         style="background:#bbf7d0;color:#15803d;border-bottom:1px solid #4ade80;border-radius:calc(.375rem - 1px) calc(.375rem - 1px) 0 0;">
-        <i class="fas fa-money-bill-wave me-2" style="color:#16a34a;"></i> Registrar pago
+<div class="card border-0 mb-4 pago-form-card">
+    <div class="card-header border-0 fw-semibold py-2 px-4 pago-form-header">
+        <i class="fas fa-money-bill-wave me-2"></i> Registrar pago
     </div>
     <div class="card-body px-4 pt-4 pb-4">
         <form method="POST" id="form-pago">
@@ -180,9 +163,9 @@
                 {% if apoderado_nombre is not None %}
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small">Apoderado</label>
-                    <input type="text" name="apoderado" class="form-control"
+                    <input type="text" name="apoderado" class="form-control pago-info-body"
                            value="{{ apoderado_nombre }}"
-                           readonly style="background:#f8fafd;cursor:default;">
+                           readonly style="cursor:default;">
                 </div>
                 {% endif %}
 
@@ -192,17 +175,11 @@
             <div class="d-flex gap-2 justify-content-end mt-3">
                 {% if ultimo_pago %}
                 <a href="{% url 'boleta_pdf' ultimo_pago.id %}" target="_blank"
-                   class="btn btn-sm fw-semibold px-3"
-                   style="background:#dbeafe;color:#1d4ed8;border:1.5px solid #93c5fd;"
-                   onmouseover="this.style.background='#bfdbfe';this.style.borderColor='#3b82f6';"
-                   onmouseout="this.style.background='#dbeafe';this.style.borderColor='#93c5fd';">
+                   class="btn btn-sm fw-semibold px-3 btn-boleta">
                     <i class="fas fa-file-pdf me-1"></i> Última boleta
                 </a>
                 {% endif %}
-                <button type="submit" class="btn btn-sm fw-semibold px-4"
-                        style="background:#86efac;color:#14532d;border:1.5px solid #22c55e;"
-                        onmouseover="this.style.background='#4ade80';this.style.borderColor='#16a34a';"
-                        onmouseout="this.style.background='#86efac';this.style.borderColor='#22c55e';">
+                <button type="submit" class="btn btn-sm fw-semibold px-4 btn-registrar-pago">
                     <i class="fas fa-save me-1"></i> Registrar pago
                 </button>
             </div>
@@ -214,7 +191,7 @@
 <div class="card border-0 shadow-sm">
     <div class="card-body text-center py-4">
         <i class="fas fa-check-circle fa-2x text-success mb-2 d-block"></i>
-        <div class="fw-semibold" style="font-size:15px">Matrícula completamente pagada</div>
+        <div class="fw-semibold fs-15">Matrícula completamente pagada</div>
         <div class="text-muted small mt-1">
             El historial de pagos está disponible en
             <a href="{% url 'lista_pagos' %}" class="text-decoration-none">Reportes Financieros</a>.

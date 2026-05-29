@@ -30,3 +30,68 @@
     height: 7px;
     border-radius: 4px;
 }
+
+/* ═══════════════════════════════════════════════════════════
+   REGISTRO DE PAGO (pagos.html)
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── INPUT MONTO — sin flechas de número ──────────────────── */
+#monto::-webkit-inner-spin-button,
+#monto::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+#monto { -moz-appearance: textfield; }
+
+/* ── TARJETAS RESUMEN FINANCIERO (3 cards arriba) ─────────── */
+.pago-card { box-shadow: 0 2px 8px rgba(0,0,0,.08) !important; }
+
+/* Colores del borde superior según estado */
+.pago-card-top-gray  { border-top: 3px solid #94a3b8 !important; }
+.pago-card-top-blue  { border-top: 3px solid #93c5fd !important; }
+.pago-card-top-red   { border-top: 3px solid #fca5a5 !important; }
+.pago-card-top-green { border-top: 3px solid #86efac !important; }
+
+/* Fondos del cuerpo según estado */
+.pago-card-bg-default { background: #f8fafc; border-radius: inherit; }
+.pago-card-bg-blue    { background: #f0f7ff; border-radius: inherit; }
+.pago-card-bg-red     { background: #fff5f5; border-radius: inherit; }
+.pago-card-bg-green   { background: #f0fdf4; border-radius: inherit; }
+
+/* ── SECCIÓN INFORMACIÓN DEL PAGO (azul) ──────────────────── */
+.pago-info-card   { border: 1px solid #60a5fa !important; }
+.pago-info-header {
+    background: #bfdbfe;
+    color: #1d4ed8;
+    border-bottom: 1px solid #60a5fa;
+    border-radius: calc(.375rem - 1px) calc(.375rem - 1px) 0 0;
+}
+.pago-info-body   { background: #f8fafd; }
+
+/* ── SECCIÓN FORMULARIO DE PAGO (verde) ───────────────────── */
+.pago-form-card   { border: 1px solid #4ade80 !important; }
+.pago-form-header {
+    background: #bbf7d0;
+    color: #15803d;
+    border-bottom: 1px solid #4ade80;
+    border-radius: calc(.375rem - 1px) calc(.375rem - 1px) 0 0;
+}
+
+/* ── BOTONES DE ACCIÓN ────────────────────────────────────── */
+.btn-boleta {
+    background: #dbeafe;
+    color: #1d4ed8;
+    border: 1.5px solid #93c5fd;
+}
+.btn-boleta:hover {
+    background: #bfdbfe;
+    border-color: #3b82f6;
+    color: #1d4ed8;
+}
+.btn-registrar-pago {
+    background: #86efac;
+    color: #14532d;
+    border: 1.5px solid #22c55e;
+}
+.btn-registrar-pago:hover {
+    background: #4ade80;
+    border-color: #16a34a;
+    color: #14532d;
+}

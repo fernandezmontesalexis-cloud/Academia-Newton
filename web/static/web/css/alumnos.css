@@ -1,0 +1,67 @@
+/* ═══════════════════════════════════════════════════════════
+   ALUMNOS.CSS — Newton en Red
+   Estilos específicos para gestión de alumnos:
+   lista_alumnos, lista_alumnos_otros, detalle_alumno, editar_alumno
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── FORMULARIO EDITAR ALUMNO ─────────────────────────────── */
+/* Inputs con borde más pronunciado (equivalente al form de registro) */
+.card .form-control {
+    border: 1.5px solid #94a3b8;
+    border-radius: 7px;
+    font-size: 13.5px;
+    color: #1e293b;
+    transition: border-color .15s, box-shadow .15s;
+}
+.card .form-control:hover:not(:disabled) {
+    border-color: #64748b;
+}
+.card .form-control:focus {
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, .1);
+}
+/* Campo solo lectura (DNI, fecha de nacimiento) */
+.card .form-control:disabled {
+    border: 1.5px solid #e2e8f0;
+    background: #f8fafc;
+    color: #94a3b8;
+}
+
+/* ── DETALLE ALUMNO — avatar ──────────────────────────────── */
+.alumno-avatar {
+    width: 52px;
+    height: 52px;
+    font-size: 1.15rem;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* ── DETALLE ALUMNO — filas de información personal ─────── */
+.alumno-info-icon {
+    width: 13px;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+.alumno-info-row {
+    font-size: 12.5px;
+    min-width: 0;
+}
+
+/* ── MODALES ALUMNOS ─────────────────────────────────────── */
+/* Dialog estrecho para modales de confirmación */
+.modal-440 {
+    max-width: 440px;
+}
+/* Título del modal de bloqueo (peligro) */
+.modal-title-danger {
+    font-size: 15px;
+    color: #dc2626;
+}
+/* Cuadro de advertencia dentro del modal de bloqueo */
+.alert-bloqueo {
+    background: #fff5f5;
+    border: 1px solid #fecaca;
+    font-size: 13.5px;
+    border-radius: 8px;
+    padding: 12px;
+}
