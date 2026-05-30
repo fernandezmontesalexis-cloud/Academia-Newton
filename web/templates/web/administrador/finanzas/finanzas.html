@@ -1,6 +1,10 @@
 {% extends 'web/base/base.html' %}
 {% load static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/finanzas.css' %}">
+{% endblock %}
+
 {% block content %}
 
 <!-- ══ ENCABEZADO ═══════════════════════════════════════════════════════ -->
@@ -28,17 +32,17 @@
         <div class="d-flex flex-wrap gap-2 align-items-end">
             <div>
                 <label class="form-label small mb-1 text-muted">Desde</label>
-                <input type="date" name="fecha_desde" class="form-control form-control-sm"
-                       style="width:145px" value="{{ fecha_desde_str }}">
+                <input type="date" name="fecha_desde" class="form-control form-control-sm filter-select-finanzas"
+                       value="{{ fecha_desde_str }}">
             </div>
             <div>
                 <label class="form-label small mb-1 text-muted">Hasta</label>
-                <input type="date" name="fecha_hasta" class="form-control form-control-sm"
-                       style="width:145px" value="{{ fecha_hasta_str }}">
+                <input type="date" name="fecha_hasta" class="form-control form-control-sm filter-select-finanzas"
+                       value="{{ fecha_hasta_str }}">
             </div>
             <div>
                 <label class="form-label small mb-1 text-muted">Sede</label>
-                <select name="sede_id" class="form-select form-select-sm" style="width:140px">
+                <select name="sede_id" class="form-select form-select-sm filter-select-finanzas">
                     <option value="">Todas</option>
                     {% for s in sedes %}
                     <option value="{{ s.id }}"
@@ -50,7 +54,7 @@
             </div>
             <div>
                 <label class="form-label small mb-1 text-muted">Método</label>
-                <select name="metodo" class="form-select form-select-sm" style="width:140px">
+                <select name="metodo" class="form-select form-select-sm filter-select-finanzas">
                     <option value="">Todos</option>
                     <option value="efectivo"      {% if metodo == 'efectivo' %}selected{% endif %}>Efectivo</option>
                     <option value="yape"          {% if metodo == 'yape' %}selected{% endif %}>Yape</option>
@@ -148,7 +152,7 @@
     </div>
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" style="font-size:0.82rem;">
+            <table class="table table-hover align-middle mb-0 fs-13">
                 <thead class="table-light">
                     <tr>
                         <th class="px-3">Alumno</th>

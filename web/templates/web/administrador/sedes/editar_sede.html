@@ -1,4 +1,9 @@
 {% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/crear_Sede.css' %}">
+{% endblock %}
 
 {% block content %}
 
@@ -16,13 +21,10 @@
     <div class="col-md-6">
         <div class="card border-0 shadow-sm overflow-hidden">
 
-            <!-- Header visual -->
-            <div class="card-header border-0 py-4 px-4"
-                 style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+            <div class="card-header border-0 py-4 px-4 card-header-visual">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="d-flex align-items-center justify-content-center rounded-circle fw-bold flex-shrink-0
-                                {% if sede.is_active %}bg-primary text-white{% else %}bg-secondary text-white{% endif %}"
-                         style="width:52px;height:52px;font-size:22px;">
+                    <div class="form-header-avatar fw-bold
+                                {% if sede.is_active %}bg-primary text-white{% else %}bg-secondary text-white{% endif %}">
                         {{ sede.nombre|slice:":1"|upper }}
                     </div>
                     <div>
@@ -36,8 +38,7 @@
                 <form method="POST">
                     {% csrf_token %}
 
-                    <!-- Sección: Información General -->
-                    <p class="small fw-semibold text-muted text-uppercase mb-1" style="letter-spacing:.07em;">
+                    <p class="section-label mb-1">
                         <i class="fas fa-info-circle me-1 opacity-50"></i>Información General
                     </p>
                     <hr class="mt-1 mb-3">
@@ -46,19 +47,17 @@
                         <label class="form-label fw-semibold small">Nombre de la sede</label>
                         <div class="d-flex gap-2">
                             <input type="text" id="nombre_input" name="nombre"
-                                   class="form-control form-control-sm" required
+                                   class="form-control form-control-sm input-locked" required
                                    value="{{ sede.nombre }}"
                                    readonly
-                                   data-original="{{ sede.nombre }}"
-                                   style="background:#f8f9fa;cursor:not-allowed;">
+                                   data-original="{{ sede.nombre }}">
                             <button type="button" id="btn_nombre"
                                     class="btn btn-sm btn-outline-secondary flex-shrink-0"
                                     onclick="toggleNombre()">
                                 <i class="fas fa-lock me-1"></i>Cambiar
                             </button>
                         </div>
-                        <div id="aviso-nombre" class="alert alert-warning py-2 px-3 mt-2 mb-0"
-                             style="display:none;font-size:12.5px;border-radius:8px;">
+                        <div id="aviso-nombre" class="alert alert-warning aviso-nombre py-2 px-3 mt-2 mb-0 d-none">
                             <i class="fas fa-exclamation-triangle me-1"></i>
                             <strong>Solo para correcciones o complementos.</strong>
                             Usa este campo si el nombre tiene un error ortográfico o quieres
@@ -77,8 +76,7 @@
                                placeholder="Ej: Jr. Lima 123, Huacho">
                     </div>
 
-                    <!-- Sección: Estado -->
-                    <p class="small fw-semibold text-muted text-uppercase mb-1" style="letter-spacing:.07em;">
+                    <p class="section-label mb-1">
                         <i class="fas fa-toggle-on me-1 opacity-50"></i>Estado
                     </p>
                     <hr class="mt-1 mb-3">
@@ -88,24 +86,20 @@
                             <div class="fw-semibold small" id="estado-label">
                                 {% if sede.is_active %}Sede Activa{% else %}Sede Inactiva{% endif %}
                             </div>
-                            <div class="text-muted" style="font-size:12px;">
+                            <div class="text-muted fs-12">
                                 Una sede inactiva no aparece en formularios de registro
                             </div>
                         </div>
                         <div class="form-check form-switch mb-0 ms-3">
-                            <input class="form-check-input" type="checkbox" role="switch"
+                            <input class="form-check-input form-switch-lg" type="checkbox" role="switch"
                                    id="is_active" name="is_active" value="1"
                                    {% if sede.is_active %}checked{% endif %}
-                                   style="width:2.5em;height:1.3em;cursor:pointer;"
                                    onchange="document.getElementById('estado-label').textContent = this.checked ? 'Sede Activa' : 'Sede Inactiva'">
                         </div>
                     </div>
 
-                    <!-- Acciones -->
                     <div class="d-flex gap-2 justify-content-end mt-4">
-                        <a href="{% url 'lista_sedes' %}" class="btn btn-outline-secondary">
-                            Cancelar
-                        </a>
+                        <a href="{% url 'lista_sedes' %}" class="btn btn-outline-secondary">Cancelar</a>
                         <button type="submit" class="btn btn-primary px-4">
                             <i class="fas fa-save me-1"></i> Guardar cambios
                         </button>
@@ -123,28 +117,24 @@
 {% block extra_js %}
 <script>
 function toggleNombre() {
-    var input  = document.getElementById('nombre_input');
-    var btn    = document.getElementById('btn_nombre');
-    var aviso  = document.getElementById('aviso-nombre');
+    var input = document.getElementById('nombre_input');
+    var btn   = document.getElementById('btn_nombre');
+    var aviso = document.getElementById('aviso-nombre');
 
     if (input.readOnly) {
-        // Desbloquear
-        input.readOnly         = false;
-        input.style.background = '';
-        input.style.cursor     = '';
+        input.readOnly = false;
+        input.classList.remove('input-locked');
         input.focus();
         btn.innerHTML = '<i class="fas fa-lock-open me-1"></i>Cancelar';
         btn.classList.replace('btn-outline-secondary', 'btn-outline-warning');
-        aviso.style.display = 'block';
+        aviso.classList.remove('d-none');
     } else {
-        // Volver a bloquear y restaurar valor original
-        input.readOnly         = true;
-        input.style.background = '#f8f9fa';
-        input.style.cursor     = 'not-allowed';
-        input.value            = input.dataset.original;
+        input.readOnly = true;
+        input.classList.add('input-locked');
+        input.value = input.dataset.original;
         btn.innerHTML = '<i class="fas fa-lock me-1"></i>Cambiar';
         btn.classList.replace('btn-outline-warning', 'btn-outline-secondary');
-        aviso.style.display = 'none';
+        aviso.classList.add('d-none');
     }
 }
 </script>

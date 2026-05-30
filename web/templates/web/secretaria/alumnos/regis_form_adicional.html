@@ -1,7 +1,11 @@
 {% extends 'web/base/base.html' %}
 {% load static %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'web/js/registro_alumno.js' %}"></script>
 {% endblock %}
 {% block content %}
 
@@ -46,7 +50,7 @@
                 <div class="reg-section">
                     <div class="reg-section-title">Academia anterior</div>
 
-                    <div class="reg-field" style="margin-bottom:14px;">
+                    <div class="reg-field">
                         <label>¿Has estudiado en alguna academia anteriormente?</label>
                         <div class="reg-radio-group">
                             <label class="reg-radio-label">
@@ -70,7 +74,11 @@
                                 value="{{ formacion_adicional.academia_anterior }}"
                                 placeholder="Nombre de la academia"
                                 oninput="this.setCustomValidity('')"
-                                oninvalid="this.setCustomValidity('Debes ingresar el nombre de la academia anterior')">
+                                oninvalid="this.setCustomValidity('Debes ingresar el nombre de la academia anterior')"
+                                class="{% if field_errors.academia_anterior %}is-invalid{% endif %}">
+                            {% if field_errors.academia_anterior %}
+                            <span class="reg-error"><i class="fas fa-exclamation-circle"></i>{{ field_errors.academia_anterior }}</span>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -108,7 +116,8 @@
                             <label>Ciclo *</label>
                             <select name="ciclo" id="ciclo_select" required
                                 oninvalid="this.setCustomValidity('Debes seleccionar un ciclo')"
-                                oninput="this.setCustomValidity('')">
+                                oninput="this.setCustomValidity('')"
+                                class="{% if field_errors.ciclo %}is-invalid{% endif %}">
                                 <option value="">Seleccione un ciclo</option>
                                 {% for ciclo in ciclos %}
                                 <option value="{{ ciclo.id }}" {% if ciclo.id == ciclo_seleccionado %}selected{% endif %}>
@@ -124,9 +133,12 @@
                                 {% endif %}
                             </select>
                             {% if not ciclos %}
-                            <small style="font-size:12px;color:#94a3b8;margin-top:4px;">
+                            <small class="d-block mt-1 fs-12 text-muted">
                                 No hay ciclos activos ni próximos. Contacta al administrador.
                             </small>
+                            {% if field_errors.ciclo %}
+                            <span class="reg-error"><i class="fas fa-exclamation-circle"></i>{{ field_errors.ciclo }}</span>
+                            {% endif %}
                             {% endif %}
                         </div>
 
@@ -184,22 +196,6 @@ document.addEventListener("DOMContentLoaded", function () {
     radioNo.addEventListener("change", toggleAcademia);
     toggleAcademia(); // estado inicial
 
-    // ── Errores de backend — tooltip nativo ──────────────────────
-    {% if field_errors %}
-    function _err(selector, msg) {
-        var el = document.querySelector(selector);
-        if (el && msg) { el.setCustomValidity(msg); return el; }
-        return null;
-    }
-    var primero = null;
-    {% if field_errors.academia_anterior %}
-    primero = primero || _err('[name="academia_anterior"]', "{{ field_errors.academia_anterior|escapejs }}");
-    {% endif %}
-    {% if field_errors.ciclo %}
-    primero = primero || _err('[name="ciclo"]', "{{ field_errors.ciclo|escapejs }}");
-    {% endif %}
-    if (primero) setTimeout(() => primero.reportValidity(), 350);
-    {% endif %}
 
 });
 </script>

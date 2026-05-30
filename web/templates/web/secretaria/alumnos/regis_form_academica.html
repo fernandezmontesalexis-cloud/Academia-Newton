@@ -1,7 +1,11 @@
 {% extends 'web/base/base.html' %}
 {% load static %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'web/js/registro_alumno.js' %}"></script>
 {% endblock %}
 {% block content %}
 
@@ -52,16 +56,17 @@
                             <div class="reg-search-input-wrapper">
                                 <i class="fas fa-search"></i>
                                 <input type="text" id="colegio"
-                                    class="reg-field input"
-                                    style="height:38px;padding:0 11px 0 32px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13.5px;width:100%;outline:none;transition:border-color .15s,box-shadow .15s;font-family:inherit;"
                                     placeholder="Buscar colegio por nombre..."
                                     autocomplete="off"
                                     value="{{ formacion.colegio_nombre }}">
                             </div>
                             <input type="hidden" name="colegio_id" id="colegio_id"
                                 value="{{ formacion.colegio_id }}">
-                            <div id="resultados" class="reg-search-results" style="display:none;"></div>
+                            <div id="resultados" class="reg-search-results"></div>
                         </div>
+                        {% if field_errors.colegio %}
+                        <span class="reg-error"><i class="fas fa-exclamation-circle"></i>{{ field_errors.colegio }}</span>
+                        {% endif %}
 
                         <!-- Botón agregar -->
                         <button type="button" class="reg-btn-add" onclick="mostrarAgregar()">
@@ -73,23 +78,21 @@
                     <div class="reg-expand" id="nuevoColegio">
                         <div class="reg-expand-inner">
                             <div class="reg-expand-title">
-                                <i class="fas fa-school" style="color:#2563eb;"></i>
+                                <i class="fas fa-school text-primary"></i>
                                 Registrar nuevo colegio
                             </div>
 
-                            <div class="reg-grid-2" style="margin-bottom:12px;">
+                            <div class="reg-grid-2">
                                 <div class="reg-field reg-span-2">
                                     <label>Nombre del colegio *</label>
                                     <input type="text" id="nuevo_nombre"
                                         placeholder="Nombre completo del colegio"
-                                        oninput="this.setCustomValidity('');"
-                                        style="height:38px;padding:0 11px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13.5px;width:100%;outline:none;font-family:inherit;">
+                                        oninput="this.setCustomValidity('');">
                                 </div>
 
                                 <div class="reg-field">
                                     <label>Tipo de institución *</label>
-                                    <select id="tipo_ie_nuevo"
-                                        style="height:38px;padding:0 11px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13.5px;width:100%;outline:none;font-family:inherit;appearance:none;">
+                                    <select id="tipo_ie_nuevo">
                                         <option value="">Seleccione tipo</option>
                                         <option value="Nacional">Nacional</option>
                                         <option value="Particular">Particular</option>
@@ -98,8 +101,7 @@
 
                                 <div class="reg-field">
                                     <label>Departamento *</label>
-                                    <select id="dep_ie"
-                                        style="height:38px;padding:0 11px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13.5px;width:100%;outline:none;font-family:inherit;appearance:none;">
+                                    <select id="dep_ie">
                                         <option value="">Seleccione</option>
                                         {% for d in departamentos %}
                                         <option value="{{ d.id }}">{{ d.nombre }}</option>
@@ -109,22 +111,20 @@
 
                                 <div class="reg-field">
                                     <label>Provincia *</label>
-                                    <select id="prov_ie"
-                                        style="height:38px;padding:0 11px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13.5px;width:100%;outline:none;font-family:inherit;appearance:none;">
+                                    <select id="prov_ie">
                                         <option value="">Seleccione departamento</option>
                                     </select>
                                 </div>
 
                                 <div class="reg-field">
                                     <label>Distrito *</label>
-                                    <select id="dist_ie"
-                                        style="height:38px;padding:0 11px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:13.5px;width:100%;outline:none;font-family:inherit;appearance:none;">
+                                    <select id="dist_ie">
                                         <option value="">Seleccione provincia</option>
                                     </select>
                                 </div>
                             </div>
 
-                            <div style="display:flex;gap:8px;">
+                            <div class="reg-expand-actions">
                                 <button type="button" class="reg-btn-save-sm" onclick="crearColegio()">
                                     <i class="fas fa-check"></i> Guardar colegio
                                 </button>
@@ -172,30 +172,9 @@
         }
     });
 
-    // ── Error de backend ──────────────────────────────────────────
-    {% if field_errors.colegio %}
-    document.addEventListener("DOMContentLoaded", function () {
-        var input = document.getElementById("colegio");
-        if (input) {
-            input.setCustomValidity("{{ field_errors.colegio|escapejs }}");
-            setTimeout(() => input.reportValidity(), 350);
-        }
-    });
-    {% endif %}
-
-    // ── Focus / blur del buscador ─────────────────────────────────
-    const colegioInput = document.getElementById("colegio");
-    colegioInput.style.setProperty('--focus-color', '#2563eb');
-    colegioInput.addEventListener("focus", function() {
-        this.style.borderColor = '#2563eb';
-        this.style.boxShadow = '0 0 0 3px rgba(37,99,235,.1)';
-    });
-    colegioInput.addEventListener("blur", function() {
-        this.style.borderColor = '#e2e8f0';
-        this.style.boxShadow = '';
-    });
 
     // ── Búsqueda de colegios ──────────────────────────────────────
+    const colegioInput = document.getElementById("colegio");
     colegioInput.addEventListener("keyup", function () {
         const query = this.value.trim();
         this.setCustomValidity('');
@@ -216,7 +195,7 @@
             .then(data => {
                 resultados.innerHTML = "";
                 if (data.length === 0) {
-                    resultados.innerHTML = '<div class="reg-search-item" style="color:#94a3b8;cursor:default;">Sin resultados — usa "+ Agregar colegio nuevo"</div>';
+                    resultados.innerHTML = '<div class="reg-search-item reg-search-item--empty">Sin resultados — usa "+ Agregar colegio nuevo"</div>';
                 } else {
                     data.forEach(c => {
                         const div = document.createElement("div");

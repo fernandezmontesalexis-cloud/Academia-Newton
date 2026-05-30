@@ -1,4 +1,9 @@
 {% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/usuarios.css' %}">
+{% endblock %}
 
 {% block content %}
 
@@ -41,17 +46,6 @@
 </div>
 
 <!-- FILAS ACTIVOS -->
-<style>
-.usuario-row {
-    border-left: 3px solid transparent;
-    transition: background 0.12s ease;
-}
-.usuario-row:hover { background: #f8f9fa; }
-.usuario-row.admin      { border-left-color: #2563eb; }
-.usuario-row.secretaria { border-left-color: #198754; }
-.usuario-row.inactivo   { border-left-color: #adb5bd; }
-</style>
-
 {% include "web/administrador/usuarios/_fila_usuario.html" with lista=usuarios_activos %}
 
 <!-- HISTORIAL (inactivos) -->
@@ -63,8 +57,7 @@
             data-bs-target="#historial-usuarios"
             aria-expanded="{{ historial_abierto|yesno:'true,false' }}">
         <span><i class="fas fa-history me-2 opacity-60"></i>Ver historial</span>
-        <span class="badge bg-secondary bg-opacity-15 text-secondary border border-secondary border-opacity-25 fw-semibold"
-              style="font-size:10px;padding:4px 9px;border-radius:20px">
+        <span class="badge bg-secondary bg-opacity-15 text-secondary border border-secondary border-opacity-25 fw-semibold admin-badge">
             {{ total_inactivos }} inactivo{% if total_inactivos != 1 %}s{% endif %}
         </span>
     </button>

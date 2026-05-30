@@ -24,6 +24,15 @@
     line-height: 1.2;
     font-weight: 700;
 }
+/* Variantes de color para cada métrica */
+.ciclo-metrica-slate   { background: #f1f5f9; }
+.ciclo-metrica-success { background: #f0fdf4; }
+.ciclo-metrica-danger  { background: #fef2f2; }
+.ciclo-metrica-warning { background: #fffbeb; }
+
+/* ── FILTROS DE REPORTE ────────────────────────────────────── */
+.filter-select-estado { width: 150px !important; }
+.filter-input-dni     { width: 110px !important; }
 
 /* ── BARRA DE PROGRESO DE CICLO ────────────────────────────── */
 .progress-ciclo {
@@ -95,3 +104,6 @@
     border-color: #16a34a;
     color: #14532d;
 }
+
+/* Campo readonly (apoderado) */
+.pago-readonly { cursor: default; }

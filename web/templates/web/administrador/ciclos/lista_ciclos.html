@@ -1,27 +1,11 @@
 {% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/ciclos.css' %}">
+{% endblock %}
 
 {% block content %}
-
-<style>
-.sede-card {
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.sede-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.10) !important;
-}
-.sede-avatar {
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 19px;
-    font-weight: 700;
-    flex-shrink: 0;
-}
-</style>
 
 <!-- Encabezado -->
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -38,30 +22,25 @@
 <div class="row g-3">
     {% for item in data_sedes %}
     <div class="col-md-6 col-lg-4">
-        <div class="card border-0 shadow-sm h-100 sede-card"
-             style="border-top: 3px solid {% if item.ciclos_activos > 0 %}#198754{% else %}#adb5bd{% endif %} !important">
+        <div class="card border-0 shadow-sm h-100 sede-card {% if item.ciclos_activos > 0 %}card-top-active{% else %}card-top-inactive{% endif %}">
             <div class="card-body p-4">
 
                 <!-- Avatar + nombre sede + badge -->
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div class="d-flex align-items-center gap-2">
-                        <div class="sede-avatar"
-                             style="background:{% if item.ciclos_activos > 0 %}rgba(13,110,253,0.1){% else %}rgba(108,117,125,0.1){% endif %};
-                                    color:{% if item.ciclos_activos > 0 %}#0d6efd{% else %}#6c757d{% endif %}">
+                        <div class="sede-avatar {% if item.ciclos_activos > 0 %}sede-avatar-active{% else %}sede-avatar-inactive{% endif %}">
                             {{ item.sede.nombre|slice:":1"|upper }}
                         </div>
-                        <h6 class="fw-bold mb-0" style="font-size:15px">
+                        <h6 class="fw-bold mb-0 fs-15">
                             {{ item.sede.nombre|capfirst }}
                         </h6>
                     </div>
                     {% if item.ciclos_activos > 0 %}
-                    <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 fw-semibold"
-                          style="font-size:10px;padding:4px 9px;border-radius:20px;white-space:nowrap">
-                        <i class="fas fa-circle me-1" style="font-size:6px;vertical-align:middle"></i>{{ item.ciclos_activos }} activo{% if item.ciclos_activos != 1 %}s{% endif %}
+                    <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 fw-semibold admin-badge">
+                        <i class="fas fa-circle me-1 badge-dot"></i>{{ item.ciclos_activos }} activo{% if item.ciclos_activos != 1 %}s{% endif %}
                     </span>
                     {% else %}
-                    <span class="badge bg-secondary bg-opacity-15 text-secondary border border-secondary border-opacity-25 fw-semibold"
-                          style="font-size:10px;padding:4px 9px;border-radius:20px;white-space:nowrap">
+                    <span class="badge bg-secondary bg-opacity-15 text-secondary border border-secondary border-opacity-25 fw-semibold admin-badge">
                         Sin activos
                     </span>
                     {% endif %}
@@ -70,17 +49,11 @@
                 <!-- Métricas -->
                 <div class="mb-3">
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-muted"
-                              style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">
-                            Total ciclos
-                        </span>
+                        <span class="metric-label">Total ciclos</span>
                         <span class="fw-bold">{{ item.total_ciclos }}</span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-muted"
-                              style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">
-                            Próximo inicio
-                        </span>
+                        <span class="metric-label">Próximo inicio</span>
                         <span class="fw-semibold small">
                             {% if item.proximo_inicio %}
                                 {{ item.proximo_inicio|date:"d/m/Y" }}
@@ -90,11 +63,8 @@
                         </span>
                     </div>
                     <div class="d-flex justify-content-between align-items-center">
-                        <span class="text-muted"
-                              style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">
-                            Último ciclo
-                        </span>
-                        <span class="fw-semibold small text-truncate ms-3" style="max-width:140px">
+                        <span class="metric-label">Último ciclo</span>
+                        <span class="fw-semibold small text-truncate text-truncate-140 ms-3">
                             {% if item.ultimo_ciclo %}
                                 {{ item.ultimo_ciclo }}
                             {% else %}
@@ -121,8 +91,7 @@
 {% else %}
 <div class="card border-0 shadow-sm">
     <div class="card-body text-center py-5">
-        <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle mb-3"
-             style="width:60px;height:60px;">
+        <div class="empty-state-icon bg-primary-subtle mb-3">
             <i class="fas fa-calendar-alt text-primary fa-lg"></i>
         </div>
         <div class="fw-semibold text-muted">No hay sedes registradas</div>

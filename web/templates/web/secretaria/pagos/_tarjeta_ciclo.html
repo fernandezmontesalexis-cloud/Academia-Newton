@@ -26,14 +26,14 @@
         <div class="row g-2 mb-3">
 
             <div class="col-6">
-                <div class="ciclo-metrica" style="background:#f1f5f9">
+                <div class="ciclo-metrica ciclo-metrica-slate">
                     <div class="ciclo-metrica-label">Matrículas activas</div>
                     <div class="ciclo-metrica-valor fs-17">{{ item.total_matriculas }}</div>
                 </div>
             </div>
 
             <div class="col-6">
-                <div class="ciclo-metrica" style="background:#f0fdf4">
+                <div class="ciclo-metrica ciclo-metrica-success">
                     <div class="ciclo-metrica-label">Recaudado</div>
                     <div class="ciclo-metrica-valor fs-15 text-success">
                         S/. {{ item.total_recaudado|floatformat:2 }}
@@ -42,7 +42,7 @@
             </div>
 
             <div class="col-6">
-                <div class="ciclo-metrica" style="background:#fef2f2">
+                <div class="ciclo-metrica ciclo-metrica-danger">
                     <div class="ciclo-metrica-label">Deuda total</div>
                     <div class="ciclo-metrica-valor fs-15 text-red-soft">
                         S/. {{ item.total_deuda|floatformat:2 }}
@@ -51,7 +51,7 @@
             </div>
 
             <div class="col-6">
-                <div class="ciclo-metrica" style="background:#fffbeb">
+                <div class="ciclo-metrica ciclo-metrica-warning">
                     <div class="ciclo-metrica-label">Con deuda</div>
                     <div class="ciclo-metrica-valor fs-17 text-amber">{{ item.alumnos_con_deuda }}</div>
                 </div>

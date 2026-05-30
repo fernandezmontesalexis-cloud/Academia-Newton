@@ -1,8 +1,12 @@
 {% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/reportes_sedes.css' %}">
+{% endblock %}
 
 {% block content %}
 
-<!-- Breadcrumb -->
 <nav aria-label="breadcrumb" class="mb-3">
     <ol class="breadcrumb">
         <li class="breadcrumb-item">
@@ -18,8 +22,7 @@
             <h4 class="mb-0 fw-bold">
                 <i class="fas fa-building text-primary me-2"></i>{{ sede.nombre }}
             </h4>
-            <span class="badge bg-{{ salud.clase }} bg-opacity-15 text-{{ salud.clase }} border border-{{ salud.clase }} border-opacity-25 fw-semibold"
-                  style="font-size:11px;padding:4px 10px;border-radius:20px;">
+            <span class="badge bg-{{ salud.clase }} bg-opacity-15 text-{{ salud.clase }} border border-{{ salud.clase }} border-opacity-25 fw-semibold admin-badge">
                 {{ salud.label }}
             </span>
         </div>
@@ -41,8 +44,8 @@
                     <i class="fas fa-coins text-success"></i>
                 </div>
                 <div>
-                    <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Ingresos Totales</div>
-                    <div class="fw-bold text-success" style="font-size:17px">S/. {{ ingresos_total|floatformat:2 }}</div>
+                    <div class="metric-label">Ingresos Totales</div>
+                    <div class="fw-bold text-success fs-17">S/. {{ ingresos_total|floatformat:2 }}</div>
                 </div>
             </div>
         </div>
@@ -54,8 +57,10 @@
                     <i class="fas fa-exclamation-circle text-danger"></i>
                 </div>
                 <div>
-                    <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Deuda Pendiente</div>
-                    <div class="fw-bold {% if deuda_total > 0 %}text-danger{% else %}text-success{% endif %}" style="font-size:17px">S/. {{ deuda_total|floatformat:2 }}</div>
+                    <div class="metric-label">Deuda Pendiente</div>
+                    <div class="fw-bold fs-17 {% if deuda_total > 0 %}text-danger{% else %}text-success{% endif %}">
+                        S/. {{ deuda_total|floatformat:2 }}
+                    </div>
                 </div>
             </div>
         </div>
@@ -67,8 +72,8 @@
                     <i class="fas fa-book-open text-warning"></i>
                 </div>
                 <div>
-                    <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Total Matrículas</div>
-                    <div class="fw-bold" style="font-size:17px">{{ total_matriculas }}</div>
+                    <div class="metric-label">Total Matrículas</div>
+                    <div class="fw-bold fs-17">{{ total_matriculas }}</div>
                 </div>
             </div>
         </div>
@@ -90,53 +95,51 @@
     {% with c=item.ciclo %}
 
     <div class="col-md-6 col-lg-4">
-        <div class="card border-0 shadow-sm h-100"
-             style="border-top: 3px solid
-                {% if c.alerta_vigencia == 'activo' %}#22c55e
-                {% elif c.alerta_vigencia == 'finaliza_pronto' %}#eab308
-                {% elif c.alerta_vigencia == 'pendiente' %}#3b82f6
-                {% else %}#94a3b8
-                {% endif %} !important">
+        <div class="card border-0 shadow-sm h-100
+            {% if c.alerta_vigencia == 'activo' %}card-top-green
+            {% elif c.alerta_vigencia == 'finaliza_pronto' %}card-top-yellow
+            {% elif c.alerta_vigencia == 'pendiente' %}card-top-blue
+            {% else %}card-top-slate{% endif %}">
             <div class="card-body p-4">
 
                 <!-- Nombre + badge estado -->
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
-                        <h6 class="fw-bold mb-0" style="font-size:15px">{{ c.nombre }}</h6>
+                        <h6 class="fw-bold mb-0 fs-15">{{ c.nombre }}</h6>
                         <small class="text-muted">
                             {{ c.fecha_inicio|date:"d/m/Y" }} – {{ c.fecha_fin|date:"d/m/Y" }}
                         </small>
                     </div>
                     {% if c.alerta_vigencia == 'activo' %}
-                        <span class="badge bg-success" style="font-size:11px">Activo</span>
+                        <span class="badge bg-success fs-11">Activo</span>
                     {% elif c.alerta_vigencia == 'finaliza_pronto' %}
-                        <span class="badge bg-warning" style="font-size:11px">Finaliza pronto</span>
+                        <span class="badge bg-warning fs-11">Finaliza pronto</span>
                     {% elif c.alerta_vigencia == 'pendiente' %}
-                        <span class="badge bg-primary" style="font-size:11px">Próximo</span>
+                        <span class="badge bg-primary fs-11">Próximo</span>
                     {% else %}
-                        <span class="badge bg-secondary" style="font-size:11px">Finalizado</span>
+                        <span class="badge bg-secondary fs-11">Finalizado</span>
                     {% endif %}
                 </div>
 
                 <!-- Métricas 2×2 -->
                 <div class="row g-2 mb-3">
                     <div class="col-6">
-                        <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Matrículas</div>
-                        <div class="fw-bold" style="font-size:17px">{{ item.total_matriculas }}</div>
+                        <div class="metric-label">Matrículas</div>
+                        <div class="fw-bold fs-17">{{ item.total_matriculas }}</div>
                     </div>
                     <div class="col-6">
-                        <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Recaudado</div>
-                        <div class="fw-bold text-success" style="font-size:17px">S/. {{ item.total_recaudado|floatformat:2 }}</div>
+                        <div class="metric-label">Recaudado</div>
+                        <div class="fw-bold text-success fs-17">S/. {{ item.total_recaudado|floatformat:2 }}</div>
                     </div>
                     <div class="col-6">
-                        <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Deuda</div>
-                        <div class="fw-bold {% if item.total_deuda > 0 %}text-danger{% else %}text-success{% endif %}" style="font-size:17px">
+                        <div class="metric-label">Deuda</div>
+                        <div class="fw-bold fs-17 {% if item.total_deuda > 0 %}text-danger{% else %}text-success{% endif %}">
                             S/. {{ item.total_deuda|floatformat:2 }}
                         </div>
                     </div>
                     <div class="col-6">
-                        <div class="text-muted" style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">Con deuda</div>
-                        <div class="fw-bold {% if item.alumnos_con_deuda > 0 %}text-warning{% endif %}" style="font-size:17px">
+                        <div class="metric-label">Con deuda</div>
+                        <div class="fw-bold fs-17 {% if item.alumnos_con_deuda > 0 %}text-warning{% endif %}">
                             {{ item.alumnos_con_deuda }}
                         </div>
                     </div>
@@ -145,19 +148,19 @@
                 <!-- Barra de progreso -->
                 <div>
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                        <span class="text-muted" style="font-size:11px">Recaudación</span>
-                        <span class="fw-semibold" style="font-size:12px">{{ item.pct_recaudado }}%</span>
+                        <span class="text-muted fs-11">Recaudación</span>
+                        <span class="fw-semibold fs-12">{{ item.pct_recaudado }}%</span>
                     </div>
-                    <div class="progress" style="height:7px;border-radius:4px;background:#f1f5f9">
+                    <div class="progress progress-reporte">
                         <div class="progress-bar
                                 {% if item.pct_recaudado >= 80 %}bg-success
                                 {% elif item.pct_recaudado >= 50 %}bg-warning
                                 {% else %}bg-danger{% endif %}"
                              role="progressbar"
-                             style="width:{{ item.pct_recaudado }}%;border-radius:4px">
+                             style="width:{{ item.pct_recaudado }}%">
                         </div>
                     </div>
-                    <div class="text-muted mt-1" style="font-size:11px">
+                    <div class="text-muted mt-1 fs-11">
                         S/. {{ item.total_recaudado|floatformat:2 }} de S/. {{ item.total_esperado|floatformat:2 }}
                     </div>
                 </div>

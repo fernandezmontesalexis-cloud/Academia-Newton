@@ -396,7 +396,9 @@ h4.fw-bold, .fw-bold.mb-0 {
 .fs-135 { font-size: 13.5px !important; }
 .fs-14  { font-size: 14px   !important; }
 .fs-15  { font-size: 15px   !important; }
+.fs-16  { font-size: 16px   !important; }
 .fs-17  { font-size: 17px   !important; }
+.fs-22  { font-size: 22px   !important; }
 
 /* ── COLOR UTILITIES (paleta del proyecto) ────────────────── */
 .text-slate   { color: #64748b !important; }   /* etiquetas secundarias */
@@ -435,3 +437,68 @@ h4.fw-bold, .fw-bold.mb-0 {
 
 /* ── PHONE NUMBER ─────────────────────────────────────────── */
 .phone-number { font-size: 15px; letter-spacing: .5px; }
+
+/* ══════════════════════════════════════════════════════════
+   COMPONENTES COMPARTIDOS — PANEL DE ADMINISTRADOR
+   ══════════════════════════════════════════════════════════ */
+
+/* ── TARJETA DE SEDE / CICLO (lista_sedes, lista_ciclos) ─── */
+.sede-card {
+    transition: transform .15s ease, box-shadow .15s ease;
+    cursor: default;
+}
+.sede-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,.10) !important;
+}
+.sede-avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 19px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+/* Variantes de color del avatar según estado */
+.sede-avatar-active   { background: rgba(13,110,253,.10); color: #0d6efd; }
+.sede-avatar-inactive { background: rgba(108,117,125,.10); color: #6c757d; }
+
+/* ── BORDE SUPERIOR DE TARJETA SEGÚN ESTADO ─────────────── */
+.card-top-active   { border-top: 3px solid #198754 !important; }
+.card-top-inactive { border-top: 3px solid #adb5bd !important; }
+.card-top-primary  { border-top: 3px solid #2563eb !important; }
+.card-top-blue     { border-top: 3px solid #3b82f6 !important; }
+.card-top-warning  { border-top: 3px solid #f59e0b !important; }
+
+/* ── MODAL NARROW 420px (reportes, matriculas) ───────────── */
+.modal-420 { max-width: 420px; }
+
+/* ── BADGE PILL — estado en tarjetas admin ───────────────── */
+.admin-badge {
+    font-size: 10px !important;
+    padding: 4px 9px !important;
+    border-radius: 20px !important;
+    white-space: nowrap;
+}
+
+/* ── METRIC LABEL — etiqueta de métrica en tarjetas ─────── */
+.metric-label {
+    font-size: 10.5px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .3px;
+    color: #64748b;
+}
+
+/* ── EMPTY STATE ICON CIRCLE ─────────────────────────────── */
+.empty-state-icon {
+    width: 60px;
+    height: 60px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}

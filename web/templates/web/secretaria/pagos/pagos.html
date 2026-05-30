@@ -122,21 +122,25 @@
                 <div class="col-md-2">
                     <label class="form-label fw-semibold small">Monto (S/.)</label>
                     <input type="number" name="monto" id="monto"
-                           class="form-control"
+                           class="form-control{% if error_monto %} is-invalid{% endif %}"
                            step="0.5" min="0.5" max="{{ deuda|floatformat:2 }}" required placeholder="0.00"
                            value="{{ monto_prev }}"
+                           autocomplete="off"
                            oninvalid="if(!this.validity.customError) this.setCustomValidity(
                                this.validity.valueMissing   ? 'El monto es obligatorio' :
                                this.validity.rangeOverflow  ? 'El monto no puede superar la deuda pendiente (S/. {{ deuda|floatformat:2 }})' :
                                this.validity.rangeUnderflow ? 'El monto debe ser mayor a 0' :
                                this.validity.stepMismatch   ? 'Solo se permiten soles enteros o medios (ej. S/. 50.00 o S/. 50.50)' :
                                'Monto no válido')"
-                           oninput="this.setCustomValidity('')">
+                           oninput="this.value = this.value.replace(/^0+(?=\d)/, ''); this.setCustomValidity('')">
+                    {% if error_monto %}
+                    <div class="invalid-feedback">{{ error_monto }}</div>
+                    {% endif %}
                 </div>
 
                 <div class="col-md-2">
                     <label class="form-label fw-semibold small">Método de pago</label>
-                    <select name="metodo_pago" class="form-select" required
+                    <select name="metodo_pago" class="form-select{% if error_metodo %} is-invalid{% endif %}" required
                         oninvalid="this.setCustomValidity('Selecciona un método de pago')"
                         oninput="this.setCustomValidity('')">
                         <option value="">Seleccione</option>
@@ -144,6 +148,9 @@
                         <option value="yape"          {% if metodo_prev == "yape" %}selected{% endif %}>Yape</option>
                         <option value="transferencia" {% if metodo_prev == "transferencia" %}selected{% endif %}>Transferencia</option>
                     </select>
+                    {% if error_metodo %}
+                    <div class="invalid-feedback">{{ error_metodo }}</div>
+                    {% endif %}
                 </div>
 
                 <div class="col-md-2">
@@ -163,9 +170,9 @@
                 {% if apoderado_nombre is not None %}
                 <div class="col-md-3">
                     <label class="form-label fw-semibold small">Apoderado</label>
-                    <input type="text" name="apoderado" class="form-control pago-info-body"
+                    <input type="text" name="apoderado" class="form-control pago-info-body pago-readonly"
                            value="{{ apoderado_nombre }}"
-                           readonly style="cursor:default;">
+                           readonly>
                 </div>
                 {% endif %}
 
@@ -245,19 +252,19 @@
         });
     }, true);
 
-    document.getElementById('form-pago').addEventListener('submit', function () {
+    document.getElementById('form-pago').addEventListener('submit', function (e) {
         formSubmitting = true;
     });
 })();
+
 </script>
 {% endif %}
 
 {% if request.GET.ok %}
 {# Data attributes: toda la lógica Django queda en HTML, no en JS #}
-<div id="pago-exito"
+<div id="pago-exito" class="d-none"
      data-matriculas-url="{% url 'matriculas' %}"
-     {% if request.GET.pago_id %}data-boleta-url="{% url 'boleta_pdf' request.GET.pago_id %}"{% endif %}
-     style="display:none;"></div>
+     {% if request.GET.pago_id %}data-boleta-url="{% url 'boleta_pdf' request.GET.pago_id %}"{% endif %}></div>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     var el           = document.getElementById('pago-exito');
@@ -319,27 +326,44 @@ document.addEventListener('DOMContentLoaded', function () {
         montoInput.addEventListener('input', actualizarProximo);
         actualizarProximo();
     }
+
+    // ── Confirmación antes de registrar pago ──────────────────────
+    var formPago = document.getElementById('form-pago');
+    var confirmado = false;
+    if (formPago) {
+        formPago.addEventListener('submit', function (e) {
+            if (confirmado) return; // ya confirmado, deja continuar
+
+            var monto = parseFloat(montoInput.value) || 0;
+            if (monto <= 0) return; // deja que la validación nativa actúe
+
+            e.preventDefault();
+            var metodoEl = document.querySelector('[name="metodo_pago"]');
+            var metodoTexto = metodoEl && metodoEl.selectedOptions[0]
+                ? metodoEl.selectedOptions[0].text
+                : '—';
+
+            Swal.fire({
+                icon: 'question',
+                title: 'Confirmar pago',
+                html: '<p style="font-size:15px;margin:0">Monto: <strong>S/. ' + monto.toFixed(2) + '</strong></p>'
+                    + '<p style="font-size:13px;color:#64748b;margin:4px 0 0">Método: ' + metodoTexto + '</p>',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, registrar',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#16a34a',
+                cancelButtonColor: '#6b7280',
+                reverseButtons: true,
+            }).then(function (result) {
+                if (result.isConfirmed) {
+                    confirmado = true;
+                    formPago.submit();
+                }
+            });
+        });
+    }
 });
 </script>
 {% endif %}
 
-{% if error_monto or error_metodo %}
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    function _marcarError(selector, msg) {
-        var el = document.querySelector(selector);
-        if (el && msg) { el.setCustomValidity(msg); return el; }
-        return null;
-    }
-    var primero = null;
-    {% if error_monto %}
-    primero = primero || _marcarError('#monto', "{{ error_monto|escapejs }}");
-    {% endif %}
-    {% if error_metodo %}
-    primero = primero || _marcarError('[name="metodo_pago"]', "{{ error_metodo|escapejs }}");
-    {% endif %}
-    if (primero) setTimeout(function () { primero.reportValidity(); }, 350);
-});
-</script>
-{% endif %}
 {% endblock %}

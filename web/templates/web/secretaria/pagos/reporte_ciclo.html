@@ -94,7 +94,7 @@
 
         <!-- Filtros compactos -->
         <form method="GET" class="d-flex gap-2 flex-wrap align-items-center mb-3">
-            <select name="estado" class="form-select form-select-sm" style="width:150px">
+            <select name="estado" class="form-select form-select-sm filter-select-estado">
                 <option value="">Estado pago</option>
                 <option value="sin_pago"  {% if estado_sel == 'sin_pago'  %}selected{% endif %}>Sin pago</option>
                 <option value="parcial"   {% if estado_sel == 'parcial'   %}selected{% endif %}>Parcial</option>
@@ -102,8 +102,8 @@
                 <option value="pagado"    {% if estado_sel == 'pagado'    %}selected{% endif %}>Pagado</option>
             </select>
             <input type="text" name="dni"
-                   class="form-control form-control-sm"
-                   style="width:110px" placeholder="DNI" value="{{ dni }}">
+                   class="form-control form-control-sm filter-input-dni"
+                   placeholder="DNI" value="{{ dni }}">
             <button type="submit" class="btn btn-primary btn-sm">
                 <i class="fas fa-search"></i>
             </button>
@@ -314,7 +314,7 @@ document.getElementById('modalHistorial').addEventListener('show.bs.modal', func
 
     const [color, label] = badgeMap[b.dataset.estado] || ['secondary', b.dataset.estado];
     document.getElementById('mh-badge').innerHTML =
-        `<span class="badge bg-${color}" style="font-size:11px">${label}</span>`;
+        `<span class="badge bg-${color}">${label}</span>`;
 
     let pagos = [];
     try { pagos = JSON.parse(b.getAttribute('data-pagos')); } catch (_) {}

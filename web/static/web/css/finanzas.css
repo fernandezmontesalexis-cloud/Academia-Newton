@@ -1,0 +1,20 @@
+/* ═══════════════════════════════════════════════════════════
+   FINANZAS.CSS — Newton en Red
+   Estilos específicos para el módulo financiero del admin
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── BADGES DE MÉTODO DE PAGO (historial_completo) ─────────── */
+.metodo-badge {
+    font-size: 0.68rem;
+    padding: 2px 9px;
+    border-radius: 20px;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+    display: inline-block;
+}
+.metodo-efectivo      { background: #d1e7dd; color: #0a3622; }
+.metodo-yape          { background: #cfe2ff; color: #052c65; }
+.metodo-transferencia { background: #cff4fc; color: #055160; }
+
+/* ── FILTROS DE FINANZAS ─────────────────────────────────── */
+.filter-select-finanzas { width: 145px !important; }

@@ -1,4 +1,10 @@
 {% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/usuarios.css' %}">
+<link rel="stylesheet" href="{% static 'web/css/crear_Sede.css' %}">
+{% endblock %}
 
 {% block content %}
 
@@ -11,8 +17,6 @@
         <i class="fas fa-arrow-left me-1"></i> Volver
     </a>
 </div>
-
-
 
 <form method="POST">
 {% csrf_token %}
@@ -27,10 +31,8 @@
             </div>
             <div class="card-body p-4">
 
-                <!-- Avatar inicial -->
                 <div class="text-center mb-4">
-                    <span class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary text-white fw-bold"
-                          style="width:64px;height:64px;font-size:24px;">
+                    <span class="usuario-avatar-lg bg-primary text-white fw-bold">
                         {{ user.username|slice:":1"|upper }}
                     </span>
                     <div class="mt-2 fw-semibold">{{ user.username }}</div>
@@ -63,11 +65,10 @@
                 <div class="mb-3">
                     <label class="form-label fw-semibold small">Tipo de usuario</label>
                     <div class="d-flex gap-2">
-                        <!-- Hidden: envía el valor original mientras el select esté bloqueado -->
                         <input type="hidden" name="tipo_usuario" id="tipo_usuario_hidden"
                                value="{{ perfil.tipo_usuario }}">
-                        <select id="tipo_usuario_select" class="form-select form-select-sm"
-                                disabled style="background:#f8f9fa;cursor:not-allowed;max-width:220px;">
+                        <select id="tipo_usuario_select" class="form-select form-select-sm input-locked"
+                                disabled style="max-width:220px;">
                             <option value="admin" {% if perfil.tipo_usuario == "admin" %}selected{% endif %}>Administrador</option>
                             <option value="secretaria" {% if perfil.tipo_usuario == "secretaria" %}selected{% endif %}>Secretaria</option>
                         </select>
@@ -82,11 +83,10 @@
                 <div class="mb-3">
                     <label class="form-label fw-semibold small">Sede asignada</label>
                     <div class="d-flex gap-2">
-                        <!-- Hidden: envía el valor original mientras el select esté bloqueado -->
                         <input type="hidden" name="sede" id="sede_hidden"
                                value="{{ perfil.sede.id }}">
-                        <select id="sede_select" class="form-select form-select-sm"
-                                disabled style="background:#f8f9fa;cursor:not-allowed;max-width:220px;">
+                        <select id="sede_select" class="form-select form-select-sm input-locked"
+                                disabled style="max-width:220px;">
                             {% for s in sedes %}
                             <option value="{{ s.id }}" {% if perfil.sede.id == s.id %}selected{% endif %}>
                                 {{ s.nombre }}
@@ -113,7 +113,6 @@
             </div>
             <div class="card-body p-4">
 
-                <!-- Último acceso -->
                 <div class="mb-4 p-3 rounded bg-light">
                     <div class="small text-muted mb-1">Último acceso al sistema</div>
                     <div class="fw-semibold">
@@ -127,7 +126,6 @@
                     </div>
                 </div>
 
-                <!-- Estado de cuenta -->
                 <div class="mb-4">
                     <label class="form-label fw-semibold">Estado de la cuenta</label>
                     <div class="d-flex gap-3">
@@ -135,14 +133,14 @@
                             <input class="form-check-input" type="radio" name="is_active"
                                    id="activo" value="1" {% if user.is_active %}checked{% endif %}>
                             <label class="form-check-label text-success fw-semibold" for="activo">
-                                <i class="fas fa-circle me-1" style="font-size:10px;"></i> Activo
+                                <i class="fas fa-circle me-1 fs-10"></i> Activo
                             </label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="is_active"
                                    id="inactivo" value="0" {% if not user.is_active %}checked{% endif %}>
                             <label class="form-check-label text-secondary fw-semibold" for="inactivo">
-                                <i class="fas fa-circle me-1" style="font-size:10px;"></i> Inactivo
+                                <i class="fas fa-circle me-1 fs-10"></i> Inactivo
                             </label>
                         </div>
                     </div>
@@ -181,6 +179,9 @@
                             <i class="fas fa-eye"></i>
                         </button>
                     </div>
+                    <div class="invalid-feedback" id="error-confirmar">
+                        Las contraseñas no coinciden.
+                    </div>
                 </div>
 
             </div>
@@ -189,11 +190,8 @@
 
 </div>
 
-<!-- BOTONES -->
 <div class="d-flex gap-2 justify-content-end mt-4">
-    <a href="{% url 'lista_usuarios' %}" class="btn btn-outline-secondary">
-        Cancelar
-    </a>
+    <a href="{% url 'lista_usuarios' %}" class="btn btn-outline-secondary">Cancelar</a>
     <button type="submit" class="btn btn-primary">
         <i class="fas fa-save me-1"></i> Guardar cambios
     </button>
@@ -201,29 +199,25 @@
 
 </form>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
 function toggleCampo(campo) {
-    const select = document.getElementById(campo + '_select');
-    const hidden = document.getElementById(campo + '_hidden');
-    const btn    = document.getElementById('btn_' + campo);
+    var select = document.getElementById(campo + '_select');
+    var hidden = document.getElementById(campo + '_hidden');
+    var btn    = document.getElementById('btn_' + campo);
 
-    const bloqueado = select.disabled;
-
-    if (bloqueado) {
-        // Desbloquear
+    if (select.disabled) {
         select.disabled = false;
-        select.style.background = '';
-        select.style.cursor = '';
-        select.style.maxWidth = '220px';
+        select.classList.remove('input-locked');
         hidden.disabled = true;
         btn.innerHTML = '<i class="fas fa-lock-open me-1"></i>Cancelar';
         btn.classList.replace('btn-outline-secondary', 'btn-outline-warning');
     } else {
-        // Volver a bloquear y restaurar valor original
         select.disabled = true;
-        select.style.background = '#f8f9fa';
-        select.style.cursor = 'not-allowed';
-        select.value = hidden.value;   // reset al valor del servidor
+        select.classList.add('input-locked');
+        select.value = hidden.value;
         hidden.disabled = false;
         btn.innerHTML = '<i class="fas fa-lock me-1"></i>Cambiar';
         btn.classList.replace('btn-outline-warning', 'btn-outline-secondary');
@@ -231,8 +225,8 @@ function toggleCampo(campo) {
 }
 
 function togglePass(inputId, btn) {
-    const input = document.getElementById(inputId);
-    const icon = btn.querySelector('i');
+    var input = document.getElementById(inputId);
+    var icon  = btn.querySelector('i');
     if (input.type === 'password') {
         input.type = 'text';
         icon.classList.replace('fa-eye', 'fa-eye-slash');
@@ -242,22 +236,22 @@ function togglePass(inputId, btn) {
     }
 }
 
-const confirmarPass = document.getElementById('confirmarPass');
-const nuevaPass = document.getElementById('nuevaPass');
+var confirmarPass = document.getElementById('confirmarPass');
+var nuevaPass     = document.getElementById('nuevaPass');
 
-document.querySelector('form').addEventListener('submit', function(e) {
+document.querySelector('form').addEventListener('submit', function (e) {
     if (nuevaPass.value && nuevaPass.value !== confirmarPass.value) {
         e.preventDefault();
-        confirmarPass.setCustomValidity('Las contraseñas no coinciden');
-        confirmarPass.reportValidity();
+        confirmarPass.classList.add('is-invalid');
+        document.getElementById('error-confirmar').style.display = 'block';
     } else {
-        confirmarPass.setCustomValidity('');
+        confirmarPass.classList.remove('is-invalid');
     }
 });
 
-confirmarPass.addEventListener('input', function() {
-    this.setCustomValidity('');
+confirmarPass.addEventListener('input', function () {
+    this.classList.remove('is-invalid');
+    document.getElementById('error-confirmar').style.display = '';
 });
 </script>
-
 {% endblock %}

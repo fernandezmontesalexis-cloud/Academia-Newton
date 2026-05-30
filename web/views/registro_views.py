@@ -65,12 +65,54 @@ def registrar_alumno(request):
         elif len(dni) != 8 or not dni.isdigit():
             field_errors['dni'] = "El DNI debe tener exactamente 8 dígitos."
         else:
-            alumno_existente = Alumno.objects.filter(dni=dni).first()
+            alumno_existente = Alumno.objects.select_related(
+                'sede', 'distrito__provincia__departamento'
+            ).filter(dni=dni).first()
             if alumno_existente:
-                if alumno_existente.estado in ('bloqueado', 'inactivo'):
-                    field_errors['dni'] = "Este alumno mantiene deuda pendiente y no puede matricularse nuevamente."
+                nombre_completo = f"{alumno_existente.nombres} {alumno_existente.apellido_paterno}"
+                if alumno_existente.estado == 'bloqueado':
+                    # Bloqueo manual — siempre bloquear sin importar la sede
+                    field_errors['dni'] = (
+                        f"El alumno {nombre_completo} está bloqueado y no puede matricularse. "
+                        f"Comunícate con el administrador para resolver su situación."
+                    )
                 else:
-                    field_errors['dni'] = "Ya existe un alumno registrado con este DNI."
+                    # activo o inactivo — verificar si tiene matrícula vigente
+                    tiene_matricula_vigente = Matricula.objects.filter(
+                        alumno=alumno_existente,
+                        ciclo__fecha_fin__gte=hoy,
+                    ).exists()
+
+                    if tiene_matricula_vigente:
+                        # Tiene ciclo en curso — no se puede matricular en ninguna sede
+                        field_errors['dni'] = (
+                            f"El alumno {nombre_completo} ya tiene una matrícula activa "
+                            f"en la sede {alumno_existente.sede}."
+                        )
+                    elif alumno_existente.sede == request.perfil.sede:
+                        # Sin matrícula vigente en la misma sede → usar flujo de Renovar
+                        field_errors['dni'] = (
+                            f"El alumno {nombre_completo} ya está registrado en esta sede. "
+                            f"Búscalo en la lista de Alumnos y usa la opción 'Renovar'."
+                        )
+                    else:
+                        # Sin matrícula vigente en otra sede → transferencia
+                        distrito = alumno_existente.distrito
+                        request.session['alumno_id_transferencia'] = alumno_existente.id
+                        request.session['alumno'] = {
+                            'apellido_paterno': alumno_existente.apellido_paterno,
+                            'apellido_materno': alumno_existente.apellido_materno,
+                            'nombres':          alumno_existente.nombres,
+                            'dni':              alumno_existente.dni,
+                            'celular':          alumno_existente.celular or '',
+                            'fecha_nacimiento': str(alumno_existente.fecha_nacimiento),
+                            'direccion':        alumno_existente.direccion or '',
+                            'email':            alumno_existente.email or '',
+                            'distrito':  str(distrito.id)                           if distrito else '',
+                            'provincia': str(distrito.provincia.id)                 if distrito else '',
+                            'departamento': str(distrito.provincia.departamento.id) if distrito else '',
+                        }
+                        return redirect('registrar_apoderado')
 
         # ── Email ─────────────────────────────────────────────────────────
         email_error = validar_email(email)
@@ -80,6 +122,10 @@ def registrar_alumno(request):
         # ── Celular ───────────────────────────────────────────────────────
         if celular and not validar_celular(celular):
             field_errors['celular'] = "El celular debe tener 9 dígitos y comenzar con 9 (ej: 987654321)"
+
+        # ── Dirección ─────────────────────────────────────────────────────
+        if not direccion:
+            field_errors['direccion'] = "La dirección es obligatoria."
 
         # ── Fecha nacimiento ──────────────────────────────────────────────
         if fecha_nacimiento:
@@ -367,40 +413,58 @@ def regis_form_adicional(request):
         if distrito_id:
             distrito = Distrito.objects.filter(id=distrito_id).first()
 
-        # ── Crear alumno ──────────────────────────────────────────────────
-        alumno = Alumno.objects.create(
-            apellido_paterno=alumno_data["apellido_paterno"],
-            apellido_materno=alumno_data["apellido_materno"],
-            nombres=alumno_data["nombres"],
-            dni=alumno_data["dni"],
-            celular=alumno_data["celular"],
-            fecha_nacimiento=alumno_data["fecha_nacimiento"],
-            direccion=alumno_data["direccion"],
-            distrito=distrito,
-            email=alumno_data["email"],
-            estado="activo",
-            sede=sede,
-            apoderado=apoderado,
-        )
+        # ── Crear o reutilizar alumno (transferencia entre sedes) ─────────
+        alumno_id_transferencia = request.session.get('alumno_id_transferencia')
+        if alumno_id_transferencia:
+            # Transferencia: actualizar datos y cambiar de sede
+            alumno = Alumno.objects.get(id=alumno_id_transferencia)
+            alumno.celular          = alumno_data["celular"]
+            alumno.direccion        = alumno_data["direccion"]
+            alumno.email            = alumno_data["email"]
+            alumno.distrito         = distrito
+            alumno.sede             = sede
+            alumno.estado           = "activo"
+            if apoderado:
+                alumno.apoderado    = apoderado
+            alumno.save()
+        else:
+            alumno = Alumno.objects.create(
+                apellido_paterno=alumno_data["apellido_paterno"],
+                apellido_materno=alumno_data["apellido_materno"],
+                nombres=alumno_data["nombres"],
+                dni=alumno_data["dni"],
+                celular=alumno_data["celular"],
+                fecha_nacimiento=alumno_data["fecha_nacimiento"],
+                direccion=alumno_data["direccion"],
+                distrito=distrito,
+                email=alumno_data["email"],
+                estado="activo",
+                sede=sede,
+                apoderado=apoderado,
+            )
 
         # ── Formación académica ───────────────────────────────────────────
         colegio = InstitucionEducativa.objects.filter(
             id=formacion_acad_data.get("colegio_id")
         ).first()
-        FormacionAcademica.objects.create(
+        FormacionAcademica.objects.update_or_create(
             alumno=alumno,
-            tipo_institucion=formacion_acad_data["tipo_institucion"],
-            institucion=colegio,
+            defaults={
+                'tipo_institucion': formacion_acad_data["tipo_institucion"],
+                'institucion':      colegio,
+            },
         )
 
         # ── Formación adicional ───────────────────────────────────────────
-        FormacionAdicional.objects.create(
+        FormacionAdicional.objects.update_or_create(
             alumno=alumno,
-            estudio_previo=estudio_previo == "si",
-            tipo_estudio=tipo_estudio,
-            academia_anterior=academia_anterior,
-            carrera_interes=carrera_interes,
-            segunda_carrera=segunda_carrera,
+            defaults={
+                'estudio_previo':    estudio_previo == "si",
+                'tipo_estudio':      tipo_estudio,
+                'academia_anterior': academia_anterior,
+                'carrera_interes':   carrera_interes,
+                'segunda_carrera':   segunda_carrera,
+            },
         )
 
         # ── Matrícula ─────────────────────────────────────────────────────
@@ -417,6 +481,7 @@ def regis_form_adicional(request):
         request.session.pop("apoderado", None)
         request.session.pop("formacion_academica", None)
         request.session.pop("formacion_adicional", None)
+        request.session.pop("alumno_id_transferencia", None)
 
         return redirect("pagos", matricula_id=matricula.id)
 

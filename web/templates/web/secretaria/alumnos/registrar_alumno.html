@@ -1,7 +1,11 @@
 {% extends 'web/base/base.html' %}
 {% load static %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'web/js/registro_alumno.js' %}"></script>
 {% endblock %}
 {% block content %}
 
@@ -80,7 +84,11 @@
                                 required maxlength="8" inputmode="numeric" pattern="\d{8}"
                                 oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,8); this.setCustomValidity('');"
                                 oninvalid="if(!this.validity.customError) this.setCustomValidity(this.value ? 'El DNI debe tener exactamente 8 dígitos.' : 'Debe ingresar un DNI.');"
-                                placeholder="8 dígitos">
+                                placeholder="8 dígitos"
+                                class="{% if field_errors.dni %}is-invalid{% endif %}">
+                            {% if field_errors.dni %}
+                            <span class="reg-error"><i class="fas fa-exclamation-circle"></i>{{ field_errors.dni }}</span>
+                            {% endif %}
                         </div>
 
                         <div class="reg-field">
@@ -94,7 +102,11 @@
                                     else if(this.validity.rangeUnderflow) this.setCustomValidity('Edad no válida (máximo 60 años)');
                                     else this.setCustomValidity('');
                                 "
-                                oninput="this.setCustomValidity('')">
+                                oninput="this.setCustomValidity('')"
+                                class="{% if field_errors.fecha_nacimiento %}is-invalid{% endif %}">
+                            {% if field_errors.fecha_nacimiento %}
+                            <span class="reg-error"><i class="fas fa-exclamation-circle"></i>{{ field_errors.fecha_nacimiento }}</span>
+                            {% endif %}
                         </div>
 
                     </div>
@@ -111,20 +123,35 @@
                                 maxlength="9" inputmode="numeric" pattern="9[0-9]{8}"
                                 oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,9); this.setCustomValidity('');"
                                 oninvalid="if(this.value) this.setCustomValidity('El celular debe tener 9 dígitos e iniciar con 9');"
-                                placeholder="9XXXXXXXX">
+                                placeholder="9XXXXXXXX"
+                                class="{% if field_errors.celular %}is-invalid{% endif %}">
+                            {% if field_errors.celular %}
+                            <span class="reg-error"><i class="fas fa-exclamation-circle"></i>{{ field_errors.celular }}</span>
+                            {% endif %}
                         </div>
 
                         <div class="reg-field">
                             <label>Correo Electrónico</label>
                             <input type="text" name="email" id="email_input" value="{{ alumno.email }}"
                                 placeholder="correo@ejemplo.com"
-                                oninput="this.setCustomValidity('');">
+                                oninput="this.setCustomValidity('');"
+                                class="{% if field_errors.email %}is-invalid{% endif %}">
+                            {% if field_errors.email %}
+                            <span class="reg-error"><i class="fas fa-exclamation-circle"></i>{{ field_errors.email }}</span>
+                            {% endif %}
                         </div>
 
                         <div class="reg-field reg-span-2">
-                            <label>Dirección</label>
+                            <label>Dirección *</label>
                             <input type="text" name="direccion" value="{{ alumno.direccion }}"
-                                placeholder="Dirección del alumno">
+                                placeholder="Dirección del alumno"
+                                required
+                                oninvalid="this.setCustomValidity('La dirección es obligatoria')"
+                                oninput="this.setCustomValidity('')"
+                                class="{% if field_errors.direccion %}is-invalid{% endif %}">
+                            {% if field_errors.direccion %}
+                            <span class="reg-error"><i class="fas fa-exclamation-circle"></i>{{ field_errors.direccion }}</span>
+                            {% endif %}
                         </div>
 
                     </div>
@@ -235,29 +262,6 @@ document.addEventListener("DOMContentLoaded", async function () {
     });
 
     if (departamento.value) await cargarProvincias(departamento.value, provinciaSeleccionada);
-
-    // ── Errores de backend — tooltip nativo ──────────────────────
-    {% if field_errors %}
-    function _err(selector, msg) {
-        var el = document.querySelector(selector);
-        if (el && msg) { el.setCustomValidity(msg); return el; }
-        return null;
-    }
-    var primero = null;
-    {% if field_errors.dni %}
-    primero = primero || _err('[name="dni"]', "{{ field_errors.dni|escapejs }}");
-    {% endif %}
-    {% if field_errors.email %}
-    primero = primero || _err('[name="email"]', "{{ field_errors.email|escapejs }}");
-    {% endif %}
-    {% if field_errors.celular %}
-    primero = primero || _err('[name="celular"]', "{{ field_errors.celular|escapejs }}");
-    {% endif %}
-    {% if field_errors.fecha_nacimiento %}
-    primero = primero || _err('[name="fecha_nacimiento"]', "{{ field_errors.fecha_nacimiento|escapejs }}");
-    {% endif %}
-    if (primero) setTimeout(() => primero.reportValidity(), 350);
-    {% endif %}
 
 });
 </script>

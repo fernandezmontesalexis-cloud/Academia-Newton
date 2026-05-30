@@ -1,17 +1,11 @@
 {% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/ciclos.css' %}">
+{% endblock %}
 
 {% block content %}
-
-<style>
-.ciclo-row {
-    border-left: 3px solid transparent;
-    transition: background 0.12s ease;
-}
-.ciclo-row:hover { background: #f8f9fa; }
-.ciclo-row.activa    { border-left-color: #198754; }
-.ciclo-row.pendiente { border-left-color: #0dcaf0; }
-.ciclo-row.finalizada { border-left-color: #adb5bd; }
-</style>
 
 <!-- Encabezado -->
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -33,13 +27,13 @@
             <div class="d-flex align-items-center gap-3">
 
                 <!-- Nombre + precio -->
-                <div class="flex-grow-1" style="min-width:0">
+                <div class="flex-grow-1 ciclo-col-nombre">
                     <div class="fw-semibold text-truncate">{{ ciclo.nombre }}</div>
                     <div class="text-muted small">S/. {{ ciclo.precio|floatformat:2 }}</div>
                 </div>
 
                 <!-- Fechas + barra de progreso -->
-                <div class="flex-shrink-0" style="min-width:200px">
+                <div class="flex-shrink-0 ciclo-col-fechas">
                     <div class="small text-muted mb-1">
                         <i class="fas fa-calendar-alt me-1 opacity-50"></i>
                         {{ ciclo.fecha_inicio|date:"d/m/Y" }}
@@ -47,29 +41,27 @@
                         {{ ciclo.fecha_fin|date:"d/m/Y" }}
                     </div>
                     {% if ciclo.estado_ciclo == 'activa' %}
-                    <div class="progress" style="height:5px;border-radius:3px">
+                    <div class="progress progress-ciclo-sm">
                         <div class="progress-bar bg-success" style="width:{{ ciclo.progreso }}%"></div>
                     </div>
-                    <div class="text-muted mt-1" style="font-size:10.5px">{{ ciclo.progreso }}% transcurrido</div>
+                    <div class="text-muted mt-1 fs-105">{{ ciclo.progreso }}% transcurrido</div>
                     {% else %}
-                    <div class="progress" style="height:5px;border-radius:3px">
+                    <div class="progress progress-ciclo-sm">
                         <div class="progress-bar bg-info" style="width:0%"></div>
                     </div>
-                    <div class="text-muted mt-1" style="font-size:10.5px">Aún no iniciado</div>
+                    <div class="text-muted mt-1 fs-105">Aún no iniciado</div>
                     {% endif %}
                 </div>
 
                 <!-- Badge estado -->
-                <div class="flex-shrink-0 text-center" style="min-width:90px">
+                <div class="flex-shrink-0 text-center ciclo-col-estado">
                     {% if ciclo.estado_ciclo == 'activa' %}
-                    <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 fw-semibold"
-                          style="font-size:10px;padding:4px 9px;border-radius:20px">
-                        <i class="fas fa-circle me-1" style="font-size:6px;vertical-align:middle"></i>Activo
+                    <span class="badge bg-success bg-opacity-15 text-success border border-success border-opacity-25 fw-semibold admin-badge">
+                        <i class="fas fa-circle me-1 badge-dot"></i>Activo
                     </span>
                     {% else %}
-                    <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25 fw-semibold"
-                          style="font-size:10px;padding:4px 9px;border-radius:20px">
-                        <i class="fas fa-clock me-1" style="font-size:9px;vertical-align:middle"></i>Próximo
+                    <span class="badge bg-info bg-opacity-15 text-info border border-info border-opacity-25 fw-semibold admin-badge">
+                        <i class="fas fa-clock me-1 fs-11"></i>Próximo
                     </span>
                     {% endif %}
                 </div>
@@ -81,9 +73,8 @@
                         <i class="fas fa-pen me-1"></i>Editar
                     </a>
                     {% if ciclo.tiene_matriculas %}
-                    <button class="btn btn-sm btn-outline-danger disabled"
-                            title="No se puede eliminar: tiene matrículas registradas"
-                            style="opacity:0.4;cursor:not-allowed;">
+                    <button class="btn btn-sm btn-outline-danger btn-disabled-look"
+                            title="No se puede eliminar: tiene matrículas registradas">
                         <i class="fas fa-trash me-1"></i>Eliminar
                     </button>
                     {% else %}
@@ -99,8 +90,7 @@
         </div>
         {% empty %}
         <div class="text-center py-5">
-            <div class="d-inline-flex align-items-center justify-content-center rounded-circle bg-primary-subtle mb-3"
-                 style="width:56px;height:56px">
+            <div class="empty-state-icon-sm bg-primary-subtle mb-3">
                 <i class="fas fa-calendar-times text-primary fa-lg"></i>
             </div>
             <div class="fw-semibold text-muted">No hay ciclos activos ni próximos</div>
@@ -124,8 +114,7 @@
             data-bs-target="#historial-ciclos"
             aria-expanded="{{ historial_abierto|yesno:'true,false' }}">
         <span><i class="fas fa-history me-2 opacity-60"></i>Ver historial</span>
-        <span class="badge bg-secondary bg-opacity-15 text-secondary border border-secondary border-opacity-25 fw-semibold"
-              style="font-size:10px;padding:4px 9px;border-radius:20px">
+        <span class="badge bg-secondary bg-opacity-15 text-secondary border border-secondary border-opacity-25 fw-semibold admin-badge">
             {{ total_finalizados }} finalizado{% if total_finalizados != 1 %}s{% endif %}
         </span>
     </button>
@@ -138,27 +127,26 @@
                 <div class="ciclo-row finalizada px-4 py-3 rounded-2">
                     <div class="d-flex align-items-center gap-3">
 
-                        <div class="flex-grow-1" style="min-width:0">
+                        <div class="flex-grow-1 ciclo-col-nombre">
                             <div class="fw-semibold text-truncate text-muted">{{ ciclo.nombre }}</div>
                             <div class="text-muted small">S/. {{ ciclo.precio|floatformat:2 }}</div>
                         </div>
 
-                        <div class="flex-shrink-0" style="min-width:200px">
+                        <div class="flex-shrink-0 ciclo-col-fechas">
                             <div class="small text-muted mb-1">
                                 <i class="fas fa-calendar-alt me-1 opacity-50"></i>
                                 {{ ciclo.fecha_inicio|date:"d/m/Y" }}
                                 <span class="mx-1 opacity-50">→</span>
                                 {{ ciclo.fecha_fin|date:"d/m/Y" }}
                             </div>
-                            <div class="progress" style="height:5px;border-radius:3px">
+                            <div class="progress progress-ciclo-sm">
                                 <div class="progress-bar bg-secondary" style="width:100%"></div>
                             </div>
-                            <div class="text-muted mt-1" style="font-size:10.5px">Completado</div>
+                            <div class="text-muted mt-1 fs-105">Completado</div>
                         </div>
 
-                        <div class="flex-shrink-0 text-center" style="min-width:90px">
-                            <span class="badge bg-secondary bg-opacity-15 text-secondary border border-secondary border-opacity-25 fw-semibold"
-                                  style="font-size:10px;padding:4px 9px;border-radius:20px">
+                        <div class="flex-shrink-0 text-center ciclo-col-estado">
+                            <span class="badge bg-secondary bg-opacity-15 text-secondary border border-secondary border-opacity-25 fw-semibold admin-badge">
                                 Finalizado
                             </span>
                         </div>
@@ -169,9 +157,8 @@
                                 <i class="fas fa-pen me-1"></i>Editar
                             </a>
                             {% if ciclo.tiene_matriculas %}
-                            <button class="btn btn-sm btn-outline-danger disabled"
-                                    title="No se puede eliminar: tiene matrículas registradas"
-                                    style="opacity:0.4;cursor:not-allowed;">
+                            <button class="btn btn-sm btn-outline-danger btn-disabled-look"
+                                    title="No se puede eliminar: tiene matrículas registradas">
                                 <i class="fas fa-trash me-1"></i>Eliminar
                             </button>
                             {% else %}
@@ -189,7 +176,6 @@
 
             </div>
 
-            <!-- Paginación historial -->
             {% if finalizados_page.paginator.num_pages > 1 %}
             <div class="d-flex justify-content-between align-items-center px-4 py-3 border-top">
                 <span class="small text-muted">

@@ -1,4 +1,9 @@
 {% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/usuarios.css' %}">
+{% endblock %}
 
 {% block content %}
 
@@ -41,12 +46,8 @@
                     <div class="mb-3">
                         <label class="form-label fw-semibold">Tipo de usuario</label>
                         <select name="tipo_usuario" class="form-select">
-                            <option value="admin" {% if tipo_usuario == "admin" %}selected{% endif %}>
-                                Administrador
-                            </option>
-                            <option value="secretaria" {% if tipo_usuario == "secretaria" or not tipo_usuario %}selected{% endif %}>
-                                Secretaria
-                            </option>
+                            <option value="admin" {% if tipo_usuario == "admin" %}selected{% endif %}>Administrador</option>
+                            <option value="secretaria" {% if tipo_usuario == "secretaria" or not tipo_usuario %}selected{% endif %}>Secretaria</option>
                         </select>
                     </div>
 
@@ -89,12 +90,13 @@
                                 <i class="fas fa-eye"></i>
                             </button>
                         </div>
+                        <div class="invalid-feedback" id="error-confirmar">
+                            Las contraseñas no coinciden.
+                        </div>
                     </div>
 
                     <div class="d-flex gap-2 justify-content-end">
-                        <a href="{% url 'lista_usuarios' %}" class="btn btn-outline-secondary">
-                            Cancelar
-                        </a>
+                        <a href="{% url 'lista_usuarios' %}" class="btn btn-outline-secondary">Cancelar</a>
                         <button type="submit" class="btn btn-primary">
                             <i class="fas fa-save me-1"></i> Crear usuario
                         </button>
@@ -107,10 +109,13 @@
     </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
 <script>
 function togglePass(inputId, btn) {
-    const input = document.getElementById(inputId);
-    const icon = btn.querySelector('i');
+    var input = document.getElementById(inputId);
+    var icon  = btn.querySelector('i');
     if (input.type === 'password') {
         input.type = 'text';
         icon.classList.replace('fa-eye', 'fa-eye-slash');
@@ -120,22 +125,22 @@ function togglePass(inputId, btn) {
     }
 }
 
-const confirmarInput = document.getElementById('confirmarInput');
-const passInput = document.getElementById('passInput');
+var confirmarInput = document.getElementById('confirmarInput');
+var passInput      = document.getElementById('passInput');
 
-document.querySelector('form').addEventListener('submit', function(e) {
+document.querySelector('form').addEventListener('submit', function (e) {
     if (passInput.value && passInput.value !== confirmarInput.value) {
         e.preventDefault();
-        confirmarInput.setCustomValidity('Las contraseñas no coinciden');
-        confirmarInput.reportValidity();
+        confirmarInput.classList.add('is-invalid');
+        document.getElementById('error-confirmar').style.display = 'block';
     } else {
-        confirmarInput.setCustomValidity('');
+        confirmarInput.classList.remove('is-invalid');
     }
 });
 
-confirmarInput.addEventListener('input', function() {
-    this.setCustomValidity('');
+confirmarInput.addEventListener('input', function () {
+    this.classList.remove('is-invalid');
+    document.getElementById('error-confirmar').style.display = '';
 });
 </script>
-
 {% endblock %}

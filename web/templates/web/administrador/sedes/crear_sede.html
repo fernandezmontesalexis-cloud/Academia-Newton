@@ -1,4 +1,9 @@
 {% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/crear_Sede.css' %}">
+{% endblock %}
 
 {% block content %}
 
@@ -16,12 +21,9 @@
     <div class="col-md-6">
         <div class="card border-0 shadow-sm overflow-hidden">
 
-            <!-- Header visual -->
-            <div class="card-header border-0 py-4 px-4"
-                 style="background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);">
+            <div class="card-header border-0 py-4 px-4 card-header-visual">
                 <div class="d-flex align-items-center gap-3">
-                    <div class="d-flex align-items-center justify-content-center rounded-circle bg-primary text-white flex-shrink-0"
-                         style="width:52px;height:52px;font-size:20px;">
+                    <div class="form-header-avatar bg-primary text-white">
                         <i class="fas fa-plus"></i>
                     </div>
                     <div>
@@ -35,8 +37,7 @@
                 <form method="POST">
                     {% csrf_token %}
 
-                    <!-- Sección: Información General -->
-                    <p class="small fw-semibold text-muted text-uppercase mb-1" style="letter-spacing:.07em;">
+                    <p class="section-label mb-1">
                         <i class="fas fa-info-circle me-1 opacity-50"></i>Información General
                     </p>
                     <hr class="mt-1 mb-3">
@@ -54,11 +55,8 @@
                                placeholder="Ej: Jr. Lima 123, Huacho">
                     </div>
 
-                    <!-- Acciones -->
                     <div class="d-flex gap-2 justify-content-end">
-                        <a href="{% url 'lista_sedes' %}" class="btn btn-outline-secondary">
-                            Cancelar
-                        </a>
+                        <a href="{% url 'lista_sedes' %}" class="btn btn-outline-secondary">Cancelar</a>
                         <button type="submit" class="btn btn-primary px-4">
                             <i class="fas fa-save me-1"></i> Guardar
                         </button>

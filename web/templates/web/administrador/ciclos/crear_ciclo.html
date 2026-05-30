@@ -1,4 +1,9 @@
 {% extends 'web/base/base.html' %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/ciclos.css' %}">
+{% endblock %}
 
 {% block content %}
 
@@ -44,7 +49,7 @@
                     </div>
 
                     <!-- Selector de sede (oculto por defecto) -->
-                    <div class="mb-3" id="selectorSede" style="display:none;">
+                    <div class="mb-3 d-none" id="selectorSede">
                         <label class="form-label fw-semibold">Sede</label>
                         <select name="sede_id" class="form-select">
                             <option value="">— Seleccionar sede —</option>
@@ -94,11 +99,13 @@
     </div>
 </div>
 
+{% block extra_js %}
 <script>
 function toggleSede(radio) {
-    document.getElementById('selectorSede').style.display =
-        radio.value === 'especifica' ? 'block' : 'none';
+    var el = document.getElementById('selectorSede');
+    el.classList.toggle('d-none', radio.value !== 'especifica');
 }
 </script>
+{% endblock %}
 
 {% endblock %}

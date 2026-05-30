@@ -2,20 +2,7 @@
 {% load static %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'web/css/dashboard_admin.css' %}">
-<style>
-.metodo-badge {
-    font-size: 0.68rem;
-    padding: 2px 9px;
-    border-radius: 20px;
-    font-weight: 600;
-    letter-spacing: 0.2px;
-    display: inline-block;
-}
-.metodo-efectivo      { background:#d1e7dd; color:#0a3622; }
-.metodo-yape          { background:#cfe2ff; color:#052c65; }
-.metodo-transferencia { background:#cff4fc; color:#055160; }
-</style>
+<link rel="stylesheet" href="{% static 'web/css/finanzas.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -130,7 +117,7 @@
 <div class="card border-0 shadow-sm">
     <div class="card-body p-0">
         <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0" style="font-size:0.83rem;">
+            <table class="table table-hover align-middle mb-0 fs-13">
                 <thead class="table-light">
                     <tr>
                         <th class="px-3">#</th>

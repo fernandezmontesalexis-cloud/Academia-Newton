@@ -1,1 +1,19 @@
-/* reportes_sedes.css — reservado para estilos futuros del módulo de Reportes */
+/* ═══════════════════════════════════════════════════════════
+   REPORTES_SEDES.CSS — Newton en Red
+   Estilos específicos para reportes gerenciales del admin
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── BORDE SUPERIOR SEGÚN VIGENCIA DEL CICLO ─────────────── */
+.card-top-green  { border-top: 3px solid #22c55e !important; }
+.card-top-yellow { border-top: 3px solid #eab308 !important; }
+.card-top-slate  { border-top: 3px solid #94a3b8 !important; }
+
+/* ── BARRA DE PROGRESO DE RECAUDACIÓN ────────────────────── */
+.progress-reporte {
+    height: 7px;
+    border-radius: 4px;
+    background: #f1f5f9;
+}
+.progress-reporte .progress-bar {
+    border-radius: 4px;
+}

@@ -249,6 +249,7 @@
                         <thead class="table-light">
                             <tr>
                                 <th class="ps-4">Ciclo</th>
+                                <th>Sede</th>
                                 <th>Fecha matrícula</th>
                                 <th>Estado ciclo</th>
                                 <th class="pe-4">Pago</th>
@@ -260,6 +261,10 @@
                                 <td class="ps-4">
                                     <div class="fw-semibold">{{ item.matricula.ciclo.nombre }}</div>
                                     <small class="text-muted">S/. {{ item.matricula.ciclo.precio }}</small>
+                                </td>
+
+                                <td>
+                                    <small>{{ item.matricula.ciclo.sede.nombre }}</small>
                                 </td>
 
                                 <td>

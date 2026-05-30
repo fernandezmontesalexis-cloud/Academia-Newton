@@ -1,0 +1,37 @@
+/* ═══════════════════════════════════════════════════════════
+   CICLOS.CSS — Newton en Red
+   Estilos específicos para gestión de ciclos académicos
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── FILAS DE CICLO (ciclos_sede_detalle) ────────────────── */
+.ciclo-row {
+    border-left: 3px solid transparent;
+    transition: background .12s ease;
+}
+.ciclo-row:hover      { background: #f8fafc; }
+.ciclo-row.activa     { border-left-color: #198754; }
+.ciclo-row.pendiente  { border-left-color: #0dcaf0; }
+.ciclo-row.finalizada { border-left-color: #adb5bd; }
+
+/* ── BARRA DE PROGRESO DEL CICLO ─────────────────────────── */
+.progress-ciclo-sm {
+    height: 5px;
+    border-radius: 3px;
+}
+
+/* ── BOTÓN DESHABILITADO CON TOOLTIP ─────────────────────── */
+.btn-disabled-look {
+    opacity: .4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+/* ── COLUMNAS DE FILA CICLO (layout flex interno) ─────────── */
+.ciclo-col-nombre { min-width: 0; }       /* permite text-truncate en flex */
+.ciclo-col-fechas { min-width: 200px; }
+.ciclo-col-estado { min-width: 90px; }
+
+/* ── MAX WIDTH TEXTO TRUNCADO EN TARJETA ─────────────────── */
+.text-truncate-140 {
+    max-width: 140px;
+}

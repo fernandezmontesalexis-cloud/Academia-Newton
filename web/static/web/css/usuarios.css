@@ -1,0 +1,54 @@
+/* ═══════════════════════════════════════════════════════════
+   USUARIOS.CSS — Newton en Red
+   Estilos específicos para gestión de usuarios
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── FILAS DE USUARIO (lista_usuarios, _fila_usuario) ────── */
+.usuario-row {
+    border-left: 3px solid transparent;
+    transition: background .12s ease;
+}
+.usuario-row:hover      { background: #f8fafc; }
+.usuario-row.admin      { border-left-color: #2563eb; }
+.usuario-row.secretaria { border-left-color: #198754; }
+.usuario-row.inactivo   { border-left-color: #adb5bd; }
+
+/* ── AVATAR DE USUARIO (fila de tabla) ───────────────────── */
+.usuario-avatar {
+    width: 38px;
+    height: 38px;
+    font-size: 14px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+/* ── COLUMNAS DE FILA (layout flex interno) ──────────────── */
+.usuario-col-name   { min-width: 200px; flex-shrink: 0; }
+.usuario-col-status { min-width: 90px; }
+.usuario-col-info   { min-width: 0; }  /* permite text-truncate en flex */
+
+/* ── AVATAR GRANDE (editar_usuario) ─────────────────────── */
+.usuario-avatar-lg {
+    width: 64px;
+    height: 64px;
+    font-size: 24px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+}
+
+/* ── EMPTY STATE USUARIOS (56px, diferente al de sedes) ──── */
+.empty-state-icon-sm {
+    width: 56px;
+    height: 56px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+}

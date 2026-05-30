@@ -181,7 +181,7 @@
 
 <!-- MODAL: CONTACTO RÁPIDO -->
 <div class="modal fade" id="modalContacto" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width:420px">
+    <div class="modal-dialog modal-dialog-centered modal-420">
         <div class="modal-content border-0 shadow">
 
             <div class="modal-header border-0 pb-1 pt-3 px-4">
@@ -269,7 +269,7 @@ document.getElementById('modalContacto').addEventListener('show.bs.modal', funct
     };
     const [color, label] = badgeMap[b.dataset.estado] || ['secondary', b.dataset.estado];
     document.getElementById('mc-badge').innerHTML =
-        `<span class="badge bg-${color}" style="font-size:11px">${label}</span>`;
+        `<span class="badge bg-${color}">${label}</span>`;
 
     // Apoderado
     const apoSection = document.getElementById('mc-apo-section');

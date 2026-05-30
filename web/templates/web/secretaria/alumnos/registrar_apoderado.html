@@ -1,7 +1,11 @@
 {% extends 'web/base/base.html' %}
 {% load static %}
 {% block extra_css %}
-<link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}?v=2">
+<link rel="stylesheet" href="{% static 'web/css/registro_alumno.css' %}">
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% static 'web/js/registro_alumno.js' %}"></script>
 {% endblock %}
 {% block content %}
 
@@ -58,7 +62,10 @@
                             <input type="text" name="nombre_apoderado"
                                 value="{{ apoderado.nombre_apoderado }}"
                                 placeholder="Nombre completo del apoderado"
-                                oninput="this.setCustomValidity('')">
+                                class="{% if field_errors.nombre_apoderado %}is-invalid{% endif %}">
+                            {% if field_errors.nombre_apoderado %}
+                            <span class="reg-error"><i class="fas fa-exclamation-circle"></i>{{ field_errors.nombre_apoderado }}</span>
+                            {% endif %}
                         </div>
 
                         <div class="reg-field">
@@ -66,9 +73,13 @@
                             <input type="text" name="dni_apoderado"
                                 value="{{ apoderado.dni_apoderado }}"
                                 maxlength="8" inputmode="numeric" pattern="[0-9]{8}"
-                                oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,8); this.setCustomValidity('');"
+                                oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,8);"
                                 oninvalid="if(this.value) this.setCustomValidity('El DNI debe tener exactamente 8 dígitos')"
-                                placeholder="8 dígitos (opcional)">
+                                placeholder="8 dígitos (opcional)"
+                                class="{% if field_errors.dni_apoderado %}is-invalid{% endif %}">
+                            {% if field_errors.dni_apoderado %}
+                            <span class="reg-error"><i class="fas fa-exclamation-circle"></i>{{ field_errors.dni_apoderado }}</span>
+                            {% endif %}
                         </div>
 
                         <div class="reg-field">
@@ -76,9 +87,13 @@
                             <input type="text" name="celular_apoderado"
                                 value="{{ apoderado.celular_apoderado }}"
                                 maxlength="9" inputmode="numeric" pattern="9[0-9]{8}"
-                                oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,9); this.setCustomValidity('');"
+                                oninput="this.value = this.value.replace(/[^0-9]/g,'').slice(0,9);"
                                 oninvalid="if(this.value) this.setCustomValidity('El celular debe tener 9 dígitos e iniciar con 9')"
-                                placeholder="9XXXXXXXX (opcional)">
+                                placeholder="9XXXXXXXX (opcional)"
+                                class="{% if field_errors.celular_apoderado %}is-invalid{% endif %}">
+                            {% if field_errors.celular_apoderado %}
+                            <span class="reg-error"><i class="fas fa-exclamation-circle"></i>{{ field_errors.celular_apoderado }}</span>
+                            {% endif %}
                         </div>
 
                         <div class="reg-field reg-span-2">
@@ -110,27 +125,5 @@
 
 </div>
 
-{% if field_errors %}
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    function _err(selector, msg) {
-        var el = document.querySelector(selector);
-        if (el && msg) { el.setCustomValidity(msg); return el; }
-        return null;
-    }
-    var primero = null;
-    {% if field_errors.nombre_apoderado %}
-    primero = primero || _err('[name="nombre_apoderado"]', "{{ field_errors.nombre_apoderado|escapejs }}");
-    {% endif %}
-    {% if field_errors.dni_apoderado %}
-    primero = primero || _err('[name="dni_apoderado"]', "{{ field_errors.dni_apoderado|escapejs }}");
-    {% endif %}
-    {% if field_errors.celular_apoderado %}
-    primero = primero || _err('[name="celular_apoderado"]', "{{ field_errors.celular_apoderado|escapejs }}");
-    {% endif %}
-    if (primero) setTimeout(() => primero.reportValidity(), 350);
-});
-</script>
-{% endif %}
 
 {% endblock %}

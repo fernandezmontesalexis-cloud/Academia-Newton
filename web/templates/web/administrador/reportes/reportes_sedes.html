@@ -1,6 +1,10 @@
 {% extends 'web/base/base.html' %}
 {% load static %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'web/css/reportes_sedes.css' %}">
+{% endblock %}
+
 {% block content %}
 
 <div class="mb-4">
@@ -14,38 +18,30 @@
 <div class="mb-4">
     <h6 class="fw-semibold mb-3">
         <i class="fas fa-calendar-alt text-primary me-2"></i> Ganancias Anuales
-        <small class="text-muted fw-normal ms-1" style="font-size:11px">Ingresos totales registrados por año</small>
+        <small class="text-muted fw-normal ms-1 fs-11">Ingresos totales registrados por año</small>
     </h6>
 
     <div class="row g-3">
         {% for row in anual_rows %}
         <div class="col-sm-6 col-lg-3">
-            <div class="card border-0 shadow-sm h-100"
-                 style="border-top:3px solid #3b82f6!important">
+            <div class="card border-0 shadow-sm h-100 card-top-blue">
                 <div class="card-body p-3">
 
                     <!-- Año + variación -->
                     <div class="d-flex justify-content-between align-items-center mb-2">
-                        <span class="text-muted fw-semibold"
-                              style="font-size:11px;text-transform:uppercase;letter-spacing:.5px">
-                            {{ row.año }}
-                        </span>
+                        <span class="metric-label">{{ row.año }}</span>
                         {% if row.tiene_crecimiento %}
-                        <span class="badge fw-semibold
+                        <span class="badge fw-semibold admin-badge
                                      {% if row.positivo %}bg-success bg-opacity-15 text-success border border-success border-opacity-25
-                                     {% else %}bg-danger bg-opacity-15 text-danger border border-danger border-opacity-25{% endif %}"
-                              style="font-size:10px;padding:3px 8px;border-radius:20px">
+                                     {% else %}bg-danger bg-opacity-15 text-danger border border-danger border-opacity-25{% endif %}">
                             <i class="fas fa-arrow-{% if row.positivo %}up{% else %}down{% endif %} me-1"></i>{% if row.positivo %}+{% endif %}{{ row.crecimiento }}%
                         </span>
                         {% else %}
-                        <span class="text-muted" style="font-size:10px">Primer año</span>
+                        <span class="text-muted fs-10">Primer año</span>
                         {% endif %}
                     </div>
 
-                    <!-- Total del año -->
-                    <div class="fw-bold mb-3" style="font-size:17px">
-                        S/. {{ row.total|floatformat:2 }}
-                    </div>
+                    <div class="fw-bold mb-3 fs-17">S/. {{ row.total|floatformat:2 }}</div>
 
                     <!-- Desglose por sede -->
                     <div class="border-top pt-2">
@@ -90,8 +86,8 @@
                     <!-- Nombre sede + badge salud -->
                     <div class="d-flex justify-content-between align-items-start mb-3">
                         <div>
-                            <h6 class="fw-bold mb-0" style="font-size:15px">
-                                <i class="fas fa-building text-secondary me-1" style="font-size:12px"></i>
+                            <h6 class="fw-bold mb-0 fs-15">
+                                <i class="fas fa-building text-secondary me-1 fs-12"></i>
                                 {{ item.sede.nombre|capfirst }}
                             </h6>
                             <small class="text-muted">
@@ -103,7 +99,7 @@
                                      text-{{ item.salud.clase }}
                                      border border-{{ item.salud.clase }} border-opacity-25
                                      fw-semibold"
-                              style="font-size:10px;padding:4px 9px;border-radius:20px;white-space:nowrap">
+                              admin-badge">
                             {{ item.salud.label }}
                         </span>
                     </div>
@@ -111,21 +107,18 @@
                     <!-- Ingresos + Deuda -->
                     <div class="row g-2 mb-3">
                         <div class="col-6">
-                            <div class="text-muted"
-                                 style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">
+                            <div class="metric-label">
                                 Ingresos
                             </div>
-                            <div class="fw-bold text-success" style="font-size:16px">
+                            <div class="fw-bold text-success fs-16">
                                 S/. {{ item.ingresos|floatformat:2 }}
                             </div>
                         </div>
                         <div class="col-6">
-                            <div class="text-muted"
-                                 style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:.3px">
+                            <div class="metric-label">
                                 Deuda
                             </div>
-                            <div class="fw-bold {% if item.deuda > 0 %}text-danger{% else %}text-success{% endif %}"
-                                 style="font-size:16px">
+                            <div class="fw-bold fs-16 {% if item.deuda > 0 %}text-danger{% else %}text-success{% endif %}">
                                 {% if item.deuda > 0 %}
                                     S/. {{ item.deuda|floatformat:2 }}
                                 {% else %}
@@ -207,7 +200,7 @@
 
 <!-- ===== MODAL: Estado de Matrículas ===== -->
 <div class="modal fade" id="modalDona" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered" style="max-width:420px">
+    <div class="modal-dialog modal-dialog-centered modal-420">
         <div class="modal-content border-0 shadow">
             <div class="modal-header border-0 pb-0">
                 <h6 class="modal-title fw-semibold">
