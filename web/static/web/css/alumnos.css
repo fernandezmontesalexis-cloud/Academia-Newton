@@ -47,6 +47,28 @@
     min-width: 0;
 }
 
+/* ── MODAL EDITAR ALUMNO ─────────────────────────────────── */
+#modalEditarAlumno .modal-body {
+    max-height: 60vh;
+    overflow-y: scroll !important;
+}
+#modalEditarAlumno .form-control {
+    border: 1.5px solid #64748b !important;
+    border-radius: 6px;
+    font-size: 13px;
+    color: #1e293b;
+    transition: border-color .15s, box-shadow .15s;
+}
+#modalEditarAlumno .form-control:focus {
+    border-color: #2563eb !important;
+    box-shadow: 0 0 0 3px rgba(37,99,235,.1);
+}
+#modalEditarAlumno .form-control:disabled {
+    border: 1.5px solid #cbd5e1 !important;
+    background: #f8fafc;
+    color: #94a3b8;
+}
+
 /* ── MODALES ALUMNOS ─────────────────────────────────────── */
 /* Dialog estrecho para modales de confirmación */
 .modal-440 {

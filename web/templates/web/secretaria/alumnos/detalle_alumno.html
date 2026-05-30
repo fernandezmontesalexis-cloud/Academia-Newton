@@ -108,9 +108,12 @@
             </div>
 
             <div class="card-footer bg-white border-0 px-4 pb-2 pt-2">
-                <a href="{% url 'editar_alumno' alumno.id %}" class="btn btn-outline-primary btn-sm w-100">
+                <button type="button"
+                        class="btn btn-outline-primary btn-sm w-100"
+                        data-bs-toggle="modal"
+                        data-bs-target="#modalEditarAlumno">
                     <i class="fas fa-edit me-1"></i> Editar perfil
-                </a>
+                </button>
             </div>
         </div>
 
@@ -308,6 +311,136 @@
         </div>
     </div>
 
+</div>
+
+<!-- MODAL: EDITAR PERFIL DEL ALUMNO -->
+<div class="modal fade" id="modalEditarAlumno" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+        <div class="modal-content border-0 shadow">
+
+            <div class="modal-header border-0 pb-1 pt-3 px-4">
+                <div>
+                    <div class="fw-bold fs-15">
+                        <i class="fas fa-user-edit text-primary me-2"></i>Editar perfil
+                    </div>
+                    <small class="text-muted">{{ alumno.nombres }} {{ alumno.apellido_paterno }}</small>
+                </div>
+                <button type="button" class="btn-close ms-auto" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="POST" action="{% url 'editar_alumno' alumno.id %}">
+                {% csrf_token %}
+                <div class="modal-body px-4 pt-3 pb-2">
+
+                    <!-- SECCIÓN: Datos personales -->
+                    <p class="label-caps mb-2">
+                        <i class="fas fa-user me-1 opacity-50"></i>Datos personales
+                    </p>
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Apellido Paterno</label>
+                            <input type="text" name="apellido_paterno" class="form-control form-control-sm"
+                                   value="{{ alumno.apellido_paterno }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Apellido Materno</label>
+                            <input type="text" name="apellido_materno" class="form-control form-control-sm"
+                                   value="{{ alumno.apellido_materno }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-semibold">Nombres</label>
+                            <input type="text" name="nombres" class="form-control form-control-sm"
+                                   value="{{ alumno.nombres }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Celular</label>
+                            <input type="text" name="celular" class="form-control form-control-sm"
+                                   value="{{ alumno.celular }}" maxlength="9" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">
+                                Correo <span class="text-muted fw-normal">(opcional)</span>
+                            </label>
+                            <input type="email" name="email" class="form-control form-control-sm"
+                                   value="{{ alumno.email|default:'' }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Dirección</label>
+                            <input type="text" name="direccion" class="form-control form-control-sm"
+                                   value="{{ alumno.direccion }}" required>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-muted">DNI</label>
+                            <input type="text" class="form-control form-control-sm bg-light text-muted"
+                                   value="{{ alumno.dni }}" disabled>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold text-muted">Fecha de nacimiento</label>
+                            <input type="text" class="form-control form-control-sm bg-light text-muted"
+                                   value="{{ alumno.fecha_nacimiento|date:'d/m/Y' }}" disabled>
+                        </div>
+                    </div>
+
+                    {% if alumno.apoderado %}
+                    <hr class="my-3">
+                    <p class="label-caps mb-2">
+                        <i class="fas fa-user-shield me-1 opacity-50"></i>Apoderado
+                    </p>
+                    <div class="row g-3 mb-3">
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold">Nombre completo</label>
+                            <input type="text" name="apo_nombre" class="form-control form-control-sm"
+                                   value="{{ alumno.apoderado.nombre_completo }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">DNI del apoderado</label>
+                            <input type="text" name="apo_dni" class="form-control form-control-sm"
+                                   value="{{ alumno.apoderado.dni }}" maxlength="8">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Celular del apoderado</label>
+                            <input type="text" name="apo_celular" class="form-control form-control-sm"
+                                   value="{{ alumno.apoderado.celular }}" maxlength="9">
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if formacion_adicional %}
+                    <hr class="my-3">
+                    <p class="label-caps mb-2">
+                        <i class="fas fa-graduation-cap me-1 opacity-50"></i>Carreras de interés
+                    </p>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">Carrera principal</label>
+                            <input type="text" name="carrera_interes" class="form-control form-control-sm"
+                                   value="{{ formacion_adicional.carrera_interes }}"
+                                   placeholder="ej. Ingeniería de Sistemas">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small fw-semibold">
+                                Segunda opción <span class="text-muted fw-normal">(opcional)</span>
+                            </label>
+                            <input type="text" name="segunda_carrera" class="form-control form-control-sm"
+                                   value="{{ formacion_adicional.segunda_carrera|default:'' }}"
+                                   placeholder="ej. Medicina">
+                        </div>
+                    </div>
+                    {% endif %}
+
+                </div>
+
+                <div class="modal-footer border-0 px-4 pb-3 pt-2">
+                    <button type="button" class="btn btn-outline-secondary btn-sm"
+                            data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-save me-1"></i> Guardar cambios
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
 </div>
 
 {% endblock %}

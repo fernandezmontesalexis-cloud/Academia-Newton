@@ -232,19 +232,43 @@ def detalle_alumno(request, alumno_id):
 @login_required
 @permiso_requerido(['admin', 'secretaria'])
 def editar_alumno(request, alumno_id):
+    from ..models import FormacionAdicional
     alumno = get_object_or_404(
-        Alumno, id=alumno_id, sede=request.perfil.sede
+        Alumno.objects.select_related('apoderado'),
+        id=alumno_id, sede=request.perfil.sede,
     )
     if request.method == 'POST':
+        # ── Datos personales ──────────────────────────────────────────────
         alumno.apellido_paterno = request.POST.get('apellido_paterno', '').strip()
         alumno.apellido_materno = request.POST.get('apellido_materno', '').strip()
-        alumno.nombres = request.POST.get('nombres', '').strip()
-        alumno.celular = request.POST.get('celular', '').strip()
-        alumno.email = request.POST.get('email', '').strip() or None
-        alumno.direccion = request.POST.get('direccion', '').strip()
+        alumno.nombres          = request.POST.get('nombres',          '').strip()
+        alumno.celular          = request.POST.get('celular',          '').strip()
+        alumno.email            = request.POST.get('email',            '').strip() or None
+        alumno.direccion        = request.POST.get('direccion',        '').strip()
         alumno.save()
+
+        # ── Apoderado ─────────────────────────────────────────────────────
+        if alumno.apoderado:
+            apo = alumno.apoderado
+            nombre  = request.POST.get('apo_nombre',    '').strip()
+            celular = request.POST.get('apo_celular',   '').strip()
+            dni     = request.POST.get('apo_dni',       '').strip()
+            if nombre:  apo.nombre_completo = nombre
+            if celular: apo.celular         = celular
+            if dni:     apo.dni             = dni
+            apo.save()
+
+        # ── Formación adicional ───────────────────────────────────────────
+        formacion = FormacionAdicional.objects.filter(alumno=alumno).first()
+        if formacion:
+            formacion.carrera_interes = request.POST.get('carrera_interes', '').strip()
+            formacion.segunda_carrera = request.POST.get('segunda_carrera', '').strip()
+            formacion.save()
+
         return redirect('detalle_alumno', alumno_id=alumno.id)
-    return render(request, 'web/secretaria/alumnos/editar_alumno.html', {'alumno': alumno})
+
+    # GET — redirige al detalle (el formulario ahora es un modal allí)
+    return redirect('detalle_alumno', alumno_id=alumno.id)
 
 
 @login_required
@@ -253,18 +277,21 @@ def renovar_matricula(request, alumno_id):
     if request.method != 'POST':
         return redirect('lista_alumnos')
 
-    alumno = get_object_or_404(Alumno, id=alumno_id, sede=request.perfil.sede)
+    # Sin filtro de sede — permite transferencia desde otra sede
+    alumno = get_object_or_404(Alumno, id=alumno_id)
+    es_transferencia = alumno.sede != request.perfil.sede
 
     if alumno.estado == 'bloqueado':
         messages.error(request, "El alumno se encuentra bloqueado y no puede matricularse.")
-        return redirect('lista_alumnos_otros')
+        return redirect('lista_alumnos_otros' if not es_transferencia else 'registrar_alumno')
 
     ciclo_id = request.POST.get('ciclo', '').strip()
     if not ciclo_id:
         messages.error(request, "Debe seleccionar un ciclo.")
-        return redirect('lista_alumnos_otros')
+        return redirect('lista_alumnos_otros' if not es_transferencia else 'registrar_alumno')
 
-    ciclo = get_object_or_404(Ciclo, id=ciclo_id, sede=alumno.sede)
+    # Ciclo siempre de la sede actual (no de la sede de origen del alumno)
+    ciclo = get_object_or_404(Ciclo, id=ciclo_id, sede=request.perfil.sede)
 
     celular = request.POST.get('celular', '').strip()
     if celular:
@@ -282,6 +309,10 @@ def renovar_matricula(request, alumno_id):
 
     if alumno.estado == 'inactivo':
         alumno.estado = 'activo'
+
+    # Transferencia entre sedes: actualizar sede del alumno
+    if es_transferencia:
+        alumno.sede = request.perfil.sede
 
     alumno.save()
 

@@ -49,22 +49,56 @@ Accede únicamente a los datos de su sede. Registra alumnos, matrículas y pagos
 
 ### 3.1 Gestión de Alumnos
 
-- **Registro completo de nuevos alumnos**: datos personales, contacto, fecha de nacimiento, dirección con departamento, provincia y distrito.
+- **Registro completo de nuevos alumnos**: datos personales, contacto, fecha de nacimiento, dirección obligatoria con departamento, provincia y distrito.
 - **Registro del apoderado**: nombre, DNI, celular — vinculado automáticamente al alumno.
 - **Historial académico del alumno**: colegio de procedencia (nacional o particular), carreras de interés, si estudió en otra academia previamente.
-- **Estados del alumno**: el sistema distingue automáticamente entre alumnos *activos*, *sin matrícula*, *inactivos* y *bloqueados*.
-- **Bloqueo con motivo registrado**: cuando un alumno es bloqueado (por deuda, expulsión, retiro, etc.), el sistema guarda el motivo y quién lo bloqueó.
 - **Búsqueda por DNI** para encontrar cualquier alumno en segundos.
-- **Edición de datos**: la secretaria puede actualizar celular, correo y datos del apoderado en cualquier momento.
+- **Edición de perfil desde la ficha del alumno**: sin necesidad de cambiar de pantalla, la secretaria puede editar directamente desde la ficha del alumno mediante un panel emergente (modal) que muestra todos los datos en un solo lugar:
+  - Datos personales: apellidos, nombres, celular, correo, dirección
+  - Datos del apoderado: nombre, DNI y celular (si tiene apoderado registrado)
+  - Carreras de interés: carrera principal y segunda opción
+
+#### Estados del alumno — cómo los maneja el sistema
+
+El sistema distingue automáticamente cuatro estados y actúa de forma diferente en cada caso:
+
+| Estado | Significado | ¿Qué puede hacer la secretaria? |
+|---|---|---|
+| **Activo** | Tiene una matrícula vigente en el ciclo actual | Ver su ficha, registrar pagos |
+| **Sin matrícula** | Estudió antes pero su ciclo ya terminó | Renovar su matrícula en el nuevo ciclo |
+| **Inactivo** | Lleva dos o más ciclos sin matricularse | Reactivarlo y matricularlo nuevamente |
+| **Bloqueado** | Fue bloqueado manualmente (deuda, expulsión, retiro, etc.) | Solo el administrador puede desbloquearlo |
+
+**Mensajes claros al intentar matricular a un alumno existente:**
+
+Cuando la secretaria ingresa el DNI de un alumno que ya existe en el sistema, el sistema no simplemente muestra un error genérico — le explica exactamente qué ocurre y qué debe hacer:
+
+- *"Juan García ya tiene una matrícula activa en la sede Huaura."* — no se puede duplicar.
+- *"Juan García ya está en esta sede sin matrícula activa. Búscalo en la lista de Alumnos y usa la opción Renovar."* — guía a la acción correcta.
+- *"Juan García está bloqueado. Comunícate con el administrador para resolver su situación."* — escala al nivel correcto.
+
+**Bloqueo con motivo registrado**: cuando un alumno es bloqueado (por deuda, expulsión, retiro voluntario, inasistencia, etc.), el sistema guarda el motivo y quién lo bloqueó. Esa información queda en el historial del alumno.
 
 ### 3.2 Matrículas y Ciclos
 
 - **Ciclos académicos por sede**: cada sede puede tener sus propios ciclos con nombre, precio, fecha de inicio y fecha de fin.
 - **Creación de ciclo para todas las sedes a la vez**: si el gerente quiere crear el mismo ciclo en todas las sedes, puede hacerlo con un solo clic.
 - **Alerta de vigencia de ciclos**: el sistema avisa automáticamente cuando un ciclo está por finalizar (menos de 14 días) o ya terminó.
-- **Matrícula en pocos pasos**: el registro de un nuevo alumno guía a la secretaria paso a paso hasta completar la matrícula y el primer pago.
-- **Renovación de matrícula**: para alumnos ya registrados, la secretaria puede renovarlos en un ciclo nuevo en segundos.
-- **Protección contra matrículas duplicadas**: el sistema no permite registrar al mismo alumno dos veces con el mismo DNI, incluso en otra sede.
+- **Matrícula en pocos pasos**: el registro de un nuevo alumno guía a la secretaria paso a paso (datos personales → apoderado → formación académica → ciclo y pago) hasta completar la matrícula. No se puede saltar pasos ni dejar la matrícula incompleta sin pago inicial.
+- **Renovación de matrícula**: para alumnos ya registrados en la misma sede, la secretaria puede renovarlos en un ciclo nuevo en segundos desde la lista de alumnos.
+- **Protección inteligente contra duplicados**: el sistema no permite duplicar matrículas, pero distingue cada situación y da la respuesta adecuada según el caso (ver tabla de estados en la sección anterior).
+
+#### Transferencia de alumno entre sedes
+
+Si un alumno estudió en la Sede Huaura y decide cambiarse a la Sede Sayán (por mudanza, cambio de trabajo u otro motivo), el proceso es completamente automático:
+
+1. La secretaria de Sayán registra normalmente el DNI del alumno.
+2. El sistema detecta que ese alumno existe pero ya no tiene matrícula activa en ninguna sede.
+3. Automáticamente carga los datos del alumno (sin necesidad de volver a tipearlos) y lo transfiere a la nueva sede.
+4. El historial del alumno — ciclos anteriores en Sede Huaura, pagos, apoderado — queda conservado íntegramente.
+5. La secretaria solo necesita completar el ciclo y el pago inicial en Sayán.
+
+**El gerente puede ver en la ficha del alumno todo su recorrido**: qué ciclos hizo en Huaura y cuáles en Sayán, con fechas y estados de pago de cada uno.
 
 ### 3.3 Control de Pagos
 
@@ -73,6 +107,8 @@ Accede únicamente a los datos de su sede. Registra alumnos, matrículas y pagos
 - **Alertas de pagos vencidos**: la lista de matrículas ordena primero a los alumnos con pagos atrasados o próximos a vencer.
 - **Historial de pagos por alumno**: se puede ver cada pago realizado, en qué fecha y por qué método.
 - **Control de próximo pago**: la secretaria puede registrar la fecha del próximo pago acordado con el alumno.
+- **Confirmación antes de registrar**: antes de guardar cualquier pago, el sistema muestra un resumen con el monto y el método seleccionado para que la secretaria confirme. Esto evita errores por tipeo accidental (por ejemplo, escribir 220 cuando se quería escribir 22).
+- **Corrección automática de montos**: si la secretaria escribe un número con ceros innecesarios al inicio (como "022"), el sistema lo corrige automáticamente a "22" en pantalla para que el monto quede siempre visible y claro antes de confirmar.
 
 ### 3.4 Panel de Control (Dashboard)
 
@@ -208,15 +244,11 @@ Los datos no se pierden. El sistema y todos los datos están en los servidores d
 
 ### 6.1 Pago por el Desarrollo del Sistema (único, no se repite)
 
-El desarrollo de un sistema personalizado de esta envergadura tiene un costo de mercado de **S/. 4,000 a S/. 8,000** en empresas de software. Al ser un equipo de practicantes comprometidos con el proyecto, ofrecemos una tarifa especial:
-
 | Concepto | Precio |
 |---|---|
-| Desarrollo completo del sistema (precio mercado) | S/. 4,000 |
-| Descuento por equipo practicante | − S/. 2,600 |
-| **Precio especial para Academia Newton** | **S/. 1,400** |
+| **Desarrollo completo del sistema** | **S/. 1,500** |
 
-> Este pago cubre: todo el desarrollo ya realizado, la configuración del servidor y la puesta en marcha del sistema en producción.
+> Este pago es único y no se repite. Cubre todo el desarrollo ya realizado, la configuración del servidor y la puesta en marcha del sistema en producción.
 
 ---
 
@@ -234,6 +266,12 @@ Se ofrecen dos opciones según el presupuesto inicial:
 | Servidor de base de datos | Basic-256mb | $6.00 | S/. 23 |
 | **Total Opción A** | | **$13.00/mes** | **≈ S/. 49/mes** |
 
+**¿Qué significa "256 MB" en la práctica?**
+
+Importante aclaración: "256 MB" **no es el espacio donde se guardan los alumnos** — es la memoria de procesamiento del servidor (como la memoria RAM de una computadora). El espacio real de almacenamiento en disco de este plan es **1 GB**, que en términos prácticos puede guardar cómodamente el historial completo de **más de 100,000 alumnos** con todos sus pagos y matrículas. Los datos de texto (nombres, DNIs, fechas, montos) ocupan muy poco espacio en disco — Academia Newton no llegará a ese límite nunca.
+
+Lo que sí afecta el "256 MB" es la **velocidad de respuesta** cuando varias personas usan el sistema al mismo tiempo. Con este plan, hasta 5–8 usuarios pueden trabajar simultáneamente sin que se sienta lento. Para una academia con 2 o 3 sedes y pocas secretarias activas a la vez, es más que suficiente.
+
 > **Para comenzar, la Opción A es suficiente para el volumen actual de la academia y cuesta S/. 49 al mes. Si en algún momento sienten que el sistema va lento o necesitan más capacidad, se amplía en un día sin perder ningún dato.**
 
 #### Opción B — Plan Crecimiento (mayor capacidad desde el inicio)
@@ -244,7 +282,11 @@ Se ofrecen dos opciones según el presupuesto inicial:
 | Servidor de base de datos | Basic-1gb | $19.00 | S/. 72 |
 | **Total Opción B** | | **$26.00/mes** | **≈ S/. 99/mes** |
 
-> Mayor capacidad de almacenamiento y rendimiento. Recomendado si se planea crecer en sedes o en cantidad de alumnos en el corto plazo.
+**¿Qué significa "1 GB" en la práctica?**
+
+Al igual que en el plan anterior, "1 GB" aquí es la memoria de procesamiento, no el límite de alumnos. El espacio de disco de este plan es **10 GB** — diez veces más que la Opción A. En ningún escenario realista se llegará a ese límite.
+
+La diferencia real frente a la Opción A es la **velocidad y fluidez del sistema bajo carga**: con 1 GB de RAM, hasta 15–20 personas pueden usar el sistema al mismo tiempo sin que se sienta lento, y las consultas de reportes y gráficos responden más rápido. Es el plan recomendado si la academia planea abrir más sedes, tener más secretarias activas, o simplemente quiere mayor comodidad desde el inicio.
 
 > *Tipo de cambio referencial: S/. 3.80 por dólar. Puede variar ligeramente.*  
 > *El costo en soles puede ajustarse mínimamente según el tipo de cambio del mes.*  
@@ -254,33 +296,55 @@ Se ofrecen dos opciones según el presupuesto inicial:
 
 ### 6.3 Mantenimiento — ¿Cada cuánto tiempo es necesario?
 
+#### Duración del acuerdo inicial: 18 meses
+
+El contrato inicial cubre un período de **1 año y medio (18 meses)** desde la puesta en marcha del sistema. Durante este tiempo se aplican las tarifas de mantenimiento descritas a continuación. Al cumplirse los 18 meses, el acuerdo se renegocia según el estado del sistema, el nivel de uso y las necesidades que hayan surgido — lo que permite ajustar las condiciones a la realidad del momento.
+
+> Este plazo de 18 meses garantiza que la academia tenga acompañamiento técnico durante todo el período de adaptación y consolidación del sistema, que es cuando más se necesita.
+
 Una preocupación frecuente es pensar que el mantenimiento es un costo fijo e inevitable todos los meses. La realidad es diferente: **la frecuencia del mantenimiento depende del estado del sistema**, y un sistema bien desarrollado tiende a necesitar cada vez menos intervención con el tiempo.
 
-#### ¿Cómo evoluciona el mantenimiento?
+#### ¿Cómo evoluciona el mantenimiento durante los 18 meses?
 
 | Período | Situación esperada | Frecuencia recomendada |
 |---|---|---|
 | **Meses 1–3** | Primeros meses de uso real. Pueden aparecer errores menores al usar funciones en situaciones no previstas durante el desarrollo. | Mensual (S/. 100/mes) |
 | **Meses 4–6** | El sistema ya está estable. El equipo lo conoce bien. Los errores, si los hay, son puntuales y menores. | Cada 2 meses (S/. 100 c/2 meses) |
-| **A partir del mes 7** | Sistema en funcionamiento pleno. El mantenimiento pasa a ser preventivo: revisión general, optimización y limpieza de datos. | Cada 4–6 meses |
-| **Anual** | Limpieza profunda de datos: registros históricos, archivos innecesarios, optimización de la base de datos. | 1 vez al año |
+| **Meses 7–18** | Sistema en funcionamiento pleno. El mantenimiento pasa a ser preventivo: revisión general, optimización y limpieza de datos. | Cada 4–6 meses |
 
-> **Importante:** el mantenimiento no es un contrato obligatorio mensual de por vida. Si el sistema funciona correctamente y no hay nada que corregir o mejorar, **no hay nada que cobrar**. Solo se cobra cuando hay trabajo real que hacer.
+> **Importante:** el mantenimiento no es un contrato mensual fijo. Si el sistema funciona correctamente y no hay nada que corregir o mejorar, **no hay nada que cobrar**. Solo se cobra cuando hay trabajo real que hacer.
 
 #### Primer mes: completamente gratuito ✅
 
 El primer mes después de la puesta en marcha no tiene costo de mantenimiento. Esto permite que el equipo de la academia use el sistema con total confianza, reporte cualquier detalle que requiera ajuste, y el equipo de desarrollo lo atiende sin costo adicional.
 
-#### Tarifas de mantenimiento (cuando aplica)
+#### Tarifas de mantenimiento durante los 18 meses
 
-| Tipo de intervención | Precio | Incluye |
+| Tipo de intervención | Precio | Ejemplos de lo que incluye |
 |---|---|---|
-| **Correctivo** (corrección de errores) | S/. 100 | Identificación y corrección del problema, pruebas, actualización del sistema |
-| **Preventivo** (revisión general cada 4–6 meses) | S/. 100 | Revisión de rendimiento, actualización de seguridad, limpieza de registros temporales |
-| **Limpieza anual de datos** | S/. 100 | Organización de datos históricos, optimización de la base de datos, respaldo completo |
-| **Mejora o nueva funcionalidad** | Cotización aparte | Según el alcance del cambio solicitado |
+| **Correctivo pequeño o mediano** | S/. 100 | Error en un formulario, mensaje incorrecto, cálculo de deuda equivocado, problema al exportar Excel, campo que no guarda bien, ajuste en validación de datos, error visual en pantalla |
+| **Correctivo complejo** | S/. 180 | Error que afecta múltiples módulos a la vez, fallo en el proceso completo de matrícula o pagos, problema de acceso o seguridad, corrección que requiere modificar la base de datos o migrar información |
+| **Preventivo** (cada 4–6 meses) | S/. 100 | Revisión general del sistema, actualización de seguridad, limpieza de registros temporales, verificación de que todo funcione correctamente |
+| **Limpieza anual de datos** (1 vez al año) | S/. 100 | Ver detalle completo en la sección siguiente |
+| **Mejora o nueva funcionalidad** | Cotización aparte | Cualquier función nueva que no estaba en el sistema original — según el alcance del cambio solicitado |
 
-> En un escenario realista, la academia podría pagar mantenimiento **3 a 4 veces al año** una vez que el sistema esté estable — lo que equivale a aproximadamente **S/. 300–400 anuales** en lugar de S/. 1,200 si fuera mensual fijo.
+> En un escenario realista durante los 18 meses, la academia podría pagar mantenimiento **4 a 6 veces en total** — lo que equivale a aproximadamente **S/. 400–600 en todo el período**.
+
+#### ¿En qué consiste la limpieza anual de datos?
+
+Con el uso diario del sistema, la base de datos va acumulando información que con el tiempo puede afectar el rendimiento si no se gestiona. La limpieza anual es una intervención técnica profunda que incluye:
+
+- **Eliminación de registros huérfanos**: datos que quedaron sueltos sin referencia, como registros de matrículas canceladas que no se limpiaron correctamente.
+- **Optimización de la base de datos**: PostgreSQL acumula fragmentación interna con cada inserción y eliminación de datos. Se ejecuta un proceso técnico (VACUUM/ANALYZE) que recupera espacio en disco y acelera las consultas del sistema.
+- **Archivado de historial antiguo**: alumnos con 3 o más años sin actividad, ciclos académicos muy antiguos y registros de sesión del sistema que ya no son necesarios.
+- **Verificación de integridad de datos**: revisión de que no existan inconsistencias acumuladas, como montos que no cuadran, estados de alumnos incorrectos o matrículas con datos incompletos.
+- **Respaldo completo verificado**: se realiza un backup total de la base de datos y se prueba su restauración para confirmar que los datos pueden recuperarse sin problemas ante cualquier eventualidad.
+
+Esta intervención está incluida dentro del contrato de 18 meses al precio indicado. Al vencer ese período, la tarifa se revisa junto con el resto de las condiciones.
+
+#### ¿Qué pasa al terminar los 18 meses?
+
+Al cumplirse el período inicial, se evalúa el estado del sistema y se propone un nuevo acuerdo acorde a las necesidades reales de la academia en ese momento. Las condiciones y tarifas de ese nuevo contrato se negocian con base en la experiencia acumulada durante los primeros 18 meses.
 
 ---
 
@@ -288,7 +352,7 @@ El primer mes después de la puesta en marcha no tiene costo de mantenimiento. E
 
 | Concepto | Tipo de pago | Opción A | Opción B |
 |---|---|---|---|
-| Desarrollo del sistema | Único | S/. 1,400 | S/. 1,400 |
+| Desarrollo del sistema | Único | S/. 1,500 | S/. 1,500 |
 | Alojamiento en la nube | Mensual (desde mes 1) | ≈ S/. 49/mes | ≈ S/. 99/mes |
 | Mantenimiento | Mensual (**primer mes gratis**) | S/. 100–180/mes | S/. 100–180/mes |
 
@@ -296,7 +360,7 @@ El primer mes después de la puesta en marcha no tiene costo de mantenimiento. E
 
 | Período | Costo estimado |
 |---|---|
-| Mes 1 (puesta en marcha) | S/. 1,400 desarrollo + S/. 49 servidor = **S/. 1,449** |
+| Mes 1 (puesta en marcha) | S/. 1,500 desarrollo + S/. 49 servidor = **S/. 1,549** |
 | Mes 2 en adelante | S/. 49 servidor + S/. 100 mantenimiento = **S/. 149/mes** |
 | **Costo anual desde el año 2** | **≈ S/. 1,788/año** (≈ S/. 149/mes × 12) |
 
@@ -304,7 +368,7 @@ El primer mes después de la puesta en marcha no tiene costo de mantenimiento. E
 
 | Período | Costo estimado |
 |---|---|
-| Mes 1 (puesta en marcha) | S/. 1,400 desarrollo + S/. 99 servidor = **S/. 1,499** |
+| Mes 1 (puesta en marcha) | S/. 1,500 desarrollo + S/. 99 servidor = **S/. 1,599** |
 | Mes 2 en adelante | S/. 99 servidor + S/. 100 mantenimiento = **S/. 199/mes** |
 | **Costo anual desde el año 2** | **≈ S/. 2,388/año** (≈ S/. 199/mes × 12) |
 
@@ -337,10 +401,10 @@ El sistema automatiza las tareas administrativas repetitivas: cálculo de deudas
 
 | Concepto | Explicación | Monto mensual |
 |---|---|---|
-| Desarrollo del sistema | S/. 1,400 repartidos en 12 meses del primer año | S/. 117 |
+| Desarrollo del sistema | S/. 1,500 repartidos en 12 meses del primer año | S/. 125 |
 | Alojamiento en la nube | Servidores donde vive el sistema (Render, Opción A) | S/. 49 |
 | Mantenimiento básico | Soporte técnico, corrección de errores | S/. 100 |
-| **Costo total del sistema/mes** | | **S/. 266** |
+| **Costo total del sistema/mes** | | **S/. 274** |
 
 ---
 
@@ -349,13 +413,13 @@ El sistema automatiza las tareas administrativas repetitivas: cálculo de deudas
 | Concepto | Sin el sistema | Con el sistema | Diferencia |
 |---|---|---|---|
 | Personal administrativo extra | S/. 1,025/mes | S/. 0 | −S/. 1,025 |
-| Costo del sistema | S/. 0 | S/. 266/mes | +S/. 266 |
-| **Resultado mensual** | **S/. 1,025** | **S/. 266** | **Ahorro: S/. 759/mes** |
-| **Resultado anual** | **S/. 12,300** | **S/. 3,192** | **Ahorro: ≈ S/. 9,100/año** |
+| Costo del sistema | S/. 0 | S/. 274/mes | +S/. 274 |
+| **Resultado mensual** | **S/. 1,025** | **S/. 274** | **Ahorro: S/. 751/mes** |
+| **Resultado anual** | **S/. 12,300** | **S/. 3,288** | **Ahorro: ≈ S/. 9,012/año** |
 
 ---
 
-> 💡 **En resumen:** el sistema no representa un gasto de S/. 266 al mes — representa un **ahorro neto de S/. 759 al mes** desde el primer año de uso. Dicho de otra forma: por cada sol invertido en el sistema, la academia recupera aproximadamente **S/. 3.85**.
+> 💡 **En resumen:** el sistema no representa un gasto de S/. 274 al mes — representa un **ahorro neto de S/. 751 al mes** desde el primer año de uso. Dicho de otra forma: por cada sol invertido en el sistema, la academia recupera aproximadamente **S/. 3.74**.
 
 ---
 
@@ -365,15 +429,30 @@ El sistema automatiza las tareas administrativas repetitivas: cálculo de deudas
 
 - **30 días de soporte gratuito** a partir de la puesta en marcha del sistema, para resolver cualquier duda o ajuste necesario.
 - **Disponibilidad del sistema**: Render garantiza un 99.5% de tiempo en línea (menos de 1 hora de caída al mes en promedio).
-- **Backups automáticos diarios**: la base de datos se respalda cada 24 horas. En caso de cualquier problema, se puede restaurar hasta el día anterior.
+- **Backups automáticos diarios**: Render realiza una copia de seguridad de la base de datos cada 24 horas de forma automática, conservando los respaldos de los últimos 7 días. Esto significa que ante cualquier problema, el sistema puede restaurarse a cualquier punto dentro de la última semana sin perder información.
 - **Capacitación incluida**: una sesión de capacitación para el equipo de secretarias y administradores sobre el uso del sistema.
 
 ### 📋 Condiciones
 
-- El costo de alojamiento ($14/mes) se paga mensualmente. Si la academia decide no continuar con el servicio, puede cancelar con 15 días de aviso previo.
+- El costo de alojamiento ($13–$26/mes según plan) se paga mensualmente. Si la academia decide no continuar con el servicio, puede cancelar con 15 días de aviso previo.
 - El mantenimiento mensual es opcional pero recomendado. Sin mantenimiento, los errores y mejoras no están cubiertos.
 - Los datos de la academia (alumnos, matrículas, pagos) son propiedad exclusiva de la academia. En caso de cancelación del servicio, se entrega una copia completa de todos los datos.
 - Cualquier funcionalidad nueva que exceda el alcance del mantenimiento básico se cotizará por separado.
+
+### 💳 ¿Cómo se paga el alojamiento en Render?
+
+El alojamiento se contrata directamente con Render (proveedor internacional). Para esto se necesita una tarjeta Visa o Mastercard que acepte pagos en dólares. Existen dos formas de manejar esto:
+
+**Opción recomendada — Cuenta propia de la academia:**
+La academia crea su propia cuenta gratuita en Render con el correo del gerente y agrega su tarjeta. El equipo de desarrollo es agregado como colaborador para gestionar la configuración técnica. De esta manera:
+- El gerente paga directamente a Render cada mes
+- La academia es dueña total de su servidor y sus datos
+- No existe dependencia del equipo de desarrollo para el hosting
+
+**Si no se tiene tarjeta internacional:**
+La mayoría de bancos peruanos (BCP, BBVA, Interbank) ofrecen tarjetas virtuales Visa o Mastercard desde su aplicación móvil, habilitadas para pagos en dólares. También funciona la tarjeta Visa prepago de Yape. Cualquiera de estas opciones es suficiente para contratar el servicio en Render.
+
+> El equipo de desarrollo acompaña al gerente en el proceso de creación de cuenta y configuración inicial, que toma aproximadamente 15–20 minutos.
 
 ---
 
@@ -401,6 +480,6 @@ Para cualquier consulta adicional sobre esta propuesta, estamos disponibles para
 ---
 
 *Este documento fue preparado exclusivamente para Academia Newton.*  
-*Los precios indicados tienen validez de 30 días a partir de la fecha de emisión.*
+*Los precios indicados tienen validez de 7 días a partir de la fecha de emisión.*
 
 ---

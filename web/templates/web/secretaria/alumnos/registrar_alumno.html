@@ -214,8 +214,137 @@
 
 </div>
 
+{% if transferencia_alumno %}
+<!-- MODAL: TRANSFERENCIA ENTRE SEDES -->
+<div class="modal fade" id="modalTransferencia" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold">
+                        <i class="fas fa-exchange-alt text-primary me-2"></i>Alumno encontrado en otra sede
+                    </h5>
+                    <small class="text-muted">
+                        Viene de <strong>{{ transferencia_alumno.sede_origen }}</strong> —
+                        puedes matricularlo aquí sin volver a ingresar sus datos.
+                    </small>
+                </div>
+            </div>
+
+            <form method="POST" action="{% url 'renovar_matricula' transferencia_alumno.id %}">
+                {% csrf_token %}
+                <div class="modal-body pt-3">
+
+                    <!-- Datos del alumno (solo lectura) -->
+                    <div class="bg-light rounded-3 p-3 mb-4">
+                        <div class="row g-2 small">
+                            <div class="col-sm-6">
+                                <span class="label-caps d-block">Alumno</span>
+                                <strong>{{ transferencia_alumno.nombre }}</strong>
+                            </div>
+                            <div class="col-sm-3">
+                                <span class="label-caps d-block">DNI</span>
+                                <strong>{{ transferencia_alumno.dni }}</strong>
+                            </div>
+                            <div class="col-sm-3">
+                                <span class="label-caps d-block">Sede anterior</span>
+                                <strong>{{ transferencia_alumno.sede_origen }}</strong>
+                            </div>
+                            <div class="col-12 mt-1">
+                                <span class="label-caps d-block">Último ciclo</span>
+                                <strong>{{ transferencia_alumno.ultimo_ciclo }}</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-3">
+
+                        <div class="col-12">
+                            <p class="label-caps mb-0">Contacto — actualiza si cambió</p>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Celular</label>
+                            <input type="text" name="celular"
+                                   class="form-control form-control-sm"
+                                   value="{{ transferencia_alumno.celular }}" maxlength="9">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label small">Correo electrónico</label>
+                            <input type="email" name="email"
+                                   class="form-control form-control-sm"
+                                   value="{{ transferencia_alumno.email }}">
+                        </div>
+
+                        {% if transferencia_alumno.apo %}
+                        <div class="col-12">
+                            <p class="label-caps mb-2 mt-1">Apoderado</p>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small">Nombre</label>
+                                    <input type="text" name="apo_nombre"
+                                           class="form-control form-control-sm"
+                                           value="{{ transferencia_alumno.apo }}">
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small">Celular</label>
+                                    <input type="text" name="apo_celular"
+                                           class="form-control form-control-sm"
+                                           value="{{ transferencia_alumno.apo_celular }}">
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <div class="col-12">
+                            <p class="label-caps mb-0 mt-1">Nueva matrícula — {{ request.perfil.sede }}</p>
+                        </div>
+                        <div class="col-md-7">
+                            <label class="form-label small">
+                                Ciclo <span class="text-danger">*</span>
+                            </label>
+                            <select name="ciclo" class="form-select form-select-sm" required>
+                                <option value="">— Seleccionar ciclo —</option>
+                                {% for c in ciclos_transfer %}
+                                <option value="{{ c.id }}">
+                                    {{ c.nombre }} &nbsp;·&nbsp; S/. {{ c.precio }}
+                                    &nbsp;·&nbsp; {{ c.fecha_inicio|date:"d/m/Y" }} – {{ c.fecha_fin|date:"d/m/Y" }}
+                                </option>
+                                {% empty %}
+                                <option value="" disabled>No hay ciclos disponibles en esta sede</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-5">
+                            <label class="form-label small">Fecha de matrícula</label>
+                            <input type="text" class="form-control form-control-sm bg-light"
+                                   value="Hoy (automática)" disabled>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer border-0 pt-1">
+                    <a href="{% url 'registrar_alumno' %}" class="btn btn-outline-secondary btn-sm">
+                        Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary btn-sm">
+                        <i class="fas fa-exchange-alt me-1"></i> Confirmar transferencia
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+{% endif %}
+
 <script>
 document.addEventListener("DOMContentLoaded", async function () {
+
+    {% if transferencia_alumno %}
+    // Abrir modal automáticamente al detectar alumno de otra sede
+    new bootstrap.Modal(document.getElementById('modalTransferencia')).show();
+    {% endif %}
 
     const departamento = document.getElementById("departamento");
     const provincia    = document.getElementById("provincia");
