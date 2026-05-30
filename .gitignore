@@ -23,5 +23,9 @@ Thumbs.db
 # Documentación personal (diagramas, notas del desarrollador)
 docs/
 
+# Propuesta comercial — documento confidencial, no va al repositorio
+PROPUESTA_SISTEMA_ACADEMIA_NEWTON.md
+PROPUESTA_SISTEMA_ACADEMIA_NEWTON.pdf
+
 # Archivos estáticos recopilados (se generan con collectstatic en cada servidor)
 staticfiles/
