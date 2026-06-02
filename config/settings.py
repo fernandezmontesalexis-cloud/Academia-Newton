@@ -2,16 +2,16 @@ import os
 from pathlib import Path
 
 import dj_database_url
+from dotenv import load_dotenv
+
+load_dotenv()  # lee .env en desarrollo local
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 # ── SEGURIDAD ──────────────────────────────────────────────────────────────
 # En producción: variable de entorno SECRET_KEY obligatoria en Render
 # En desarrollo local: fallback al valor de desarrollo (nunca usar en producción)
-SECRET_KEY = os.environ.get(
-    'SECRET_KEY',
-    'django-insecure-(ch@qzs9zw9v9&t^_o*i$!^)q(avbs$!nmvm1@v0m&2xi74uzo'
-)
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
 # En producción: DEBUG=False (variable de entorno en Render)
 # En desarrollo local: True por defecto, sin necesidad de configurar nada

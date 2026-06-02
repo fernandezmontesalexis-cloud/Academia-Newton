@@ -27,5 +27,8 @@ docs/
 PROPUESTA_SISTEMA_ACADEMIA_NEWTON.md
 PROPUESTA_SISTEMA_ACADEMIA_NEWTON.pdf
 
+# Datos de demostración — solo para uso local
+web/management/commands/seed_demo.py
+
 # Archivos estáticos recopilados (se generan con collectstatic en cada servidor)
 staticfiles/
