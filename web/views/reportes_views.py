@@ -12,7 +12,12 @@ from ..models import Sede, Alumno, Matricula, Pago, Ciclo
 
 
 def _salud_badge(pct):
-    """Devuelve etiqueta, clase Bootstrap y color hex según % de recaudación."""
+    """
+    Devuelve la etiqueta de salud financiera según el porcentaje recaudado.
+    - 75% o más → Saludable (verde)
+    - Entre 50% y 74% → Riesgo medio (amarillo)
+    - Menos del 50% → Alta deuda (rojo)
+    """
     if pct >= 75:
         return {'label': 'Saludable',    'clase': 'success', 'color': '#198754'}
     if pct >= 50:
@@ -22,12 +27,12 @@ def _salud_badge(pct):
 
 def _ingresos_6_meses(sede=None):
     """
-    Calcula ingresos de los últimos 6 meses en 1 sola query
-    (antes hacía 6 queries separadas, una por mes).
+    Calcula los ingresos de los últimos 6 meses usando 1 sola consulta a la base de datos.
+    Antes esto hacía 6 consultas separadas — una por mes — lo optimicé para que sea más rápido.
     """
     hoy = date.today()
 
-    # Calcular el primer día del período (hace 5 meses)
+    # Calculo el mes donde empieza el período de 6 meses
     mes_inicio = hoy.month - 5
     año_inicio = hoy.year
     while mes_inicio <= 0:
@@ -35,7 +40,7 @@ def _ingresos_6_meses(sede=None):
         año_inicio -= 1
     inicio_periodo = date(año_inicio, mes_inicio, 1)
 
-    # 1 sola query agrupada por año + mes
+    # Traigo todos los pagos del período y los agrupo por año y mes en la BD
     qs = Pago.objects.filter(fecha_pago__gte=inicio_periodo)
     if sede is not None:
         qs = qs.filter(matricula__alumno__sede=sede)
@@ -46,11 +51,12 @@ def _ingresos_6_meses(sede=None):
         .values('año', 'mes')
         .annotate(total=Sum('monto'))
     )
+    # Convierto los resultados en un diccionario para búsqueda rápida por (año, mes)
     mapa = {(r['año'], r['mes']): float(r['total'] or 0) for r in resultados}
 
-    # Construir labels y data en orden cronológico
+    # Construyo las listas en orden cronológico — si un mes no tuvo pagos pongo 0
     labels = []
-    data = []
+    data   = []
     for i in range(5, -1, -1):
         m = hoy.month - i
         a = hoy.year
@@ -70,7 +76,8 @@ def reportes_sedes(request):
 
     sedes = list(Sede.objects.all())
 
-    # ── Ganancias anuales ─────────────────────────────────────────────────
+    # ── Sección 1: Ganancias anuales ──────────────────────────────────────
+    # Traigo todos los pagos agrupados por año y sede en una sola query
     pagos_anuales = (
         Pago.objects
         .annotate(año=ExtractYear('fecha_pago'))
@@ -79,16 +86,19 @@ def reportes_sedes(request):
         .order_by('año')
     )
 
+    # Armo una matriz: matriz[año][sede_id] = total recaudado
     matriz = defaultdict(dict)
     for row in pagos_anuales:
         matriz[row['año']][row['matricula__alumno__sede_id']] = float(row['total'] or 0)
 
-    años_list   = sorted(matriz.keys())[-4:]   # máximo últimos 4 años
-    anual_rows  = []
-    prev_total  = None
+    # Solo muestro los últimos 4 años
+    años_list  = sorted(matriz.keys())[-4:]
+    anual_rows = []
+    prev_total = None
     for año in años_list:
         totales   = [round(matriz[año].get(s.id, 0), 2) for s in sedes]
         total_año = round(sum(totales), 2)
+        # Calculo el % de crecimiento o caída respecto al año anterior
         if prev_total is not None and prev_total > 0:
             crecimiento      = round((total_año - prev_total) / prev_total * 100, 1)
             tiene_crecimiento = True
@@ -98,7 +108,6 @@ def reportes_sedes(request):
         anual_rows.append({
             'año':              año,
             'totales':          totales,
-            # Lista de (nombre_sede, monto) para iterar en template sin indexado
             'sede_totales':     list(zip([s.nombre for s in sedes], totales)),
             'total':            total_año,
             'crecimiento':      crecimiento,
@@ -107,7 +116,8 @@ def reportes_sedes(request):
         })
         prev_total = total_año
 
-    # ── Comparativo de sedes ──────────────────────────────────────────────
+    # ── Sección 2: Comparativo de sedes ──────────────────────────────────
+    # Armo una card por cada sede con sus métricas y datos para los gráficos modales
     data_sedes = []
 
     for sede in sedes:
@@ -116,20 +126,23 @@ def reportes_sedes(request):
         matriculas_pagadas    = matriculas_qs.filter(estado='pagado').count()
         matriculas_pendientes = matriculas_qs.filter(estado='pendiente').count()
 
+        # Total recaudado histórico de la sede
         ingresos = (
             Pago.objects.filter(matricula__alumno__sede=sede)
             .aggregate(total=Sum('monto'))['total'] or 0
         )
+
+        # Deuda total: recorro las matrículas pendientes y sumo lo que falta cobrar
         deuda = sum(
             m.deuda() for m in
             matriculas_qs.filter(estado='pendiente')
             .select_related('ciclo').prefetch_related('pago_set')
         )
 
-        # Datos gráfico 1: ingresos mensuales
+        # Datos para el gráfico 1 del modal: ingresos mensuales últimos 6 meses
         mensual_labels, mensual_data = _ingresos_6_meses(sede=sede)
 
-        # Datos gráfico 3: esperado vs cobrado por ciclo
+        # Datos para el gráfico 3 del modal: esperado vs cobrado por cada ciclo
         ciclos = list(
             Matricula.objects.filter(alumno__sede=sede)
             .values('ciclo__id', 'ciclo__nombre', 'ciclo__precio')
@@ -149,6 +162,7 @@ def reportes_sedes(request):
             bar_esperado.append(round(esperado, 2))
             bar_cobrado.append(round(cobrado, 2))
 
+        # Calculo el % recaudado para el badge de salud financiera
         total_esperado = sum(bar_esperado)
         ingresos_f     = round(float(ingresos), 2)
         pct            = int(ingresos_f / total_esperado * 100) if total_esperado > 0 else 0
@@ -161,7 +175,7 @@ def reportes_sedes(request):
             'deuda':                  round(float(deuda), 2),
             'pct_recaudado':          min(pct, 100),
             'salud':                  _salud_badge(pct),
-            # Para gráficos modales
+            # Datos JSON para los gráficos en los modales
             'chart_mensual_labels':   json.dumps(mensual_labels),
             'chart_mensual_data':     json.dumps(mensual_data),
             'chart_estado_data':      json.dumps([matriculas_pagadas, matriculas_pendientes]),
@@ -171,9 +185,9 @@ def reportes_sedes(request):
         })
 
     return render(request, 'web/administrador/reportes/reportes_sedes.html', {
-        'data_sedes':  data_sedes,
-        'anual_rows':  anual_rows,
-        'sedes':       sedes,
+        'data_sedes': data_sedes,
+        'anual_rows': anual_rows,
+        'sedes':      sedes,
     })
 
 
@@ -185,6 +199,7 @@ def reporte_sede_detalle(request, sede_id):
     alumnos_activos = Alumno.objects.filter(sede=sede, estado='activo').count()
     matriculas_qs   = Matricula.objects.filter(alumno__sede=sede)
 
+    # Ingresos y deuda total de la sede
     ingresos_total = round(float(
         Pago.objects.filter(matricula__alumno__sede=sede)
         .aggregate(total=Sum('monto'))['total'] or 0
@@ -195,7 +210,7 @@ def reporte_sede_detalle(request, sede_id):
         .select_related('ciclo').prefetch_related('pago_set')
     )), 2)
 
-    # Cards de ciclos — igual que secretaria en Reportes Financieros
+    # Cards de ciclos — mismo formato que los reportes financieros de la secretaria
     ciclos_raw  = Ciclo.objects.filter(sede=sede).order_by('-fecha_inicio')
     ciclos_data = []
 
@@ -203,6 +218,7 @@ def reporte_sede_detalle(request, sede_id):
         total_matriculas = Matricula.objects.filter(
             ciclo=c, alumno__estado='activo', alumno__sede=sede,
         ).count()
+        # Si el ciclo no tiene alumnos activos, no lo muestro
         if total_matriculas == 0:
             continue
 
@@ -216,6 +232,7 @@ def reporte_sede_detalle(request, sede_id):
         total_esperado = c.precio * total_matriculas
         total_deuda    = max(total_esperado - total_recaudado, Decimal('0'))
 
+        # Cuento cuántos alumnos del ciclo aún tienen deuda
         alumnos_con_deuda = (
             Matricula.objects
             .filter(ciclo=c, alumno__estado='activo', alumno__sede=sede)
@@ -241,7 +258,7 @@ def reporte_sede_detalle(request, sede_id):
             'pct_recaudado':     min(pct, 100),
         })
 
-    # Badge de salud global de la sede
+    # Badge de salud global de la sede basado en el % total recaudado vs esperado
     total_esperado_sede = sum(float(item['total_esperado']) for item in ciclos_data)
     pct_sede = int(ingresos_total / total_esperado_sede * 100) if total_esperado_sede > 0 else 0
 
@@ -255,5 +272,3 @@ def reporte_sede_detalle(request, sede_id):
         'salud':            _salud_badge(pct_sede),
         'pct_recaudado':    min(pct_sede, 100),
     })
-
-

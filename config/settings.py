@@ -114,3 +114,7 @@ LOGOUT_REDIRECT_URL = '/'
 
 SESSION_COOKIE_AGE        = 1800   # 30 minutos de inactividad
 SESSION_SAVE_EVERY_REQUEST = True  # reinicia el contador con cada acción
+
+# Solo viajan por HTTPS — activar únicamente en producción con Render
+SESSION_COOKIE_SECURE  = not DEBUG
+SESSION_COOKIE_HTTPONLY = True

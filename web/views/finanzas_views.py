@@ -23,6 +23,11 @@ _METODO_MAP = {
 
 
 def _build_page_range(page_obj, window=2):
+    """
+    Genera los números de página para la paginación con puntos suspensivos.
+    Por ejemplo: 1 ... 4 5 6 ... 20
+    El parámetro window controla cuántas páginas mostrar alrededor de la actual.
+    """
     total = page_obj.paginator.num_pages
     if total <= 7:
         return list(range(1, total + 1))
@@ -31,24 +36,31 @@ def _build_page_range(page_obj, window=2):
     for i in range(1, total + 1):
         if i == 1 or i == total or abs(i - current) <= window:
             if last_added is not None and i - last_added > 1:
-                result.append(None)
+                result.append(None)  # None representa los "..."
             result.append(i)
             last_added = i
     return result
 
 
 def _filtrar_historial(request):
+    """
+    Aplica los filtros del formulario de búsqueda al historial de pagos.
+    Esta función la reutilizo tanto en la vista principal como en el exportador de Excel.
+    """
     fecha_desde_str = request.GET.get('fecha_desde', '')
     fecha_hasta_str = request.GET.get('fecha_hasta', '')
     sede_id         = request.GET.get('sede_id', '')
     metodo          = request.GET.get('metodo', '')
     busqueda        = request.GET.get('q', '').strip()
 
+    # Traigo todos los pagos con sus relaciones — evita consultas extra al iterar
     qs = Pago.objects.select_related(
         'matricula__alumno',
         'matricula__alumno__sede',
         'matricula__ciclo',
     )
+
+    # Aplico cada filtro solo si el usuario lo seleccionó
     if fecha_desde_str:
         try:
             qs = qs.filter(fecha_pago__gte=date.fromisoformat(fecha_desde_str))
@@ -64,11 +76,13 @@ def _filtrar_historial(request):
     if metodo:
         qs = qs.filter(metodo_pago=metodo)
     if busqueda:
+        # Busco por nombre o apellido del alumno
         qs = (
             qs.filter(matricula__alumno__nombres__icontains=busqueda) |
             qs.filter(matricula__alumno__apellido_paterno__icontains=busqueda)
         )
 
+    # Armo la URL base para la paginación — preserva los filtros activos al cambiar de página
     params = request.GET.copy()
     params.pop('page', None)
     qs_str = params.urlencode()
@@ -89,24 +103,24 @@ def _filtrar_historial(request):
 @permiso_requerido(['admin'])
 def finanzas(request):
     hoy        = date.today()
-    sem_inicio = hoy - timedelta(days=6)
+    sem_inicio = hoy - timedelta(days=6)  # últimos 7 días incluyendo hoy
 
-    # ── Historial filtrado (base de todos los cálculos) ───────────────────
+    # Traigo el historial ya filtrado — es la base de todos los cálculos de esta vista
     historial_qs, filtros = _filtrar_historial(request)
     historial = Paginator(historial_qs, 10).get_page(request.GET.get('page'))
 
-    # ── KPIs ──────────────────────────────────────────────────────────────
+    # ── KPI: Ingresos del período ─────────────────────────────────────────
     fecha_desde_str = request.GET.get('fecha_desde', '')
     fecha_hasta_str = request.GET.get('fecha_hasta', '')
 
     if fecha_desde_str or fecha_hasta_str:
-        # Con filtro de fecha: total del período filtrado
+        # Si hay filtro de fecha, muestro el total del período filtrado
         ingresos_periodo = round(float(
             historial_qs.aggregate(t=Sum('monto'))['t'] or 0
         ), 2)
         periodo_label = "Total del período"
     else:
-        # Sin filtro de fecha: ingresos del mes actual
+        # Sin filtro de fecha, muestro los ingresos del mes actual
         mes_qs = Pago.objects.filter(fecha_pago__gte=hoy.replace(day=1))
         if filtros['sede_id']:
             mes_qs = mes_qs.filter(matricula__alumno__sede_id=filtros['sede_id'])
@@ -117,7 +131,8 @@ def finanzas(request):
         ), 2)
         periodo_label = "Ingresos del mes"
 
-    # ── Deuda total pendiente (respeta filtro de sede, no de fecha) ──────
+    # ── KPI: Deuda total pendiente ────────────────────────────────────────
+    # La deuda respeta el filtro de sede pero no el de fecha — siempre muestra la deuda actual
     _mats_pend = Matricula.objects.filter(alumno__estado='activo', estado='pendiente')
     if filtros['sede_id']:
         _mats_pend = _mats_pend.filter(alumno__sede_id=filtros['sede_id'])
@@ -128,7 +143,7 @@ def finanzas(request):
     )
     deuda_total = round(float(_precio_pend - _pagado_pend), 2)
 
-    # ── Resumen — esta semana respeta filtros de sede y método ────────────
+    # ── KPI: Total cobrado esta semana ────────────────────────────────────
     sem_qs = Pago.objects.filter(fecha_pago__gte=sem_inicio)
     if filtros['sede_id']:
         sem_qs = sem_qs.filter(matricula__alumno__sede_id=filtros['sede_id'])
@@ -138,6 +153,7 @@ def finanzas(request):
         sem_qs.aggregate(t=Sum('monto'))['t'] or 0
     ), 2)
 
+    # Detecto el método de pago más usado en el historial filtrado
     metodo_result = (
         historial_qs.values('metodo_pago')
         .annotate(cnt=Count('id'))
@@ -164,6 +180,7 @@ def finanzas(request):
 @login_required
 @permiso_requerido(['admin'])
 def exportar_finanzas_excel(request):
+    # Reutilizo los mismos filtros activos en pantalla para exportar exactamente lo que se ve
     historial_qs, _ = _filtrar_historial(request)
     pagos = historial_qs.select_related('registrado_por__user')
 
@@ -171,13 +188,13 @@ def exportar_finanzas_excel(request):
     ws = wb.active
     ws.title = "Movimientos Financieros"
 
-    # ── Estilos de cabecera ────────────────────────────────────────────────
-    hdr_fill = PatternFill("solid", fgColor="1B5E20")   # verde oscuro (≠ azul de Reportes)
+    # ── Estilos de la cabecera ────────────────────────────────────────────
+    # Verde oscuro para diferenciarlo del Excel de reportes (que es azul)
+    hdr_fill = PatternFill("solid", fgColor="1B5E20")
     hdr_font = Font(bold=True, color="FFFFFF", size=10)
     center   = Alignment(horizontal='center', vertical='center')
     left_al  = Alignment(horizontal='left',   vertical='center')
 
-    # Columna → (título, ancho fijo)
     cols = [
         ('N°',             6),
         ('Alumno',        28),
@@ -199,13 +216,13 @@ def exportar_finanzas_excel(request):
         cell.alignment = center
         ws.column_dimensions[get_column_letter(col)].width = width
 
-    # ── Estilos de datos ──────────────────────────────────────────────────
-    fill_alt   = PatternFill("solid", fgColor="F5F5F5")  # zebra par
-    fill_comp  = PatternFill("solid", fgColor="E8F5E9")  # verde claro → Completo
-    fill_parc  = PatternFill("solid", fgColor="FFF3E0")  # naranja claro → Parcial
+    # ── Estilos de las filas de datos ─────────────────────────────────────
+    fill_alt   = PatternFill("solid", fgColor="F5F5F5")   # gris claro para filas pares
+    fill_comp  = PatternFill("solid", fgColor="E8F5E9")   # verde claro para pagos completos
+    fill_parc  = PatternFill("solid", fgColor="FFF3E0")   # naranja claro para pagos parciales
     font_base  = Font(size=9)
-    font_money = Font(size=9, color="1B5E20", bold=True)
-    font_deuda = Font(size=9, color="B71C1C", bold=True)
+    font_money = Font(size=9, color="1B5E20", bold=True)  # verde para montos pagados
+    font_deuda = Font(size=9, color="B71C1C", bold=True)  # rojo para deuda pendiente
     font_parc  = Font(size=9, color="E65100", bold=True)
     curr_fmt   = '"S/. "#,##0.00'
 
@@ -232,6 +249,7 @@ def exportar_finanzas_excel(request):
             (usuario,                              center,  font_base,  None),
         ]
 
+        # La columna de Estado se colorea según si el pago está completo o parcial
         estado_fill = fill_comp if estado == 'Completo' else fill_parc
 
         for col, (value, align, font, fmt) in enumerate(filas_data, 1):
@@ -239,14 +257,17 @@ def exportar_finanzas_excel(request):
             cell.font      = font
             cell.alignment = align
             if col == 9:
+                # Columna Estado: color especial según completo/parcial
                 cell.fill = estado_fill
                 if estado == 'Parcial':
                     cell.font = font_parc
             elif is_even:
+                # Filas pares: fondo gris suave para facilitar la lectura
                 cell.fill = fill_alt
             if fmt:
                 cell.number_format = fmt
 
+    # Congelo la primera fila para que los encabezados siempre estén visibles al hacer scroll
     ws.freeze_panes = 'A2'
 
     response = HttpResponse(
@@ -260,6 +281,7 @@ def exportar_finanzas_excel(request):
 @login_required
 @permiso_requerido(['admin'])
 def historial_completo(request):
+    # Vista separada para el historial completo con los mismos filtros de finanzas
     historial_qs, filtros = _filtrar_historial(request)
     historial = Paginator(historial_qs, 10).get_page(request.GET.get('page'))
 
